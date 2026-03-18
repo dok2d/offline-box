@@ -63,6 +63,22 @@
     mode: "0644"
   notify: Reload nginx
 
+- name: Create web root directory
+  ansible.builtin.file:
+    path: /var/www/html
+    state: directory
+    owner: www-data
+    group: www-data
+    mode: "0755"
+
+- name: Deploy dashboard page
+  ansible.builtin.template:
+    src: dashboard.html.j2
+    dest: /var/www/html/index.html
+    owner: www-data
+    group: www-data
+    mode: "0644"
+
 - name: Remove default nginx site
   ansible.builtin.file:
     path: "{{ item }}"

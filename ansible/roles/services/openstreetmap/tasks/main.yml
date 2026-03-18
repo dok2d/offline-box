@@ -15,6 +15,16 @@
     group: "{{ svc_user }}"
     mode: "0755"
 
+- name: Download MBTiles map file
+  ansible.builtin.get_url:
+    url: "{{ openstreetmap_mbtiles_url }}"
+    dest: "{{ openstreetmap_data_dir }}/{{ openstreetmap_mbtiles_url | basename }}"
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0644"
+    timeout: 3600
+  when: openstreetmap_mbtiles_url | default('') | length > 0
+
 - name: Copy OpenStreetMap Containerfile
   ansible.builtin.copy:
     src: Containerfile

@@ -69,32 +69,10 @@ http {
         include /etc/nginx/snippets/security-headers.conf;
 
         root /var/www/html;
+        index index.html;
 
-        location / {
-            return 200 '<!DOCTYPE html>
-<html><head><meta charset="utf-8"><title>Offline Box</title>
-<style>
-body{font-family:sans-serif;max-width:800px;margin:40px auto;padding:0 20px;background:#1a1a2e;color:#e0e0e0}
-a{color:#64b5f6;text-decoration:none}a:hover{text-decoration:underline}
-h1{color:#fff;border-bottom:1px solid #333;padding-bottom:10px}
-.svc{display:inline-block;margin:8px;padding:12px 20px;background:#16213e;border-radius:8px;border:1px solid #333}
-.svc:hover{background:#0f3460}
-</style></head>
-<body><h1>Offline Box</h1><p>Available services:</p><div>
-{% if enable_kiwix | bool %}<a href="/kiwix/" class="svc">Kiwix (Wikipedia)</a>{% endif %}
-{% if enable_openstreetmap | bool %}<a href="/osm/" class="svc">OpenStreetMap</a>{% endif %}
-{% if enable_transmission | bool %}<a href="/transmission/" class="svc">Transmission</a>{% endif %}
-{% if enable_nexus | bool %}<a href="/nexus/" class="svc">Nexus</a>{% endif %}
-{% if enable_nextcloud | bool %}<a href="/nextcloud/" class="svc">Nextcloud</a>{% endif %}
-{% if enable_gitea | bool %}<a href="/gitea/" class="svc">Gitea</a>{% endif %}
-{% if enable_jellyfin | bool %}<a href="/jellyfin/" class="svc">Jellyfin</a>{% endif %}
-{% if enable_calibre_web | bool %}<a href="/calibre/" class="svc">Calibre-web</a>{% endif %}
-{% if enable_searxng | bool %}<a href="/searxng/" class="svc">SearXNG</a>{% endif %}
-{% if enable_vaultwarden | bool %}<a href="/vaultwarden/" class="svc">Vaultwarden</a>{% endif %}
-{% if enable_syncthing | bool %}<a href="/syncthing/" class="svc">Syncthing</a>{% endif %}
-{% if enable_paperless_ngx | bool %}<a href="/paperless/" class="svc">Paperless-ngx</a>{% endif %}
-</div></body></html>';
-            default_type text/html;
+        location = / {
+            try_files /index.html =404;
         }
 
         # Include per-service location blocks

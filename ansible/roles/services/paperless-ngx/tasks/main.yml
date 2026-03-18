@@ -74,6 +74,36 @@
     state: started
     daemon_reload: true
 
+- name: Wait for Paperless-ngx to become available
+  ansible.builtin.uri:
+    url: "http://{{ listen_addr }}:{{ paperless_ngx_port }}/"
+    status_code: [200, 302, 400]
+  register: paperless_health
+  retries: 30
+  delay: 5
+  until: paperless_health is not failed
+
+- name: Create Paperless-ngx superuser
+  become: true
+  become_user: "{{ svc_user }}"
+  ansible.builtin.shell: |
+    podman exec paperless-ngx /app/venv/bin/python3 -c "
+    import django, os
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'paperless.settings')
+    django.setup()
+    from django.contrib.auth.models import User
+    if not User.objects.filter(username='{{ paperless_ngx_admin_user }}').exists():
+        User.objects.create_superuser('{{ paperless_ngx_admin_user }}', '', '{{ paperless_ngx_admin_password }}')
+        print('created')
+    else:
+        print('exists')
+    "
+  args:
+    executable: /bin/bash
+  register: paperless_superuser
+  changed_when: "'created' in paperless_superuser.stdout"
+  failed_when: false
+
 - name: Deploy nginx config for Paperless-ngx
   ansible.builtin.template:
     src: nginx-paperless-ngx.conf.j2

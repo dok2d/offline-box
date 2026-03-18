@@ -58,6 +58,26 @@
     state: started
     daemon_reload: true
 
+- name: Wait for Nextcloud to become available
+  ansible.builtin.uri:
+    url: "http://{{ listen_addr }}:{{ nextcloud_port }}/status.php"
+    return_content: true
+    status_code: [200, 302, 400]
+  register: nc_health
+  retries: 30
+  delay: 5
+  until: nc_health is not failed
+
+- name: Trigger Nextcloud auto-install (first run)
+  ansible.builtin.uri:
+    url: "http://{{ listen_addr }}:{{ nextcloud_port }}/index.php"
+    method: GET
+    status_code: [200, 302, 303, 400]
+    timeout: 120
+  register: nc_install
+  changed_when: nc_install.status in [200, 302, 303]
+  failed_when: false
+
 - name: Deploy nginx config for Nextcloud
   ansible.builtin.template:
     src: nginx-nextcloud.conf.j2

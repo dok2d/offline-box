@@ -67,9 +67,12 @@ paperless_ngx_port: 8012
 # Kiwix
 ####################
 
-# Directory with .zim files (download wikipedia, wiktionary, etc.)
+# Directory with .zim files
 kiwix_data_dir: "{{ opt_base }}/kiwix/data"
 kiwix_config_dir: "{{ opt_base }}/kiwix/config"
+# List of ZIM file URLs to download (e.g. from download.kiwix.org)
+# Example: ["https://download.kiwix.org/zim/wikipedia/wikipedia_ru_all_maxi_2024-01.zim"]
+kiwix_zim_urls: []
 
 
 ####################
@@ -78,10 +81,9 @@ kiwix_config_dir: "{{ opt_base }}/kiwix/config"
 
 openstreetmap_data_dir: "{{ opt_base }}/openstreetmap/data"
 openstreetmap_config_dir: "{{ opt_base }}/openstreetmap/config"
-# PBF file for map import (download before deploy)
-# e.g. russia-latest.osm.pbf, europe-latest.osm.pbf
-openstreetmap_pbf_file: ""
-openstreetmap_flat_nodes: "yes"
+# MBTiles URL for tileserver-gl-light (pre-rendered vector tiles)
+# Example: "https://download.maptiler.com/osm/planet.mbtiles"
+openstreetmap_mbtiles_url: ""
 
 
 ####################
@@ -154,6 +156,9 @@ jellyfin_cache_dir: "{{ opt_base }}/jellyfin/data/cache"
 calibre_web_data_dir: "{{ opt_base }}/calibre-web/data"
 calibre_web_config_dir: "{{ opt_base }}/calibre-web/config"
 calibre_web_library_dir: "{{ opt_base }}/calibre-web/data/library"
+# URL to zip archive of Calibre library (must contain metadata.db)
+# If empty, an empty library will be initialized
+calibre_web_library_url: ""
 
 
 ####################
@@ -195,4 +200,6 @@ paperless_ngx_config_dir: "{{ opt_base }}/paperless-ngx/config"
 paperless_ngx_consume_dir: "{{ opt_base }}/paperless-ngx/data/consume"
 paperless_ngx_media_dir: "{{ opt_base }}/paperless-ngx/data/media"
 paperless_ngx_secret_key: changeme-generate-long-random-string
+paperless_ngx_admin_user: admin
+paperless_ngx_admin_password: changeme
 paperless_ngx_ocr_language: rus+eng
