@@ -283,6 +283,9 @@ gitea_db_type: sqlite3
 gitea_secret_key: changeme-generate-long-random-string
 gitea_lfs_enabled: "true"
 gitea_ssh_port: 2222
+gitea_admin_user: admin
+gitea_admin_password: changeme
+gitea_admin_email: admin@localhost
 
 
 ####################
@@ -294,6 +297,10 @@ jellyfin_data_dir: "{{ opt_base }}/jellyfin/data"
 jellyfin_config_dir: "{{ opt_base }}/jellyfin/config"
 jellyfin_media_dir: "{{ opt_base }}/jellyfin/data/media"
 jellyfin_cache_dir: "{{ opt_base }}/jellyfin/data/cache"
+jellyfin_admin_user: admin
+jellyfin_admin_password: changeme
+jellyfin_language: ru
+jellyfin_country: RU
 
 
 ####################
@@ -340,6 +347,8 @@ syncthing_data_dir: "{{ opt_base }}/syncthing/data"
 syncthing_config_dir: "{{ opt_base }}/syncthing/config"
 syncthing_sync_port: 22000
 syncthing_discovery_port: 21027
+syncthing_gui_user: admin
+syncthing_gui_password: changeme
 
 
 ####################

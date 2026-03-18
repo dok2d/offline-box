@@ -50,6 +50,54 @@
     state: started
     daemon_reload: true
 
+- name: Wait for Nexus to become available
+  ansible.builtin.uri:
+    url: "http://{{ listen_addr }}:{{ nexus_port }}/nexus/service/rest/v1/status"
+    status_code: [200]
+  register: nexus_health
+  retries: 60
+  delay: 10
+  until: nexus_health is not failed
+
+- name: Check if Nexus initial admin password file exists
+  ansible.builtin.stat:
+    path: "{{ nexus_data_dir }}/admin.password"
+  register: nexus_initial_pw_file
+
+- name: Read initial Nexus admin password
+  ansible.builtin.slurp:
+    src: "{{ nexus_data_dir }}/admin.password"
+  register: nexus_initial_pw
+  when: nexus_initial_pw_file.stat.exists
+
+- name: Change Nexus admin password
+  ansible.builtin.uri:
+    url: "http://{{ listen_addr }}:{{ nexus_port }}/nexus/service/rest/v1/security/users/admin/change-password"
+    method: PUT
+    body: "{{ nexus_admin_password }}"
+    headers:
+      Content-Type: "text/plain"
+    url_username: admin
+    url_password: "{{ nexus_initial_pw.content | b64decode }}"
+    force_basic_auth: true
+    status_code: [204]
+  when: nexus_initial_pw_file.stat.exists
+
+- name: Enable anonymous access for read-only browsing
+  ansible.builtin.uri:
+    url: "http://{{ listen_addr }}:{{ nexus_port }}/nexus/service/rest/v1/security/anonymous"
+    method: PUT
+    body_format: json
+    body:
+      enabled: true
+      userId: anonymous
+      realmName: NexusAuthorizingRealm
+    url_username: admin
+    url_password: "{{ nexus_admin_password }}"
+    force_basic_auth: true
+    status_code: [200]
+  failed_when: false
+
 - name: Deploy nginx config for Nexus
   ansible.builtin.template:
     src: nginx-nexus.conf.j2

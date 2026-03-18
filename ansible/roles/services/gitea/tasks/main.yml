@@ -58,6 +58,34 @@
     state: started
     daemon_reload: true
 
+- name: Wait for Gitea to become available
+  ansible.builtin.uri:
+    url: "http://{{ listen_addr }}:{{ gitea_port }}/gitea/"
+    status_code: [200, 302]
+  register: gitea_health
+  retries: 30
+  delay: 5
+  until: gitea_health is not failed
+
+- name: Create Gitea admin user
+  become: true
+  become_user: "{{ svc_user }}"
+  ansible.builtin.shell: |
+    podman exec gitea gitea admin user create \
+      --admin \
+      --username '{{ gitea_admin_user }}' \
+      --password '{{ gitea_admin_password }}' \
+      --email '{{ gitea_admin_email }}' \
+      --must-change-password=false 2>&1
+  args:
+    executable: /bin/bash
+  register: gitea_admin
+  changed_when: "'created' in gitea_admin.stdout | lower"
+  failed_when:
+    - gitea_admin.rc != 0
+    - "'already exists' not in gitea_admin.stdout | lower"
+    - "'already exists' not in gitea_admin.stderr | lower"
+
 - name: Deploy nginx config for Gitea
   ansible.builtin.template:
     src: nginx-gitea.conf.j2

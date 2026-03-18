@@ -112,6 +112,45 @@
     state: started
     daemon_reload: true
 
+- name: Wait for Calibre-web to become available
+  ansible.builtin.uri:
+    url: "http://{{ listen_addr }}:{{ calibre_web_port }}/calibre/"
+    status_code: [200, 302]
+  register: calibre_health
+  retries: 30
+  delay: 5
+  until: calibre_health is not failed
+
+- name: Configure Calibre-web library path in app.db
+  ansible.builtin.shell: |
+    python3 -c "
+    import sqlite3
+    db = '{{ calibre_web_config_dir }}/app.db'
+    conn = sqlite3.connect(db)
+    c = conn.cursor()
+    c.execute('UPDATE settings SET config_calibre_dir = ? WHERE id = 1', ('/books',))
+    if c.rowcount == 0:
+        print('no_row')
+    else:
+        conn.commit()
+        print('configured')
+    conn.close()
+    "
+  args:
+    executable: /bin/bash
+  register: calibre_config
+  changed_when: "'configured' in calibre_config.stdout"
+  failed_when: false
+
+- name: Restart Calibre-web to apply library path
+  become: true
+  become_user: "{{ svc_user }}"
+  ansible.builtin.systemd:
+    name: calibre-web
+    scope: user
+    state: restarted
+  when: calibre_config.changed | default(false)
+
 - name: Deploy nginx config for Calibre-web
   ansible.builtin.template:
     src: nginx-calibre-web.conf.j2

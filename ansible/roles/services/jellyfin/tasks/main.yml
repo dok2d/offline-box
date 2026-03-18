@@ -66,6 +66,65 @@
     state: started
     daemon_reload: true
 
+- name: Wait for Jellyfin to become available
+  ansible.builtin.uri:
+    url: "http://{{ listen_addr }}:{{ jellyfin_port }}/jellyfin/health"
+    status_code: [200]
+  register: jellyfin_health
+  retries: 30
+  delay: 5
+  until: jellyfin_health is not failed
+
+- name: Check if Jellyfin startup wizard is pending
+  ansible.builtin.uri:
+    url: "http://{{ listen_addr }}:{{ jellyfin_port }}/jellyfin/Startup/Configuration"
+    method: GET
+    status_code: [200, 404]
+  register: jellyfin_startup
+
+- name: Set Jellyfin initial configuration
+  ansible.builtin.uri:
+    url: "http://{{ listen_addr }}:{{ jellyfin_port }}/jellyfin/Startup/Configuration"
+    method: POST
+    body_format: json
+    body:
+      UICulture: "{{ jellyfin_language }}"
+      MetadataCountryCode: "{{ jellyfin_country }}"
+      PreferredMetadataLanguage: "{{ jellyfin_language }}"
+    status_code: [200, 204]
+  when: jellyfin_startup.status == 200
+
+- name: Create Jellyfin admin user
+  ansible.builtin.uri:
+    url: "http://{{ listen_addr }}:{{ jellyfin_port }}/jellyfin/Startup/User"
+    method: POST
+    body_format: json
+    body:
+      Name: "{{ jellyfin_admin_user }}"
+      Password: "{{ jellyfin_admin_password }}"
+    status_code: [200, 204]
+  when: jellyfin_startup.status == 200
+
+- name: Configure Jellyfin media library
+  ansible.builtin.uri:
+    url: "http://{{ listen_addr }}:{{ jellyfin_port }}/jellyfin/Library/VirtualFolders?name=Media&collectionType=mixed&refreshLibrary=false"
+    method: POST
+    body_format: json
+    body:
+      LibraryOptions: {}
+    headers:
+      X-MediaBrowser-Token: ""
+    status_code: [200, 204]
+  failed_when: false
+  when: jellyfin_startup.status == 200
+
+- name: Complete Jellyfin startup wizard
+  ansible.builtin.uri:
+    url: "http://{{ listen_addr }}:{{ jellyfin_port }}/jellyfin/Startup/Complete"
+    method: POST
+    status_code: [200, 204]
+  when: jellyfin_startup.status == 200
+
 - name: Deploy nginx config for Jellyfin
   ansible.builtin.template:
     src: nginx-jellyfin.conf.j2
