@@ -160,9 +160,9 @@ body {
 
 <script>
 var services = [
-{% for svc in dashboard_services %}
+{% for svc_id, svc in offlinebox_services.items() %}
 {% if svc.enabled | bool %}
-  {id:"{{ svc.id }}", name:"{{ svc.name }}", desc:"{{ svc.desc }}", url:"{{ svc.url }}", icon:"{{ svc.icon }}"},
+  {id:"{{ svc_id }}", name:"{{ svc.dashboard.name }}", desc:"{{ svc.dashboard.desc }}", url:"{{ svc.dashboard.url }}", icon:"{{ svc.dashboard.icon }}"},
 {% endif %}
 {% endfor %}
 ];

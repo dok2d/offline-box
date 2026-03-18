@@ -17,37 +17,37 @@
     - role: nginx
 
     - role: services/kiwix
-      when: enable_kiwix | bool
+      when: offlinebox_services.kiwix.enabled | bool
 
     - role: services/openstreetmap
-      when: enable_openstreetmap | bool
+      when: offlinebox_services.openstreetmap.enabled | bool
 
     - role: services/transmission
-      when: enable_transmission | bool
+      when: offlinebox_services.transmission.enabled | bool
 
     - role: services/nexus
-      when: enable_nexus | bool
+      when: offlinebox_services.nexus.enabled | bool
 
     - role: services/nextcloud
-      when: enable_nextcloud | bool
+      when: offlinebox_services.nextcloud.enabled | bool
 
     - role: services/gitea
-      when: enable_gitea | bool
+      when: offlinebox_services.gitea.enabled | bool
 
     - role: services/jellyfin
-      when: enable_jellyfin | bool
+      when: offlinebox_services.jellyfin.enabled | bool
 
     - role: services/calibre-web
-      when: enable_calibre_web | bool
+      when: offlinebox_services['calibre-web'].enabled | bool
 
     - role: services/searxng
-      when: enable_searxng | bool
+      when: offlinebox_services.searxng.enabled | bool
 
     - role: services/vaultwarden
-      when: enable_vaultwarden | bool
+      when: offlinebox_services.vaultwarden.enabled | bool
 
     - role: services/syncthing
-      when: enable_syncthing | bool
+      when: offlinebox_services.syncthing.enabled | bool
 
     - role: services/paperless-ngx
-      when: enable_paperless_ngx | bool
+      when: offlinebox_services['paperless-ngx'].enabled | bool
