@@ -159,43 +159,26 @@ body {
 <div class="footer">Auto-refresh every 30s</div>
 
 <script>
+{% set dashboard_services = [
+  {"id": "kiwix",        "name": "Kiwix",         "desc": "Wikipedia & offline content",    "url": "/kiwix/",        "icon": "\uD83D\uDCDA", "enabled": enable_kiwix},
+  {"id": "osm",          "name": "OpenStreetMap",  "desc": "Offline maps & navigation",     "url": "/osm/",          "icon": "\uD83D\uDDFA\uFE0F", "enabled": enable_openstreetmap},
+  {"id": "transmission", "name": "Transmission",   "desc": "Torrent downloads",             "url": "/transmission/", "icon": "\u2B07\uFE0F", "enabled": enable_transmission},
+  {"id": "nexus",        "name": "Nexus",          "desc": "Package & artifact repository",  "url": "/nexus/",        "icon": "\uD83D\uDCE6", "enabled": enable_nexus},
+  {"id": "nextcloud",    "name": "Nextcloud",      "desc": "Cloud storage & collaboration",  "url": "/nextcloud/",    "icon": "\u2601\uFE0F", "enabled": enable_nextcloud},
+  {"id": "gitea",        "name": "Gitea",          "desc": "Git repositories & code hosting", "url": "/gitea/",       "icon": "\uD83D\uDD00", "enabled": enable_gitea},
+  {"id": "jellyfin",     "name": "Jellyfin",       "desc": "Media streaming server",         "url": "/jellyfin/",     "icon": "\uD83C\uDFAC", "enabled": enable_jellyfin},
+  {"id": "calibre",      "name": "Calibre-web",    "desc": "E-book library",                 "url": "/calibre/",      "icon": "\uD83D\uDCD6", "enabled": enable_calibre_web},
+  {"id": "searxng",      "name": "SearXNG",        "desc": "Meta search engine",             "url": "/searxng/",      "icon": "\uD83D\uDD0D", "enabled": enable_searxng},
+  {"id": "vaultwarden",  "name": "Vaultwarden",    "desc": "Password manager",               "url": "/vaultwarden/",  "icon": "\uD83D\uDD10", "enabled": enable_vaultwarden},
+  {"id": "syncthing",    "name": "Syncthing",      "desc": "File synchronization",           "url": "/syncthing/",    "icon": "\uD83D\uDD04", "enabled": enable_syncthing},
+  {"id": "paperless",    "name": "Paperless-ngx",  "desc": "Document management & OCR",      "url": "/paperless/",    "icon": "\uD83D\uDCC4", "enabled": enable_paperless_ngx},
+] %}
 var services = [
-{% if enable_kiwix | bool %}
-  {id:"kiwix", name:"Kiwix", desc:"Wikipedia & offline content", url:"/kiwix/", icon:"\uD83D\uDCDA"},
+{% for svc in dashboard_services %}
+{% if svc.enabled | bool %}
+  {id:"{{ svc.id }}", name:"{{ svc.name }}", desc:"{{ svc.desc }}", url:"{{ svc.url }}", icon:"{{ svc.icon }}"},
 {% endif %}
-{% if enable_openstreetmap | bool %}
-  {id:"osm", name:"OpenStreetMap", desc:"Offline maps & navigation", url:"/osm/", icon:"\uD83D\uDDFA\uFE0F"},
-{% endif %}
-{% if enable_transmission | bool %}
-  {id:"transmission", name:"Transmission", desc:"Torrent downloads", url:"/transmission/", icon:"\u2B07\uFE0F"},
-{% endif %}
-{% if enable_nexus | bool %}
-  {id:"nexus", name:"Nexus", desc:"Package & artifact repository", url:"/nexus/", icon:"\uD83D\uDCE6"},
-{% endif %}
-{% if enable_nextcloud | bool %}
-  {id:"nextcloud", name:"Nextcloud", desc:"Cloud storage & collaboration", url:"/nextcloud/", icon:"\u2601\uFE0F"},
-{% endif %}
-{% if enable_gitea | bool %}
-  {id:"gitea", name:"Gitea", desc:"Git repositories & code hosting", url:"/gitea/", icon:"\uD83D\uDD00"},
-{% endif %}
-{% if enable_jellyfin | bool %}
-  {id:"jellyfin", name:"Jellyfin", desc:"Media streaming server", url:"/jellyfin/", icon:"\uD83C\uDFAC"},
-{% endif %}
-{% if enable_calibre_web | bool %}
-  {id:"calibre", name:"Calibre-web", desc:"E-book library", url:"/calibre/", icon:"\uD83D\uDCD6"},
-{% endif %}
-{% if enable_searxng | bool %}
-  {id:"searxng", name:"SearXNG", desc:"Meta search engine", url:"/searxng/", icon:"\uD83D\uDD0D"},
-{% endif %}
-{% if enable_vaultwarden | bool %}
-  {id:"vaultwarden", name:"Vaultwarden", desc:"Password manager", url:"/vaultwarden/", icon:"\uD83D\uDD10"},
-{% endif %}
-{% if enable_syncthing | bool %}
-  {id:"syncthing", name:"Syncthing", desc:"File synchronization", url:"/syncthing/", icon:"\uD83D\uDD04"},
-{% endif %}
-{% if enable_paperless_ngx | bool %}
-  {id:"paperless", name:"Paperless-ngx", desc:"Document management & OCR", url:"/paperless/", icon:"\uD83D\uDCC4"},
-{% endif %}
+{% endfor %}
 ];
 
 var grid = document.getElementById("services");
