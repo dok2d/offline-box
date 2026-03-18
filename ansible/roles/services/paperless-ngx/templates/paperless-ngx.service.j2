@@ -1,0 +1,32 @@
+[Unit]
+Description=Paperless-ngx document management (podman)
+After=default.target
+
+[Service]
+Environment="XDG_RUNTIME_DIR=/run/user/{{ svc_uid }}"
+ExecStartPre=-/usr/bin/podman rm -f paperless-ngx
+ExecStart=/usr/bin/podman run \
+  --name paperless-ngx \
+  --replace \
+  --rm \
+  --cap-drop=ALL \
+  --security-opt=no-new-privileges \
+  -p {{ listen_addr }}:{{ paperless_ngx_port }}:8012 \
+  -v {{ paperless_ngx_data_dir }}:/data:rw \
+  -v {{ paperless_ngx_config_dir }}:/config:rw \
+  -v {{ paperless_ngx_consume_dir }}:/data/consume:rw \
+  -v {{ paperless_ngx_media_dir }}:/data/media:rw \
+  -e PAPERLESS_SECRET_KEY={{ paperless_ngx_secret_key }} \
+  -e PAPERLESS_FORCE_SCRIPT_NAME=/paperless \
+  -e PAPERLESS_OCR_LANGUAGE={{ paperless_ngx_ocr_language }} \
+  -e PAPERLESS_REDIS=redis://127.0.0.1:6379 \
+  -e PAPERLESS_DATA_DIR=/data/data \
+  -e PAPERLESS_MEDIA_ROOT=/data/media \
+  -e PAPERLESS_CONSUMPTION_DIR=/data/consume \
+  localhost/paperless-ngx:latest
+ExecStop=/usr/bin/podman stop paperless-ngx
+Restart=on-failure
+RestartSec=10s
+
+[Install]
+WantedBy=default.target

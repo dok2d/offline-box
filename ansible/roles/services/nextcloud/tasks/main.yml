@@ -1,0 +1,66 @@
+---
+- name: Create Nextcloud data directory
+  ansible.builtin.file:
+    path: "{{ nextcloud_data_dir }}"
+    state: directory
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0755"
+
+- name: Create Nextcloud config directory
+  ansible.builtin.file:
+    path: "{{ nextcloud_config_dir }}"
+    state: directory
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0755"
+
+- name: Copy Nextcloud Containerfile
+  ansible.builtin.copy:
+    src: Containerfile
+    dest: "{{ nextcloud_config_dir }}/Containerfile"
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0644"
+
+- name: Deploy Nextcloud autoconfig
+  ansible.builtin.template:
+    src: nextcloud-autoconfig.php.j2
+    dest: "{{ nextcloud_config_dir }}/autoconfig.php"
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0644"
+
+- name: Build Nextcloud container image
+  become: true
+  become_user: "{{ svc_user }}"
+  containers.podman.podman_image:
+    name: localhost/nextcloud
+    tag: latest
+    path: "{{ nextcloud_config_dir }}"
+    force: true
+
+- name: Deploy Nextcloud systemd user unit
+  ansible.builtin.template:
+    src: nextcloud.service.j2
+    dest: "{{ svc_home }}/.config/systemd/user/nextcloud.service"
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0644"
+
+- name: Enable and start Nextcloud service
+  become: true
+  become_user: "{{ svc_user }}"
+  ansible.builtin.systemd:
+    name: nextcloud
+    scope: user
+    enabled: true
+    state: started
+    daemon_reload: true
+
+- name: Deploy nginx config for Nextcloud
+  ansible.builtin.template:
+    src: nginx-nextcloud.conf.j2
+    dest: /etc/nginx/sites-enabled/nextcloud.conf
+    mode: "0644"
+  notify: Reload nginx

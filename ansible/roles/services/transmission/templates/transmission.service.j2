@@ -1,0 +1,25 @@
+[Unit]
+Description=Transmission BitTorrent client (podman)
+After=default.target
+
+[Service]
+Environment="XDG_RUNTIME_DIR=/run/user/{{ svc_uid }}"
+ExecStartPre=-/usr/bin/podman rm -f transmission
+ExecStart=/usr/bin/podman run \
+  --name transmission \
+  --replace \
+  --rm \
+  --cap-drop=ALL \
+  --security-opt=no-new-privileges \
+  -p {{ listen_addr }}:{{ transmission_port }}:8003 \
+  -p {{ transmission_peer_port }}:51413 \
+  -v {{ transmission_config_dir }}:/config:rw \
+  -v {{ transmission_download_dir }}:/downloads:rw \
+  -v {{ transmission_watch_dir }}:/watch:rw \
+  localhost/transmission:latest
+ExecStop=/usr/bin/podman stop transmission
+Restart=on-failure
+RestartSec=10s
+
+[Install]
+WantedBy=default.target

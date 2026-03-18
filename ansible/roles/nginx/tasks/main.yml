@@ -1,0 +1,79 @@
+---
+- name: Install nginx
+  ansible.builtin.apt:
+    name: nginx
+    state: present
+    install_recommends: false
+
+- name: Create nginx SSL directory
+  ansible.builtin.file:
+    path: /etc/nginx/ssl
+    state: directory
+    owner: root
+    group: root
+    mode: "0700"
+
+- name: Generate DH parameters (may take a few minutes)
+  ansible.builtin.command:
+    cmd: openssl dhparam -out {{ ssl_dhparam_path }} 2048
+    creates: "{{ ssl_dhparam_path }}"
+
+- name: Generate self-signed TLS certificate
+  ansible.builtin.command:
+    cmd: >
+      openssl req -x509 -nodes -days 3650
+      -newkey rsa:2048
+      -keyout {{ ssl_key_path }}
+      -out {{ ssl_cert_path }}
+      -subj "/CN={{ server_name }}/O=OfflineBox/C=RU"
+      -addext "subjectAltName=IP:{{ server_name }}"
+    creates: "{{ ssl_cert_path }}"
+
+- name: Set SSL key permissions
+  ansible.builtin.file:
+    path: "{{ ssl_key_path }}"
+    mode: "0600"
+
+- name: Create sites-available and sites-enabled directories
+  ansible.builtin.file:
+    path: "/etc/nginx/{{ item }}"
+    state: directory
+    mode: "0755"
+  loop:
+    - sites-available
+    - sites-enabled
+
+- name: Create nginx snippets directory
+  ansible.builtin.file:
+    path: /etc/nginx/snippets
+    state: directory
+    mode: "0755"
+
+- name: Deploy main nginx.conf
+  ansible.builtin.template:
+    src: nginx.conf.j2
+    dest: /etc/nginx/nginx.conf
+    mode: "0644"
+  notify: Reload nginx
+
+- name: Deploy security headers snippet
+  ansible.builtin.template:
+    src: security-headers.conf.j2
+    dest: /etc/nginx/snippets/security-headers.conf
+    mode: "0644"
+  notify: Reload nginx
+
+- name: Remove default nginx site
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /etc/nginx/sites-enabled/default
+    - /etc/nginx/sites-available/default
+  notify: Reload nginx
+
+- name: Enable and start nginx
+  ansible.builtin.systemd:
+    name: nginx
+    enabled: true
+    state: started

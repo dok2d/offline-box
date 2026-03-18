@@ -1,0 +1,24 @@
+[Unit]
+Description=Gitea git hosting (podman)
+After=default.target
+
+[Service]
+Environment="XDG_RUNTIME_DIR=/run/user/{{ svc_uid }}"
+ExecStartPre=-/usr/bin/podman rm -f gitea
+ExecStart=/usr/bin/podman run \
+  --name gitea \
+  --replace \
+  --rm \
+  --cap-drop=ALL \
+  --security-opt=no-new-privileges \
+  -p {{ listen_addr }}:{{ gitea_port }}:8006 \
+  -p {{ gitea_ssh_port }}:2222 \
+  -v {{ gitea_data_dir }}:/data:rw \
+  -v {{ gitea_config_dir }}:/etc/gitea:rw \
+  localhost/gitea:latest
+ExecStop=/usr/bin/podman stop gitea
+Restart=on-failure
+RestartSec=10s
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,103 @@
+user www-data;
+worker_processes auto;
+pid /run/nginx.pid;
+error_log /var/log/nginx/error.log warn;
+
+events {
+    worker_connections 1024;
+    multi_accept on;
+}
+
+http {
+    include /etc/nginx/mime.types;
+    default_type application/octet-stream;
+
+    # Logging
+    log_format main '$remote_addr - $remote_user [$time_local] "$request" '
+                    '$status $body_bytes_sent "$http_referer" '
+                    '"$http_user_agent"';
+    access_log /var/log/nginx/access.log main;
+
+    # Performance
+    sendfile on;
+    tcp_nopush on;
+    tcp_nodelay on;
+    keepalive_timeout 65;
+    types_hash_max_size 2048;
+    server_tokens off;
+
+    # Gzip
+    gzip on;
+    gzip_vary on;
+    gzip_proxied any;
+    gzip_comp_level 4;
+    gzip_types text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript image/svg+xml;
+
+    # Rate limiting zones
+    limit_req_zone $binary_remote_addr zone=general:10m rate=30r/s;
+    limit_req_zone $binary_remote_addr zone=api:10m rate=10r/s;
+    limit_req_zone $binary_remote_addr zone=upload:10m rate=5r/s;
+
+    # Default client body size
+    client_max_body_size 50m;
+
+    # SSL settings
+    ssl_certificate {{ ssl_cert_path }};
+    ssl_certificate_key {{ ssl_key_path }};
+    ssl_dhparam {{ ssl_dhparam_path }};
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384;
+    ssl_prefer_server_ciphers on;
+    ssl_session_cache shared:SSL:10m;
+    ssl_session_timeout 10m;
+    ssl_session_tickets off;
+
+    # Redirect HTTP to HTTPS
+    server {
+        listen 80 default_server;
+        listen [::]:80 default_server;
+        server_name _;
+        return 301 https://$host$request_uri;
+    }
+
+    # Default HTTPS server with landing page
+    server {
+        listen 443 ssl default_server;
+        listen [::]:443 ssl default_server;
+        server_name {{ server_name }};
+
+        include /etc/nginx/snippets/security-headers.conf;
+
+        root /var/www/html;
+
+        location / {
+            return 200 '<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>Offline Box</title>
+<style>
+body{font-family:sans-serif;max-width:800px;margin:40px auto;padding:0 20px;background:#1a1a2e;color:#e0e0e0}
+a{color:#64b5f6;text-decoration:none}a:hover{text-decoration:underline}
+h1{color:#fff;border-bottom:1px solid #333;padding-bottom:10px}
+.svc{display:inline-block;margin:8px;padding:12px 20px;background:#16213e;border-radius:8px;border:1px solid #333}
+.svc:hover{background:#0f3460}
+</style></head>
+<body><h1>Offline Box</h1><p>Available services:</p><div>
+{% if enable_kiwix | bool %}<a href="/kiwix/" class="svc">Kiwix (Wikipedia)</a>{% endif %}
+{% if enable_openstreetmap | bool %}<a href="/osm/" class="svc">OpenStreetMap</a>{% endif %}
+{% if enable_transmission | bool %}<a href="/transmission/" class="svc">Transmission</a>{% endif %}
+{% if enable_nexus | bool %}<a href="/nexus/" class="svc">Nexus</a>{% endif %}
+{% if enable_nextcloud | bool %}<a href="/nextcloud/" class="svc">Nextcloud</a>{% endif %}
+{% if enable_gitea | bool %}<a href="/gitea/" class="svc">Gitea</a>{% endif %}
+{% if enable_jellyfin | bool %}<a href="/jellyfin/" class="svc">Jellyfin</a>{% endif %}
+{% if enable_calibre_web | bool %}<a href="/calibre/" class="svc">Calibre-web</a>{% endif %}
+{% if enable_searxng | bool %}<a href="/searxng/" class="svc">SearXNG</a>{% endif %}
+{% if enable_vaultwarden | bool %}<a href="/vaultwarden/" class="svc">Vaultwarden</a>{% endif %}
+{% if enable_syncthing | bool %}<a href="/syncthing/" class="svc">Syncthing</a>{% endif %}
+{% if enable_paperless_ngx | bool %}<a href="/paperless/" class="svc">Paperless-ngx</a>{% endif %}
+</div></body></html>';
+            default_type text/html;
+        }
+
+        # Include per-service location blocks
+        include /etc/nginx/sites-enabled/*.conf;
+    }
+}

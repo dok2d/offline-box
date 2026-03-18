@@ -1,0 +1,22 @@
+FROM docker.io/library/debian:13-slim AS build
+RUN apt-get update && apt-get install -y --no-install-recommends curl tar && \
+    curl -fsSL https://download.sonatype.com/nexus/3/nexus-3.75.1-01-java17-unix.tar.gz \
+      | tar xz -C /opt && \
+    mv /opt/nexus-3.75.1-01 /opt/nexus && \
+    rm -rf /var/lib/apt/lists/*
+
+FROM docker.io/library/debian:13-slim
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends openjdk-17-jre-headless && \
+    rm -rf /var/lib/apt/lists/*
+COPY --from=build /opt/nexus /opt/nexus
+COPY --from=build /opt/sonatype-work /opt/sonatype-work
+RUN echo "application-port=8004" >> /opt/nexus/etc/nexus-default.properties && \
+    echo "nexus-context-path=/nexus" >> /opt/nexus/etc/nexus-default.properties
+RUN useradd -r -u 10001 -m nexus && \
+    chown -R nexus:nexus /opt/nexus /opt/sonatype-work
+USER nexus
+ENV NEXUS_CONTEXT=/nexus
+EXPOSE 8004
+WORKDIR /opt/nexus
+ENTRYPOINT ["bin/nexus", "run"]

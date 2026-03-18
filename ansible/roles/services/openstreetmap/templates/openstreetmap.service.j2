@@ -1,0 +1,22 @@
+[Unit]
+Description=OpenStreetMap tile server (podman)
+After=default.target
+
+[Service]
+Environment="XDG_RUNTIME_DIR=/run/user/{{ svc_uid }}"
+ExecStartPre=-/usr/bin/podman rm -f openstreetmap
+ExecStart=/usr/bin/podman run \
+  --name openstreetmap \
+  --replace \
+  --rm \
+  --cap-drop=ALL \
+  --security-opt=no-new-privileges \
+  -p {{ listen_addr }}:{{ openstreetmap_port }}:8002 \
+  -v {{ openstreetmap_data_dir }}:/data:ro \
+  localhost/openstreetmap:latest
+ExecStop=/usr/bin/podman stop openstreetmap
+Restart=on-failure
+RestartSec=10s
+
+[Install]
+WantedBy=default.target

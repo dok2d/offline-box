@@ -1,0 +1,58 @@
+---
+- name: Create Nexus data directory
+  ansible.builtin.file:
+    path: "{{ nexus_data_dir }}"
+    state: directory
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0755"
+
+- name: Create Nexus config directory
+  ansible.builtin.file:
+    path: "{{ nexus_config_dir }}"
+    state: directory
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0755"
+
+- name: Copy Nexus Containerfile
+  ansible.builtin.copy:
+    src: Containerfile
+    dest: "{{ nexus_config_dir }}/Containerfile"
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0644"
+
+- name: Build Nexus container image
+  become: true
+  become_user: "{{ svc_user }}"
+  containers.podman.podman_image:
+    name: localhost/nexus
+    tag: latest
+    path: "{{ nexus_config_dir }}"
+    force: true
+
+- name: Deploy Nexus systemd user unit
+  ansible.builtin.template:
+    src: nexus.service.j2
+    dest: "{{ svc_home }}/.config/systemd/user/nexus.service"
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0644"
+
+- name: Enable and start Nexus service
+  become: true
+  become_user: "{{ svc_user }}"
+  ansible.builtin.systemd:
+    name: nexus
+    scope: user
+    enabled: true
+    state: started
+    daemon_reload: true
+
+- name: Deploy nginx config for Nexus
+  ansible.builtin.template:
+    src: nginx-nexus.conf.j2
+    dest: /etc/nginx/sites-enabled/nexus.conf
+    mode: "0644"
+  notify: Reload nginx

@@ -1,0 +1,198 @@
+---
+####################
+# Global settings
+####################
+
+# Service user (rootless podman)
+svc_user: svc
+svc_uid: 1001
+svc_home: /home/svc
+
+# Base directory for service data and config
+opt_base: /opt
+
+# All services listen on loopback only; nginx exposes them
+listen_addr: 127.0.0.1
+
+# Server address (used in nginx server_name and self-signed cert)
+# Override with your actual IP or hostname
+server_name: "{{ ansible_default_ipv4.address | default(ansible_host) }}"
+
+# TLS (self-signed)
+ssl_cert_path: /etc/nginx/ssl/box.crt
+ssl_key_path: /etc/nginx/ssl/box.key
+ssl_dhparam_path: /etc/nginx/ssl/dhparam.pem
+
+# Base container image for all services
+container_base_image: docker.io/library/debian:13-slim
+
+
+####################
+# Service toggles
+####################
+
+enable_kiwix: "yes"
+enable_openstreetmap: "yes"
+enable_transmission: "yes"
+enable_nexus: "yes"
+enable_nextcloud: "yes"
+enable_gitea: "yes"
+enable_jellyfin: "yes"
+enable_calibre_web: "yes"
+enable_searxng: "yes"
+enable_vaultwarden: "yes"
+enable_syncthing: "yes"
+enable_paperless_ngx: "yes"
+
+
+####################
+# Port assignments
+####################
+
+kiwix_port: 8001
+openstreetmap_port: 8002
+transmission_port: 8003
+nexus_port: 8004
+nextcloud_port: 8005
+gitea_port: 8006
+jellyfin_port: 8007
+calibre_web_port: 8008
+searxng_port: 8009
+vaultwarden_port: 8010
+syncthing_port: 8011
+paperless_ngx_port: 8012
+
+
+####################
+# Kiwix
+####################
+
+# Directory with .zim files (download wikipedia, wiktionary, etc.)
+kiwix_data_dir: "{{ opt_base }}/kiwix/data"
+kiwix_config_dir: "{{ opt_base }}/kiwix/config"
+
+
+####################
+# OpenStreetMap
+####################
+
+openstreetmap_data_dir: "{{ opt_base }}/openstreetmap/data"
+openstreetmap_config_dir: "{{ opt_base }}/openstreetmap/config"
+# PBF file for map import (download before deploy)
+# e.g. russia-latest.osm.pbf, europe-latest.osm.pbf
+openstreetmap_pbf_file: ""
+openstreetmap_flat_nodes: "yes"
+
+
+####################
+# Transmission
+####################
+
+transmission_data_dir: "{{ opt_base }}/transmission/data"
+transmission_config_dir: "{{ opt_base }}/transmission/config"
+transmission_download_dir: "{{ opt_base }}/transmission/data/downloads"
+transmission_watch_dir: "{{ opt_base }}/transmission/data/watch"
+transmission_rpc_username: admin
+transmission_rpc_password: changeme
+transmission_peer_port: 51413
+transmission_speed_limit_up_enabled: "false"
+transmission_speed_limit_up: 1000
+transmission_speed_limit_down_enabled: "false"
+transmission_speed_limit_down: 5000
+
+
+####################
+# Nexus
+####################
+
+nexus_data_dir: "{{ opt_base }}/nexus/data"
+nexus_config_dir: "{{ opt_base }}/nexus/config"
+nexus_admin_password: changeme
+# JVM heap size
+nexus_jvm_heap: 1g
+
+
+####################
+# Nextcloud
+####################
+
+nextcloud_data_dir: "{{ opt_base }}/nextcloud/data"
+nextcloud_config_dir: "{{ opt_base }}/nextcloud/config"
+nextcloud_admin_user: admin
+nextcloud_admin_password: changeme
+nextcloud_db_type: sqlite
+nextcloud_upload_max_size: 10G
+nextcloud_php_memory_limit: 512M
+
+
+####################
+# Gitea
+####################
+
+gitea_data_dir: "{{ opt_base }}/gitea/data"
+gitea_config_dir: "{{ opt_base }}/gitea/config"
+gitea_db_type: sqlite3
+gitea_secret_key: changeme-generate-long-random-string
+gitea_lfs_enabled: "true"
+gitea_ssh_port: 2222
+
+
+####################
+# Jellyfin
+####################
+
+jellyfin_data_dir: "{{ opt_base }}/jellyfin/data"
+jellyfin_config_dir: "{{ opt_base }}/jellyfin/config"
+jellyfin_media_dir: "{{ opt_base }}/jellyfin/data/media"
+jellyfin_cache_dir: "{{ opt_base }}/jellyfin/data/cache"
+
+
+####################
+# Calibre-web
+####################
+
+calibre_web_data_dir: "{{ opt_base }}/calibre-web/data"
+calibre_web_config_dir: "{{ opt_base }}/calibre-web/config"
+calibre_web_library_dir: "{{ opt_base }}/calibre-web/data/library"
+
+
+####################
+# SearXNG
+####################
+
+searxng_data_dir: "{{ opt_base }}/searxng/data"
+searxng_config_dir: "{{ opt_base }}/searxng/config"
+searxng_secret_key: changeme-generate-long-random-string
+searxng_base_url: "/searxng/"
+
+
+####################
+# Vaultwarden
+####################
+
+vaultwarden_data_dir: "{{ opt_base }}/vaultwarden/data"
+vaultwarden_config_dir: "{{ opt_base }}/vaultwarden/config"
+vaultwarden_admin_token: changeme-generate-long-random-string
+vaultwarden_signups_allowed: "true"
+
+
+####################
+# Syncthing
+####################
+
+syncthing_data_dir: "{{ opt_base }}/syncthing/data"
+syncthing_config_dir: "{{ opt_base }}/syncthing/config"
+syncthing_sync_port: 22000
+syncthing_discovery_port: 21027
+
+
+####################
+# Paperless-ngx
+####################
+
+paperless_ngx_data_dir: "{{ opt_base }}/paperless-ngx/data"
+paperless_ngx_config_dir: "{{ opt_base }}/paperless-ngx/config"
+paperless_ngx_consume_dir: "{{ opt_base }}/paperless-ngx/data/consume"
+paperless_ngx_media_dir: "{{ opt_base }}/paperless-ngx/data/media"
+paperless_ngx_secret_key: changeme-generate-long-random-string
+paperless_ngx_ocr_language: rus+eng

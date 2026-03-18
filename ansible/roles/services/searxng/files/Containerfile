@@ -1,0 +1,15 @@
+FROM docker.io/library/debian:13-slim
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    python3 python3-pip python3-venv \
+    libxml2 libxslt1.1 libffi8 && \
+    rm -rf /var/lib/apt/lists/*
+RUN useradd -r -u 10001 -m searxng && \
+    mkdir -p /app /config && \
+    chown -R searxng:searxng /app /config
+USER searxng
+RUN python3 -m venv /app/venv && \
+    /app/venv/bin/pip install --no-cache-dir searxng
+EXPOSE 8009
+ENV SEARXNG_SETTINGS_PATH=/config/settings.yml
+ENTRYPOINT ["/app/venv/bin/python", "-m", "searx.webapp"]

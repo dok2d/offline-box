@@ -1,0 +1,58 @@
+---
+- name: Create Kiwix data directory
+  ansible.builtin.file:
+    path: "{{ kiwix_data_dir }}"
+    state: directory
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0755"
+
+- name: Create Kiwix config directory
+  ansible.builtin.file:
+    path: "{{ kiwix_config_dir }}"
+    state: directory
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0755"
+
+- name: Copy Kiwix Containerfile
+  ansible.builtin.copy:
+    src: Containerfile
+    dest: "{{ kiwix_config_dir }}/Containerfile"
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0644"
+
+- name: Build Kiwix container image
+  become: true
+  become_user: "{{ svc_user }}"
+  containers.podman.podman_image:
+    name: localhost/kiwix
+    tag: latest
+    path: "{{ kiwix_config_dir }}"
+    force: true
+
+- name: Deploy Kiwix systemd user unit
+  ansible.builtin.template:
+    src: kiwix.service.j2
+    dest: "{{ svc_home }}/.config/systemd/user/kiwix.service"
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0644"
+
+- name: Enable and start Kiwix service
+  become: true
+  become_user: "{{ svc_user }}"
+  ansible.builtin.systemd:
+    name: kiwix
+    scope: user
+    enabled: true
+    state: started
+    daemon_reload: true
+
+- name: Deploy nginx config for Kiwix
+  ansible.builtin.template:
+    src: nginx-kiwix.conf.j2
+    dest: /etc/nginx/sites-enabled/kiwix.conf
+    mode: "0644"
+  notify: Reload nginx

@@ -1,0 +1,12 @@
+use_default_settings: true
+server:
+  bind_address: "0.0.0.0"
+  port: 8009
+  secret_key: "{{ searxng_secret_key }}"
+  base_url: "https://{{ server_name }}/searxng/"
+  image_proxy: true
+ui:
+  static_use_hash: true
+search:
+  safe_search: 0
+  autocomplete: ""

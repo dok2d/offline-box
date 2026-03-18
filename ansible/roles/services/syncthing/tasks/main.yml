@@ -1,0 +1,58 @@
+---
+- name: Create Syncthing data directory
+  ansible.builtin.file:
+    path: "{{ syncthing_data_dir }}"
+    state: directory
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0755"
+
+- name: Create Syncthing config directory
+  ansible.builtin.file:
+    path: "{{ syncthing_config_dir }}"
+    state: directory
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0755"
+
+- name: Copy Syncthing Containerfile
+  ansible.builtin.copy:
+    src: Containerfile
+    dest: "{{ syncthing_config_dir }}/Containerfile"
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0644"
+
+- name: Build Syncthing container image
+  become: true
+  become_user: "{{ svc_user }}"
+  containers.podman.podman_image:
+    name: localhost/syncthing
+    tag: latest
+    path: "{{ syncthing_config_dir }}"
+    force: true
+
+- name: Deploy Syncthing systemd user unit
+  ansible.builtin.template:
+    src: syncthing.service.j2
+    dest: "{{ svc_home }}/.config/systemd/user/syncthing.service"
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0644"
+
+- name: Enable and start Syncthing service
+  become: true
+  become_user: "{{ svc_user }}"
+  ansible.builtin.systemd:
+    name: syncthing
+    scope: user
+    enabled: true
+    state: started
+    daemon_reload: true
+
+- name: Deploy nginx config for Syncthing
+  ansible.builtin.template:
+    src: nginx-syncthing.conf.j2
+    dest: /etc/nginx/sites-enabled/syncthing.conf
+    mode: "0644"
+  notify: Reload nginx

@@ -1,0 +1,66 @@
+---
+- name: Create Calibre-web data directory
+  ansible.builtin.file:
+    path: "{{ calibre_web_data_dir }}"
+    state: directory
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0755"
+
+- name: Create Calibre-web config directory
+  ansible.builtin.file:
+    path: "{{ calibre_web_config_dir }}"
+    state: directory
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0755"
+
+- name: Create Calibre-web library directory
+  ansible.builtin.file:
+    path: "{{ calibre_web_library_dir }}"
+    state: directory
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0755"
+
+- name: Copy Calibre-web Containerfile
+  ansible.builtin.copy:
+    src: Containerfile
+    dest: "{{ calibre_web_config_dir }}/Containerfile"
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0644"
+
+- name: Build Calibre-web container image
+  become: true
+  become_user: "{{ svc_user }}"
+  containers.podman.podman_image:
+    name: localhost/calibre-web
+    tag: latest
+    path: "{{ calibre_web_config_dir }}"
+    force: true
+
+- name: Deploy Calibre-web systemd user unit
+  ansible.builtin.template:
+    src: calibre-web.service.j2
+    dest: "{{ svc_home }}/.config/systemd/user/calibre-web.service"
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0644"
+
+- name: Enable and start Calibre-web service
+  become: true
+  become_user: "{{ svc_user }}"
+  ansible.builtin.systemd:
+    name: calibre-web
+    scope: user
+    enabled: true
+    state: started
+    daemon_reload: true
+
+- name: Deploy nginx config for Calibre-web
+  ansible.builtin.template:
+    src: nginx-calibre-web.conf.j2
+    dest: /etc/nginx/sites-enabled/calibre-web.conf
+    mode: "0644"
+  notify: Reload nginx

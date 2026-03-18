@@ -1,0 +1,12 @@
+# Calibre-web ebook library
+location /calibre/ {
+    proxy_pass http://{{ listen_addr }}:{{ calibre_web_port }}/;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header X-Script-Name /calibre;
+    include /etc/nginx/snippets/security-headers.conf;
+    limit_req zone=general burst=20 nodelay;
+    client_max_body_size 100m;
+}

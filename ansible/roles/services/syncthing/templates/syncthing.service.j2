@@ -1,0 +1,25 @@
+[Unit]
+Description=Syncthing P2P file sync (podman)
+After=default.target
+
+[Service]
+Environment="XDG_RUNTIME_DIR=/run/user/{{ svc_uid }}"
+ExecStartPre=-/usr/bin/podman rm -f syncthing
+ExecStart=/usr/bin/podman run \
+  --name syncthing \
+  --replace \
+  --rm \
+  --cap-drop=ALL \
+  --security-opt=no-new-privileges \
+  -p {{ listen_addr }}:{{ syncthing_port }}:8011 \
+  -p {{ syncthing_sync_port }}:22000 \
+  -p {{ syncthing_discovery_port }}:21027/udp \
+  -v {{ syncthing_config_dir }}:/config:rw \
+  -v {{ syncthing_data_dir }}:/data:rw \
+  localhost/syncthing:latest
+ExecStop=/usr/bin/podman stop syncthing
+Restart=on-failure
+RestartSec=10s
+
+[Install]
+WantedBy=default.target

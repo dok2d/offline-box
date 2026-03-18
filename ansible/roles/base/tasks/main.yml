@@ -1,0 +1,93 @@
+---
+- name: Update apt cache
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Install base packages
+  ansible.builtin.apt:
+    name:
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - gnupg
+      - python3
+      - python3-pip
+      - ufw
+      - acl
+      - sudo
+      - htop
+      - iotop
+      - tmux
+    state: present
+    install_recommends: false
+
+- name: Set kernel parameters for containers
+  ansible.posix.sysctl:
+    name: "{{ item.key }}"
+    value: "{{ item.value }}"
+    sysctl_set: true
+    reload: true
+  loop:
+    - { key: net.ipv4.ip_unprivileged_port_start, value: "80" }
+    - { key: kernel.unprivileged_userns_clone, value: "1" }
+    - { key: net.ipv4.ip_forward, value: "1" }
+
+- name: Create service user {{ svc_user }}
+  ansible.builtin.user:
+    name: "{{ svc_user }}"
+    uid: "{{ svc_uid }}"
+    shell: /bin/bash
+    create_home: true
+    home: "{{ svc_home }}"
+
+- name: Configure UFW defaults
+  community.general.ufw:
+    direction: incoming
+    policy: deny
+
+- name: Allow SSH through UFW
+  community.general.ufw:
+    rule: allow
+    port: "22"
+    proto: tcp
+
+- name: Allow HTTP through UFW
+  community.general.ufw:
+    rule: allow
+    port: "{{ nginx_http_port | default('80') }}"
+    proto: tcp
+
+- name: Allow HTTPS through UFW
+  community.general.ufw:
+    rule: allow
+    port: "{{ nginx_https_port | default('443') }}"
+    proto: tcp
+
+- name: Allow Transmission peer port
+  community.general.ufw:
+    rule: allow
+    port: "{{ transmission_peer_port | string }}"
+    proto: tcp
+  when: enable_transmission | bool
+
+- name: Allow Syncthing ports
+  community.general.ufw:
+    rule: allow
+    port: "{{ item.port }}"
+    proto: "{{ item.proto }}"
+  loop:
+    - { port: "{{ syncthing_sync_port | string }}", proto: tcp }
+    - { port: "{{ syncthing_discovery_port | string }}", proto: udp }
+  when: enable_syncthing | bool
+
+- name: Allow Gitea SSH port
+  community.general.ufw:
+    rule: allow
+    port: "{{ gitea_ssh_port | string }}"
+    proto: tcp
+  when: enable_gitea | bool
+
+- name: Enable UFW
+  community.general.ufw:
+    state: enabled

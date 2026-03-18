@@ -1,0 +1,25 @@
+[server]
+ROOT_URL = https://{{ server_name }}/gitea/
+HTTP_PORT = 8006
+HTTP_ADDR = 0.0.0.0
+DOMAIN = {{ server_name }}
+SSH_PORT = {{ gitea_ssh_port }}
+SSH_LISTEN_PORT = 2222
+LFS_START_SERVER = {{ gitea_lfs_enabled }}
+STATIC_URL_PREFIX = /gitea
+
+[database]
+DB_TYPE = {{ gitea_db_type }}
+PATH = /data/gitea.db
+
+[security]
+SECRET_KEY = {{ gitea_secret_key }}
+INSTALL_LOCK = true
+
+[service]
+DISABLE_REGISTRATION = false
+REQUIRE_SIGNIN_VIEW = false
+
+[log]
+MODE = console
+LEVEL = Info

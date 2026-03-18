@@ -1,0 +1,57 @@
+---
+- name: Install podman and dependencies
+  ansible.builtin.apt:
+    name:
+      - podman
+      - slirp4netns
+      - fuse-overlayfs
+      - uidmap
+      - crun
+    state: present
+    install_recommends: false
+
+- name: Configure subuid for {{ svc_user }}
+  ansible.builtin.lineinfile:
+    path: /etc/subuid
+    regexp: "^{{ svc_user }}:"
+    line: "{{ svc_user }}:100000:65536"
+    create: true
+    mode: "0644"
+
+- name: Configure subgid for {{ svc_user }}
+  ansible.builtin.lineinfile:
+    path: /etc/subgid
+    regexp: "^{{ svc_user }}:"
+    line: "{{ svc_user }}:100000:65536"
+    create: true
+    mode: "0644"
+
+- name: Enable lingering for {{ svc_user }}
+  ansible.builtin.command:
+    cmd: loginctl enable-linger {{ svc_user }}
+  changed_when: false
+
+- name: Create systemd user directory
+  ansible.builtin.file:
+    path: "{{ svc_home }}/.config/systemd/user"
+    state: directory
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0755"
+
+- name: Set XDG_RUNTIME_DIR for {{ svc_user }}
+  ansible.builtin.lineinfile:
+    path: "{{ svc_home }}/.bashrc"
+    regexp: "^export XDG_RUNTIME_DIR="
+    line: "export XDG_RUNTIME_DIR=/run/user/{{ svc_uid }}"
+    create: true
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0644"
+
+- name: Configure podman registries
+  ansible.builtin.copy:
+    dest: /etc/containers/registries.conf.d/00-unqualified.conf
+    content: |
+      unqualified-search-registries = ["docker.io"]
+    mode: "0644"

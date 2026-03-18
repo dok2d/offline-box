@@ -1,0 +1,17 @@
+FROM docker.io/library/debian:13-slim
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    php php-gd php-curl php-mbstring php-intl \
+    php-xml php-zip php-bz2 php-sqlite3 php-apcu \
+    php-bcmath php-gmp php-opcache php-readline \
+    curl bzip2 && \
+    rm -rf /var/lib/apt/lists/*
+RUN curl -fsSL https://download.nextcloud.com/server/releases/latest.tar.bz2 | \
+    tar xj -C /opt
+RUN useradd -r -u 10001 -m nextcloud && \
+    mkdir -p /data && \
+    chown -R 10001:10001 /opt/nextcloud /data
+USER 10001
+EXPOSE 8005
+WORKDIR /opt/nextcloud
+ENTRYPOINT ["php", "-d", "memory_limit=512M", "-S", "0.0.0.0:8005", "-t", "/opt/nextcloud"]

@@ -1,0 +1,28 @@
+[Unit]
+Description=Vaultwarden password manager (podman)
+After=default.target
+
+[Service]
+Environment="XDG_RUNTIME_DIR=/run/user/{{ svc_uid }}"
+ExecStartPre=-/usr/bin/podman rm -f vaultwarden
+ExecStart=/usr/bin/podman run \
+  --name vaultwarden \
+  --replace \
+  --rm \
+  --cap-drop=ALL \
+  --security-opt=no-new-privileges \
+  -p {{ listen_addr }}:{{ vaultwarden_port }}:8010 \
+  -v {{ vaultwarden_data_dir }}:/data:rw \
+  -e ROCKET_PORT=8010 \
+  -e WEB_VAULT_FOLDER=/opt/web-vault \
+  -e DATA_FOLDER=/data \
+  -e DOMAIN=https://{{ server_name }}/vaultwarden \
+  -e ADMIN_TOKEN={{ vaultwarden_admin_token }} \
+  -e SIGNUPS_ALLOWED={{ vaultwarden_signups_allowed }} \
+  localhost/vaultwarden:latest
+ExecStop=/usr/bin/podman stop vaultwarden
+Restart=on-failure
+RestartSec=10s
+
+[Install]
+WantedBy=default.target
