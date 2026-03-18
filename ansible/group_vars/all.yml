@@ -31,18 +31,18 @@ container_base_image: docker.io/library/debian:13-slim
 # Service toggles
 ####################
 
-enable_kiwix: "yes"
-enable_openstreetmap: "yes"
-enable_transmission: "yes"
-enable_nexus: "yes"
-enable_nextcloud: "yes"
-enable_gitea: "yes"
-enable_jellyfin: "yes"
-enable_calibre_web: "yes"
-enable_searxng: "yes"
-enable_vaultwarden: "yes"
-enable_syncthing: "yes"
-enable_paperless_ngx: "yes"
+enable_kiwix: true
+enable_openstreetmap: true
+enable_transmission: true
+enable_nexus: true
+enable_nextcloud: true
+enable_gitea: true
+enable_jellyfin: true
+enable_calibre_web: true
+enable_searxng: true
+enable_vaultwarden: true
+enable_syncthing: true
+enable_paperless_ngx: true
 
 
 ####################
@@ -61,6 +61,27 @@ searxng_port: 8009
 vaultwarden_port: 8010
 syncthing_port: 8011
 paperless_ngx_port: 8012
+
+
+####################
+# Dashboard
+####################
+# Service metadata for the landing page. The HTML template is fully generic —
+# it just iterates this list. To add a new service, append an entry here.
+
+dashboard_services:
+  - {id: kiwix,        name: Kiwix,        desc: "Wikipedia & offline content",     icon: "\U0001F4DA",       url: /kiwix/,        enabled: "{{ enable_kiwix }}"}
+  - {id: osm,          name: OpenStreetMap, desc: "Offline maps & navigation",      icon: "\U0001F5FA\uFE0F", url: /osm/,          enabled: "{{ enable_openstreetmap }}"}
+  - {id: transmission, name: Transmission,  desc: "Torrent downloads",              icon: "\u2B07\uFE0F",     url: /transmission/, enabled: "{{ enable_transmission }}"}
+  - {id: nexus,        name: Nexus,         desc: "Package & artifact repository",  icon: "\U0001F4E6",       url: /nexus/,        enabled: "{{ enable_nexus }}"}
+  - {id: nextcloud,    name: Nextcloud,     desc: "Cloud storage & collaboration",  icon: "\u2601\uFE0F",     url: /nextcloud/,    enabled: "{{ enable_nextcloud }}"}
+  - {id: gitea,        name: Gitea,         desc: "Git repositories & code hosting", icon: "\U0001F500",      url: /gitea/,        enabled: "{{ enable_gitea }}"}
+  - {id: jellyfin,     name: Jellyfin,      desc: "Media streaming server",         icon: "\U0001F3AC",       url: /jellyfin/,     enabled: "{{ enable_jellyfin }}"}
+  - {id: calibre,      name: Calibre-web,   desc: "E-book library",                 icon: "\U0001F4D6",       url: /calibre/,      enabled: "{{ enable_calibre_web }}"}
+  - {id: searxng,      name: SearXNG,       desc: "Meta search engine",             icon: "\U0001F50D",       url: /searxng/,      enabled: "{{ enable_searxng }}"}
+  - {id: vaultwarden,  name: Vaultwarden,   desc: "Password manager",               icon: "\U0001F510",       url: /vaultwarden/,  enabled: "{{ enable_vaultwarden }}"}
+  - {id: syncthing,    name: Syncthing,     desc: "File synchronization",           icon: "\U0001F504",       url: /syncthing/,    enabled: "{{ enable_syncthing }}"}
+  - {id: paperless,    name: Paperless-ngx, desc: "Document management & OCR",      icon: "\U0001F4C4",       url: /paperless/,    enabled: "{{ enable_paperless_ngx }}"}
 
 
 ####################
