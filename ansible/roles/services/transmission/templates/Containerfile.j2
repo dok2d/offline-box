@@ -1,10 +1,11 @@
 FROM {{ container_base_image }}
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends transmission-daemon && \
+    apt-get install -y --no-install-recommends transmission-daemon curl && \
     rm -rf /var/lib/apt/lists/*
 RUN useradd -r -u 10001 -m transmission && \
     mkdir -p /config /downloads /watch && \
     chown -R transmission:transmission /config /downloads /watch
 USER transmission
 EXPOSE {{ transmission_port }} {{ transmission_peer_port }}
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD curl -fs http://localhost:8003/transmission/web/ || exit 1
 ENTRYPOINT ["transmission-daemon", "--foreground", "--config-dir", "/config"]

@@ -2,7 +2,7 @@ FROM {{ container_base_image }}
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     python3 python3-pip python3-venv \
-    libxml2 libxslt1.1 libffi8 && \
+    libxml2 libxslt1.1 libffi8 curl && \
     rm -rf /var/lib/apt/lists/*
 RUN useradd -r -u 10001 -m searxng && \
     mkdir -p /app /config && \
@@ -12,4 +12,5 @@ RUN python3 -m venv /app/venv && \
     /app/venv/bin/pip install --no-cache-dir searxng
 EXPOSE {{ searxng_port }}
 ENV SEARXNG_SETTINGS_PATH=/config/settings.yml
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD curl -fs http://localhost:8009/searxng/ || exit 1
 ENTRYPOINT ["/app/venv/bin/python", "-m", "searx.webapp"]

@@ -22,6 +22,7 @@
     owner: "{{ svc_user }}"
     group: "{{ svc_user }}"
     mode: "0644"
+  diff: true
 
 - name: Build Vaultwarden container image
   become: true
@@ -39,6 +40,7 @@
     owner: "{{ svc_user }}"
     group: "{{ svc_user }}"
     mode: "0644"
+  diff: true
 
 - name: Enable and start Vaultwarden service
   become: true
@@ -55,4 +57,5 @@
     src: nginx-vaultwarden.conf.j2
     dest: /etc/nginx/sites-enabled/vaultwarden.conf
     mode: "0644"
+  diff: true
   notify: Reload nginx

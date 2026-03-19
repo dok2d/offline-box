@@ -4,6 +4,7 @@ enable_vaultwarden: true
 vaultwarden_port: 8010
 vaultwarden_data_dir: "{{ opt_base }}/vaultwarden/data"
 vaultwarden_config_dir: "{{ opt_base }}/vaultwarden/config"
-vaultwarden_admin_token: changeme-generate-long-random-string
+# vaultwarden_admin_token — defined in group_vars/passwords.yml
 vaultwarden_signups_allowed: "true"
+vaultwarden_version: "1.32.7"
 vaultwarden_web_vault_version: "2024.12.0"

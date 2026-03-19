@@ -84,6 +84,7 @@
     owner: "{{ svc_user }}"
     group: "{{ svc_user }}"
     mode: "0644"
+  diff: true
 
 - name: Build Calibre-web container image
   become: true
@@ -101,6 +102,7 @@
     owner: "{{ svc_user }}"
     group: "{{ svc_user }}"
     mode: "0644"
+  diff: true
 
 - name: Enable and start Calibre-web service
   become: true
@@ -156,4 +158,5 @@
     src: nginx-calibre-web.conf.j2
     dest: /etc/nginx/sites-enabled/calibre-web.conf
     mode: "0644"
+  diff: true
   notify: Reload nginx

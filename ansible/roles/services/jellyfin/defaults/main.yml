@@ -7,6 +7,5 @@ jellyfin_config_dir: "{{ opt_base }}/jellyfin/config"
 jellyfin_media_dir: "{{ opt_base }}/jellyfin/data/media"
 jellyfin_cache_dir: "{{ opt_base }}/jellyfin/data/cache"
 jellyfin_admin_user: admin
-jellyfin_admin_password: changeme
 jellyfin_language: ru
 jellyfin_country: RU

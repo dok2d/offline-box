@@ -16,6 +16,8 @@ ExecStart=/usr/bin/podman run \
   -v {{ calibre_web_library_dir }}:/books:rw \
   localhost/calibre-web:latest
 ExecStop=/usr/bin/podman stop calibre-web
+MemoryMax=512M
+CPUQuota=100%
 Restart=on-failure
 RestartSec=10s
 

@@ -7,7 +7,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends curl tar && \
 
 FROM {{ container_base_image }}
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends openjdk-17-jre-headless && \
+    apt-get install -y --no-install-recommends openjdk-17-jre-headless curl && \
     rm -rf /var/lib/apt/lists/*
 COPY --from=build /opt/nexus /opt/nexus
 COPY --from=build /opt/sonatype-work /opt/sonatype-work
@@ -19,4 +19,5 @@ USER nexus
 ENV NEXUS_CONTEXT=/nexus
 EXPOSE {{ nexus_port }}
 WORKDIR /opt/nexus
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD curl -fs http://localhost:8004/nexus/service/rest/v1/status || exit 1
 ENTRYPOINT ["bin/nexus", "run"]

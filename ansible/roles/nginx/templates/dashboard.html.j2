@@ -162,7 +162,7 @@ body {
 var services = [
 {% for svc_id, svc in offlinebox_services.items() %}
 {% if svc.enabled | bool %}
-  {id:"{{ svc_id }}", name:"{{ svc.dashboard.name }}", desc:"{{ svc.dashboard.desc }}", url:"{{ svc.dashboard.url }}", icon:"{{ svc.dashboard.icon }}"},
+  {id:{{ svc_id | to_json }}, name:{{ svc.dashboard.name | to_json }}, desc:{{ svc.dashboard.desc | to_json }}, url:{{ svc.dashboard.url | to_json }}, icon:{{ svc.dashboard.icon | to_json }}},
 {% endif %}
 {% endfor %}
 ];
@@ -204,10 +204,10 @@ function checkHealth() {
   services.forEach(function(s) {
     var controller = new AbortController();
     var timer = setTimeout(function() { controller.abort(); }, 5000);
-    fetch(s.url, {method:"HEAD", signal:controller.signal, redirect:"follow"})
+    fetch(s.url, {method:"HEAD", signal:controller.signal, redirect:"manual"})
       .then(function(r) {
         clearTimeout(timer);
-        s.status = (r.ok || r.status === 302 || r.status === 301) ? "online" : "offline";
+        s.status = (r.ok || r.status === 302 || r.status === 301 || r.type === "opaqueredirect") ? "online" : "offline";
       })
       .catch(function() {
         clearTimeout(timer);

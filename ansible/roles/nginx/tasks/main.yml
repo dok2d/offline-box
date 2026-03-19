@@ -12,11 +12,13 @@
     owner: root
     group: root
     mode: "0700"
+  when: use_ssl | bool
 
 - name: Generate DH parameters (may take a few minutes)
   ansible.builtin.command:
     cmd: openssl dhparam -out {{ ssl_dhparam_path }} 2048
     creates: "{{ ssl_dhparam_path }}"
+  when: use_ssl | bool
 
 - name: Generate self-signed TLS certificate
   ansible.builtin.command:
@@ -26,13 +28,15 @@
       -keyout {{ ssl_key_path }}
       -out {{ ssl_cert_path }}
       -subj "/CN={{ server_name }}/O=OfflineBox/C=RU"
-      -addext "subjectAltName=IP:{{ server_name }}"
+      -addext "subjectAltName={{ 'IP' if server_name | ansible.utils.ipaddr else 'DNS' }}:{{ server_name }}"
     creates: "{{ ssl_cert_path }}"
+  when: use_ssl | bool
 
 - name: Set SSL key permissions
   ansible.builtin.file:
     path: "{{ ssl_key_path }}"
     mode: "0600"
+  when: use_ssl | bool
 
 - name: Create sites-available and sites-enabled directories
   ansible.builtin.file:
@@ -54,6 +58,7 @@
     src: nginx.conf.j2
     dest: /etc/nginx/nginx.conf
     mode: "0644"
+  diff: true
   notify: Reload nginx
 
 - name: Deploy security headers snippet
@@ -61,6 +66,7 @@
     src: security-headers.conf.j2
     dest: /etc/nginx/snippets/security-headers.conf
     mode: "0644"
+  diff: true
   notify: Reload nginx
 
 - name: Create web root directory
@@ -78,6 +84,7 @@
     owner: www-data
     group: www-data
     mode: "0644"
+  diff: true
 
 - name: Remove default nginx site
   ansible.builtin.file:

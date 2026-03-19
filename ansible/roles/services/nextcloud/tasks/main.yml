@@ -22,6 +22,7 @@
     owner: "{{ svc_user }}"
     group: "{{ svc_user }}"
     mode: "0644"
+  diff: true
 
 - name: Deploy Nextcloud autoconfig
   ansible.builtin.template:
@@ -30,6 +31,7 @@
     owner: "{{ svc_user }}"
     group: "{{ svc_user }}"
     mode: "0644"
+  diff: true
 
 - name: Build Nextcloud container image
   become: true
@@ -47,6 +49,7 @@
     owner: "{{ svc_user }}"
     group: "{{ svc_user }}"
     mode: "0644"
+  diff: true
 
 - name: Enable and start Nextcloud service
   become: true
@@ -83,4 +86,5 @@
     src: nginx-nextcloud.conf.j2
     dest: /etc/nginx/sites-enabled/nextcloud.conf
     mode: "0644"
+  diff: true
   notify: Reload nginx

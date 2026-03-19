@@ -25,6 +25,8 @@ ExecStart=/usr/bin/podman run \
   -e PAPERLESS_CONSUMPTION_DIR=/data/consume \
   localhost/paperless-ngx:latest
 ExecStop=/usr/bin/podman stop paperless-ngx
+MemoryMax=2G
+CPUQuota=400%
 Restart=on-failure
 RestartSec=10s
 

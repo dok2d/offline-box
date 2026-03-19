@@ -18,6 +18,8 @@ ExecStart=/usr/bin/podman run \
   -v {{ syncthing_data_dir }}:/data:rw \
   localhost/syncthing:latest
 ExecStop=/usr/bin/podman stop syncthing
+MemoryMax=1G
+CPUQuota=200%
 Restart=on-failure
 RestartSec=10s
 

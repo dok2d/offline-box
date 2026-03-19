@@ -22,6 +22,7 @@
     owner: "{{ svc_user }}"
     group: "{{ svc_user }}"
     mode: "0644"
+  diff: true
 
 - name: Deploy SearXNG settings
   ansible.builtin.template:
@@ -30,6 +31,7 @@
     owner: "{{ svc_user }}"
     group: "{{ svc_user }}"
     mode: "0644"
+  diff: true
 
 - name: Build SearXNG container image
   become: true
@@ -47,6 +49,7 @@
     owner: "{{ svc_user }}"
     group: "{{ svc_user }}"
     mode: "0644"
+  diff: true
 
 - name: Enable and start SearXNG service
   become: true
@@ -63,4 +66,5 @@
     src: nginx-searxng.conf.j2
     dest: /etc/nginx/sites-enabled/searxng.conf
     mode: "0644"
+  diff: true
   notify: Reload nginx

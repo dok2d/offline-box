@@ -38,6 +38,7 @@
     owner: "{{ svc_user }}"
     group: "{{ svc_user }}"
     mode: "0644"
+  diff: true
 
 - name: Build Jellyfin container image
   become: true
@@ -55,6 +56,7 @@
     owner: "{{ svc_user }}"
     group: "{{ svc_user }}"
     mode: "0644"
+  diff: true
 
 - name: Enable and start Jellyfin service
   become: true
@@ -130,4 +132,5 @@
     src: nginx-jellyfin.conf.j2
     dest: /etc/nginx/sites-enabled/jellyfin.conf
     mode: "0644"
+  diff: true
   notify: Reload nginx

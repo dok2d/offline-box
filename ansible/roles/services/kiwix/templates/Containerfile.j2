@@ -1,8 +1,9 @@
 FROM {{ container_base_image }}
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends kiwix-tools && \
+    apt-get install -y --no-install-recommends kiwix-tools curl && \
     rm -rf /var/lib/apt/lists/*
 RUN useradd -r -u 10001 -m kiwix
 USER kiwix
 EXPOSE {{ kiwix_port }}
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD curl -fs http://localhost:8001/kiwix/ || exit 1
 ENTRYPOINT ["kiwix-serve", "--port={{ kiwix_port }}", "--urlRootLocation=/kiwix/", "--library", "/data/library.xml"]

@@ -17,6 +17,8 @@ ExecStart=/usr/bin/podman run \
   -v {{ jellyfin_media_dir }}:/media:ro \
   localhost/jellyfin:latest
 ExecStop=/usr/bin/podman stop jellyfin
+MemoryMax=4G
+CPUQuota=400%
 Restart=on-failure
 RestartSec=10s
 

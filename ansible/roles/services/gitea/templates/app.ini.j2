@@ -1,5 +1,5 @@
 [server]
-ROOT_URL = https://{{ server_name }}/gitea/
+ROOT_URL = {{ 'https' if use_ssl | bool else 'http' }}://{{ server_name }}/gitea/
 HTTP_PORT = 8006
 HTTP_ADDR = 0.0.0.0
 DOMAIN = {{ server_name }}

@@ -5,7 +5,6 @@ nextcloud_port: 8005
 nextcloud_data_dir: "{{ opt_base }}/nextcloud/data"
 nextcloud_config_dir: "{{ opt_base }}/nextcloud/config"
 nextcloud_admin_user: admin
-nextcloud_admin_password: changeme
 nextcloud_db_type: sqlite
 nextcloud_upload_max_size: 10G
 nextcloud_php_memory_limit: 512M

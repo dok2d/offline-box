@@ -18,6 +18,9 @@ listen_addr: 127.0.0.1
 # Override with your actual IP or hostname
 server_name: "{{ ansible_default_ipv4.address | default(ansible_host) }}"
 
+# Enable HTTPS with self-signed certificate (set false for plain HTTP)
+use_ssl: true
+
 # TLS (self-signed)
 ssl_cert_path: /etc/nginx/ssl/box.crt
 ssl_key_path: /etc/nginx/ssl/box.key

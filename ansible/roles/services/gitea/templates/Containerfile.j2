@@ -9,7 +9,7 @@ RUN ARCH=$(dpkg --print-architecture) && \
 
 FROM {{ container_base_image }}
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends git git-lfs && \
+    apt-get install -y --no-install-recommends git git-lfs curl && \
     rm -rf /var/lib/apt/lists/*
 COPY --from=build /usr/local/bin/gitea /usr/local/bin/gitea
 RUN useradd -r -u 10001 -m -s /bin/bash gitea && \
@@ -18,4 +18,5 @@ RUN useradd -r -u 10001 -m -s /bin/bash gitea && \
 USER gitea
 ENV GITEA_WORK_DIR=/data
 EXPOSE {{ gitea_port }} {{ gitea_ssh_port }}
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD curl -fs http://localhost:8006/gitea/ || exit 1
 ENTRYPOINT ["gitea", "web", "--config", "/etc/gitea/app.ini"]

@@ -38,6 +38,7 @@
     owner: "{{ svc_user }}"
     group: "{{ svc_user }}"
     mode: "0644"
+  diff: true
 
 - name: Copy Paperless-ngx entrypoint script
   ansible.builtin.copy:
@@ -63,6 +64,7 @@
     owner: "{{ svc_user }}"
     group: "{{ svc_user }}"
     mode: "0644"
+  diff: true
 
 - name: Enable and start Paperless-ngx service
   become: true
@@ -87,13 +89,17 @@
   become: true
   become_user: "{{ svc_user }}"
   ansible.builtin.shell: |
-    podman exec paperless-ngx /app/venv/bin/python3 -c "
+    podman exec -e ADMIN_USER={{ paperless_ngx_admin_user | quote }} \
+                -e ADMIN_PASS={{ paperless_ngx_admin_password | quote }} \
+      paperless-ngx /app/venv/bin/python3 -c "
     import django, os
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'paperless.settings')
     django.setup()
     from django.contrib.auth.models import User
-    if not User.objects.filter(username='{{ paperless_ngx_admin_user }}').exists():
-        User.objects.create_superuser('{{ paperless_ngx_admin_user }}', '', '{{ paperless_ngx_admin_password }}')
+    user = os.environ['ADMIN_USER']
+    passwd = os.environ['ADMIN_PASS']
+    if not User.objects.filter(username=user).exists():
+        User.objects.create_superuser(user, '', passwd)
         print('created')
     else:
         print('exists')
@@ -102,11 +108,14 @@
     executable: /bin/bash
   register: paperless_superuser
   changed_when: "'created' in paperless_superuser.stdout"
-  failed_when: false
+  failed_when:
+    - paperless_superuser.rc != 0
+    - "'exists' not in paperless_superuser.stdout"
 
 - name: Deploy nginx config for Paperless-ngx
   ansible.builtin.template:
     src: nginx-paperless-ngx.conf.j2
     dest: /etc/nginx/sites-enabled/paperless-ngx.conf
     mode: "0644"
+  diff: true
   notify: Reload nginx

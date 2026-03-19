@@ -33,6 +33,7 @@
     owner: "{{ svc_user }}"
     group: "{{ svc_user }}"
     mode: "0644"
+  diff: true
 
 - name: Build Kiwix container image
   become: true
@@ -67,6 +68,7 @@
     owner: "{{ svc_user }}"
     group: "{{ svc_user }}"
     mode: "0644"
+  diff: true
 
 - name: Enable and start Kiwix service
   become: true
@@ -83,4 +85,5 @@
     src: nginx-kiwix.conf.j2
     dest: /etc/nginx/sites-enabled/kiwix.conf
     mode: "0644"
+  diff: true
   notify: Reload nginx

@@ -32,6 +32,7 @@
     owner: "{{ svc_user }}"
     group: "{{ svc_user }}"
     mode: "0644"
+  diff: true
 
 - name: Build OpenStreetMap container image
   become: true
@@ -49,6 +50,7 @@
     owner: "{{ svc_user }}"
     group: "{{ svc_user }}"
     mode: "0644"
+  diff: true
 
 - name: Enable and start OpenStreetMap service
   become: true
@@ -65,4 +67,5 @@
     src: nginx-openstreetmap.conf.j2
     dest: /etc/nginx/sites-enabled/openstreetmap.conf
     mode: "0644"
+  diff: true
   notify: Reload nginx

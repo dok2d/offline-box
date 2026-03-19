@@ -2,7 +2,7 @@ FROM {{ container_base_image }}
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     python3 python3-pip python3-venv \
-    libxml2 libxslt1.1 libmagic1 && \
+    libxml2 libxslt1.1 libmagic1 curl && \
     rm -rf /var/lib/apt/lists/*
 RUN useradd -r -u 10001 -m calibre && \
     mkdir -p /app /books /config && \
@@ -11,4 +11,5 @@ USER calibre
 RUN python3 -m venv /app/venv && \
     /app/venv/bin/pip install --no-cache-dir calibreweb
 EXPOSE {{ calibre_web_port }}
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD curl -fs http://localhost:8008/ || exit 1
 ENTRYPOINT ["/app/venv/bin/cps", "-p", "/config/app.db", "-g", "/config/gdrive.db"]

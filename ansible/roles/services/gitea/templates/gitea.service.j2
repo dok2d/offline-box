@@ -17,6 +17,8 @@ ExecStart=/usr/bin/podman run \
   -v {{ gitea_config_dir }}:/etc/gitea:rw \
   localhost/gitea:latest
 ExecStop=/usr/bin/podman stop gitea
+MemoryMax=1G
+CPUQuota=200%
 Restart=on-failure
 RestartSec=10s
 

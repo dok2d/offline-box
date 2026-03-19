@@ -4,7 +4,7 @@ enable_nexus: true
 nexus_port: 8004
 nexus_data_dir: "{{ opt_base }}/nexus/data"
 nexus_config_dir: "{{ opt_base }}/nexus/config"
-nexus_admin_password: changeme
+# nexus_admin_password — defined in group_vars/passwords.yml
 nexus_jvm_heap: 1g
 # Caching proxy repositories
 nexus_apt_proxy_url: "http://deb.debian.org/debian"

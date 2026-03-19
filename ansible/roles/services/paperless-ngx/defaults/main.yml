@@ -6,7 +6,5 @@ paperless_ngx_data_dir: "{{ opt_base }}/paperless-ngx/data"
 paperless_ngx_config_dir: "{{ opt_base }}/paperless-ngx/config"
 paperless_ngx_consume_dir: "{{ opt_base }}/paperless-ngx/data/consume"
 paperless_ngx_media_dir: "{{ opt_base }}/paperless-ngx/data/media"
-paperless_ngx_secret_key: changeme-generate-long-random-string
 paperless_ngx_admin_user: admin
-paperless_ngx_admin_password: changeme
 paperless_ngx_ocr_language: rus+eng

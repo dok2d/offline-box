@@ -38,9 +38,10 @@ http {
     limit_req_zone $binary_remote_addr zone=api:10m rate=10r/s;
     limit_req_zone $binary_remote_addr zone=upload:10m rate=5r/s;
 
-    # Default client body size
-    client_max_body_size 50m;
+    # No global body size limit — each location sets its own
+    client_max_body_size 0;
 
+{% if use_ssl | bool %}
     # SSL settings
     ssl_certificate {{ ssl_cert_path }};
     ssl_certificate_key {{ ssl_key_path }};
@@ -62,8 +63,8 @@ http {
 
     # Default HTTPS server with landing page
     server {
-        listen 443 ssl default_server;
-        listen [::]:443 ssl default_server;
+        listen 443 ssl http2 default_server;
+        listen [::]:443 ssl http2 default_server;
         server_name {{ server_name }};
 
         include /etc/nginx/snippets/security-headers.conf;
@@ -78,4 +79,24 @@ http {
         # Include per-service location blocks
         include /etc/nginx/sites-enabled/*.conf;
     }
+{% else %}
+    # Plain HTTP server with landing page
+    server {
+        listen 80 default_server;
+        listen [::]:80 default_server;
+        server_name {{ server_name }};
+
+        include /etc/nginx/snippets/security-headers.conf;
+
+        root /var/www/html;
+        index index.html;
+
+        location = / {
+            try_files /index.html =404;
+        }
+
+        # Include per-service location blocks
+        include /etc/nginx/sites-enabled/*.conf;
+    }
+{% endif %}
 }

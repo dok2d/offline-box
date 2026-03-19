@@ -18,6 +18,8 @@ ExecStart=/usr/bin/podman run \
   -v {{ transmission_watch_dir }}:/watch:rw \
   localhost/transmission:latest
 ExecStop=/usr/bin/podman stop transmission
+MemoryMax=1G
+CPUQuota=200%
 Restart=on-failure
 RestartSec=10s
 

@@ -7,7 +7,6 @@ transmission_config_dir: "{{ opt_base }}/transmission/config"
 transmission_download_dir: "{{ opt_base }}/transmission/data/downloads"
 transmission_watch_dir: "{{ opt_base }}/transmission/data/watch"
 transmission_rpc_username: admin
-transmission_rpc_password: changeme
 transmission_peer_port: 51413
 transmission_speed_limit_up_enabled: "false"
 transmission_speed_limit_up: 1000

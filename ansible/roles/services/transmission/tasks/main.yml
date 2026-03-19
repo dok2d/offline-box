@@ -38,6 +38,7 @@
     owner: "{{ svc_user }}"
     group: "{{ svc_user }}"
     mode: "0644"
+  diff: true
 
 - name: Deploy Transmission Containerfile
   ansible.builtin.template:
@@ -46,6 +47,7 @@
     owner: "{{ svc_user }}"
     group: "{{ svc_user }}"
     mode: "0644"
+  diff: true
 
 - name: Build Transmission container image
   become: true
@@ -63,6 +65,7 @@
     owner: "{{ svc_user }}"
     group: "{{ svc_user }}"
     mode: "0644"
+  diff: true
 
 - name: Enable and start Transmission service
   become: true
@@ -79,4 +82,5 @@
     src: nginx-transmission.conf.j2
     dest: /etc/nginx/sites-enabled/transmission.conf
     mode: "0644"
+  diff: true
   notify: Reload nginx

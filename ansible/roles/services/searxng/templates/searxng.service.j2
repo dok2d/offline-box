@@ -15,6 +15,8 @@ ExecStart=/usr/bin/podman run \
   -v {{ searxng_config_dir }}:/config:rw \
   localhost/searxng:latest
 ExecStop=/usr/bin/podman stop searxng
+MemoryMax=512M
+CPUQuota=100%
 Restart=on-failure
 RestartSec=10s
 

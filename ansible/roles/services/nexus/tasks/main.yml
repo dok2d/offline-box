@@ -22,6 +22,7 @@
     owner: "{{ svc_user }}"
     group: "{{ svc_user }}"
     mode: "0644"
+  diff: true
 
 - name: Build Nexus container image
   become: true
@@ -39,6 +40,7 @@
     owner: "{{ svc_user }}"
     group: "{{ svc_user }}"
     mode: "0644"
+  diff: true
 
 - name: Enable and start Nexus service
   become: true
@@ -239,4 +241,5 @@
     src: nginx-nexus.conf.j2
     dest: /etc/nginx/sites-enabled/nexus.conf
     mode: "0644"
+  diff: true
   notify: Reload nginx
