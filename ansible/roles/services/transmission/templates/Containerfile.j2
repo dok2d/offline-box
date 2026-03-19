@@ -1,4 +1,4 @@
-FROM docker.io/library/debian:13-slim
+FROM {{ container_base_image }}
 RUN apt-get update && \
     apt-get install -y --no-install-recommends transmission-daemon && \
     rm -rf /var/lib/apt/lists/*
@@ -6,5 +6,5 @@ RUN useradd -r -u 10001 -m transmission && \
     mkdir -p /config /downloads /watch && \
     chown -R transmission:transmission /config /downloads /watch
 USER transmission
-EXPOSE 8003 51413
+EXPOSE {{ transmission_port }} {{ transmission_peer_port }}
 ENTRYPOINT ["transmission-daemon", "--foreground", "--config-dir", "/config"]

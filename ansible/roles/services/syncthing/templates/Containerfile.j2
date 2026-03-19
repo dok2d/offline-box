@@ -1,16 +1,16 @@
-FROM docker.io/library/debian:13-slim AS build
+FROM {{ container_base_image }} AS build
 RUN apt-get update && \
     apt-get install -y --no-install-recommends curl ca-certificates && \
     rm -rf /var/lib/apt/lists/*
 RUN ARCH=$(dpkg --print-architecture) && \
-    curl -fsSL "https://github.com/syncthing/syncthing/releases/latest/download/syncthing-linux-${ARCH}-v1.29.2.tar.gz" | \
+    curl -fsSL "https://github.com/syncthing/syncthing/releases/latest/download/syncthing-linux-${ARCH}-v{{ syncthing_version }}.tar.gz" | \
     tar xz --strip-components=1 -C /usr/local/bin/ --wildcards '*/syncthing'
 
-FROM docker.io/library/debian:13-slim
+FROM {{ container_base_image }}
 COPY --from=build /usr/local/bin/syncthing /usr/local/bin/syncthing
 RUN useradd -r -u 10001 -m syncthing && \
     mkdir -p /config /data && \
     chown -R syncthing:syncthing /config /data
 USER syncthing
-EXPOSE 8011 22000 21027/udp
-ENTRYPOINT ["syncthing", "--gui-address=0.0.0.0:8011", "--home=/config", "--no-browser"]
+EXPOSE {{ syncthing_port }} {{ syncthing_sync_port }} {{ syncthing_discovery_port }}/udp
+ENTRYPOINT ["syncthing", "--gui-address=0.0.0.0:{{ syncthing_port }}", "--home=/config", "--no-browser"]

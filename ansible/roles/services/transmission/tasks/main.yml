@@ -39,9 +39,9 @@
     group: "{{ svc_user }}"
     mode: "0644"
 
-- name: Copy Transmission Containerfile
-  ansible.builtin.copy:
-    src: Containerfile
+- name: Deploy Transmission Containerfile
+  ansible.builtin.template:
+    src: Containerfile.j2
     dest: "{{ transmission_config_dir }}/Containerfile"
     owner: "{{ svc_user }}"
     group: "{{ svc_user }}"

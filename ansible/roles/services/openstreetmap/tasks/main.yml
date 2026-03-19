@@ -25,9 +25,9 @@
     timeout: 3600
   when: openstreetmap_mbtiles_url | default('') | length > 0
 
-- name: Copy OpenStreetMap Containerfile
-  ansible.builtin.copy:
-    src: Containerfile
+- name: Deploy OpenStreetMap Containerfile
+  ansible.builtin.template:
+    src: Containerfile.j2
     dest: "{{ openstreetmap_config_dir }}/Containerfile"
     owner: "{{ svc_user }}"
     group: "{{ svc_user }}"

@@ -10,3 +10,4 @@ openstreetmap_config_dir: "{{ opt_base }}/openstreetmap/config"
 #   Europe: https://archive.org/download/osm_europe_z11-z14_2019.mbtiles/osm_europe_z11-z14_2019.mbtiles
 #   Planet:  https://archive.org/download/osm-vector-mbtiles/2020-10-planet-14.mbtiles (83 GB)
 openstreetmap_mbtiles_url: "https://archive.org/download/osm_europe_z11-z14_2019.mbtiles/osm_europe_z11-z14_2019.mbtiles"
+tileserver_gl_version: "4"

@@ -1,4 +1,4 @@
-FROM docker.io/library/debian:13-slim
+FROM {{ container_base_image }}
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     python3 python3-pip python3-venv \
@@ -10,5 +10,5 @@ RUN useradd -r -u 10001 -m calibre && \
 USER calibre
 RUN python3 -m venv /app/venv && \
     /app/venv/bin/pip install --no-cache-dir calibreweb
-EXPOSE 8008
+EXPOSE {{ calibre_web_port }}
 ENTRYPOINT ["/app/venv/bin/cps", "-p", "/config/app.db", "-g", "/config/gdrive.db"]

@@ -77,9 +77,9 @@
     group: "{{ svc_user }}"
     mode: "0644"
 
-- name: Copy Calibre-web Containerfile
-  ansible.builtin.copy:
-    src: Containerfile
+- name: Deploy Calibre-web Containerfile
+  ansible.builtin.template:
+    src: Containerfile.j2
     dest: "{{ calibre_web_config_dir }}/Containerfile"
     owner: "{{ svc_user }}"
     group: "{{ svc_user }}"

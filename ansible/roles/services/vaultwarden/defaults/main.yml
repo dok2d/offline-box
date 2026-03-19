@@ -6,3 +6,4 @@ vaultwarden_data_dir: "{{ opt_base }}/vaultwarden/data"
 vaultwarden_config_dir: "{{ opt_base }}/vaultwarden/config"
 vaultwarden_admin_token: changeme-generate-long-random-string
 vaultwarden_signups_allowed: "true"
+vaultwarden_web_vault_version: "2024.12.0"

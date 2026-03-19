@@ -1,8 +1,0 @@
-FROM docker.io/library/debian:13-slim
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends kiwix-tools && \
-    rm -rf /var/lib/apt/lists/*
-RUN useradd -r -u 10001 -m kiwix
-USER kiwix
-EXPOSE 8001
-ENTRYPOINT ["kiwix-serve", "--port=8001", "--urlRootLocation=/kiwix/", "--library", "/data/library.xml"]

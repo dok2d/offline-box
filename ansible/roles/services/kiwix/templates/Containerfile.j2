@@ -1,0 +1,8 @@
+FROM {{ container_base_image }}
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends kiwix-tools && \
+    rm -rf /var/lib/apt/lists/*
+RUN useradd -r -u 10001 -m kiwix
+USER kiwix
+EXPOSE {{ kiwix_port }}
+ENTRYPOINT ["kiwix-serve", "--port={{ kiwix_port }}", "--urlRootLocation=/kiwix/", "--library", "/data/library.xml"]

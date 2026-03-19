@@ -15,9 +15,9 @@
     group: "{{ svc_user }}"
     mode: "0755"
 
-- name: Copy Nextcloud Containerfile
-  ansible.builtin.copy:
-    src: Containerfile
+- name: Deploy Nextcloud Containerfile
+  ansible.builtin.template:
+    src: Containerfile.j2
     dest: "{{ nextcloud_config_dir }}/Containerfile"
     owner: "{{ svc_user }}"
     group: "{{ svc_user }}"

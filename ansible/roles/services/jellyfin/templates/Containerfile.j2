@@ -1,4 +1,4 @@
-FROM docker.io/library/debian:13-slim
+FROM {{ container_base_image }}
 RUN apt-get update && \
     apt-get install -y --no-install-recommends curl gnupg ca-certificates && \
     mkdir -p /etc/apt/keyrings && \
@@ -13,7 +13,7 @@ RUN useradd -r -u 10001 -m jellyfin && \
     mkdir -p /config /cache /media && \
     chown -R jellyfin:jellyfin /config /cache /media
 USER jellyfin
-EXPOSE 8007
+EXPOSE {{ jellyfin_port }}
 ENTRYPOINT ["/usr/bin/jellyfin", "--service", \
     "--datadir", "/config", \
     "--cachedir", "/cache", \

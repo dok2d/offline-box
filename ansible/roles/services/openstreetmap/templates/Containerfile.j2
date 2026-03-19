@@ -1,0 +1,10 @@
+FROM {{ container_base_image }}
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends nodejs npm curl ca-certificates && \
+    rm -rf /var/lib/apt/lists/*
+RUN npm install -g tileserver-gl-light@{{ tileserver_gl_version }} && npm cache clean --force
+RUN useradd -r -u 10001 -m tileserver
+USER tileserver
+WORKDIR /data
+EXPOSE {{ openstreetmap_port }}
+ENTRYPOINT ["tileserver-gl-light", "--port", "{{ openstreetmap_port }}", "--basePath", "/osm"]

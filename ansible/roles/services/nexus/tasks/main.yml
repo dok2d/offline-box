@@ -15,9 +15,9 @@
     group: "{{ svc_user }}"
     mode: "0755"
 
-- name: Copy Nexus Containerfile
-  ansible.builtin.copy:
-    src: Containerfile
+- name: Deploy Nexus Containerfile
+  ansible.builtin.template:
+    src: Containerfile.j2
     dest: "{{ nexus_config_dir }}/Containerfile"
     owner: "{{ svc_user }}"
     group: "{{ svc_user }}"
@@ -122,10 +122,10 @@
       proxy:
         remoteUrl: "{{ nexus_apt_proxy_url }}"
         contentMaxAge: -1
-        metadataMaxAge: 1440
+        metadataMaxAge: -1
       negativeCache:
-        enabled: true
-        timeToLive: 1440
+        enabled: false
+        timeToLive: 0
       httpClient:
         blocked: false
         autoBlock: true
@@ -152,10 +152,10 @@
       proxy:
         remoteUrl: "{{ nexus_pypi_proxy_url }}"
         contentMaxAge: -1
-        metadataMaxAge: 1440
+        metadataMaxAge: -1
       negativeCache:
-        enabled: true
-        timeToLive: 1440
+        enabled: false
+        timeToLive: 0
       httpClient:
         blocked: false
         autoBlock: true
@@ -179,10 +179,10 @@
       proxy:
         remoteUrl: "{{ nexus_docker_proxy_url }}"
         contentMaxAge: -1
-        metadataMaxAge: 1440
+        metadataMaxAge: -1
       negativeCache:
-        enabled: true
-        timeToLive: 1440
+        enabled: false
+        timeToLive: 0
       httpClient:
         blocked: false
         autoBlock: true

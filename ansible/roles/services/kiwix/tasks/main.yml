@@ -26,9 +26,9 @@
   loop: "{{ kiwix_zim_urls }}"
   when: kiwix_zim_urls | length > 0
 
-- name: Copy Kiwix Containerfile
-  ansible.builtin.copy:
-    src: Containerfile
+- name: Deploy Kiwix Containerfile
+  ansible.builtin.template:
+    src: Containerfile.j2
     dest: "{{ kiwix_config_dir }}/Containerfile"
     owner: "{{ svc_user }}"
     group: "{{ svc_user }}"

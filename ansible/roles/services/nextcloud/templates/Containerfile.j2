@@ -1,4 +1,4 @@
-FROM docker.io/library/debian:13-slim
+FROM {{ container_base_image }}
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     php php-gd php-curl php-mbstring php-intl \
@@ -12,6 +12,6 @@ RUN useradd -r -u 10001 -m nextcloud && \
     mkdir -p /data && \
     chown -R 10001:10001 /opt/nextcloud /data
 USER 10001
-EXPOSE 8005
+EXPOSE {{ nextcloud_port }}
 WORKDIR /opt/nextcloud
-ENTRYPOINT ["php", "-d", "memory_limit=512M", "-S", "0.0.0.0:8005", "-t", "/opt/nextcloud"]
+ENTRYPOINT ["php", "-d", "memory_limit={{ nextcloud_php_memory_limit }}", "-S", "0.0.0.0:{{ nextcloud_port }}", "-t", "/opt/nextcloud"]

@@ -15,9 +15,9 @@
     group: "{{ svc_user }}"
     mode: "0755"
 
-- name: Copy SearXNG Containerfile
-  ansible.builtin.copy:
-    src: Containerfile
+- name: Deploy SearXNG Containerfile
+  ansible.builtin.template:
+    src: Containerfile.j2
     dest: "{{ searxng_config_dir }}/Containerfile"
     owner: "{{ svc_user }}"
     group: "{{ svc_user }}"

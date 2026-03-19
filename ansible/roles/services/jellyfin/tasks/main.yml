@@ -31,9 +31,9 @@
     group: "{{ svc_user }}"
     mode: "0755"
 
-- name: Copy Jellyfin Containerfile
-  ansible.builtin.copy:
-    src: Containerfile
+- name: Deploy Jellyfin Containerfile
+  ansible.builtin.template:
+    src: Containerfile.j2
     dest: "{{ jellyfin_config_dir }}/Containerfile"
     owner: "{{ svc_user }}"
     group: "{{ svc_user }}"
