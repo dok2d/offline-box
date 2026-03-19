@@ -1,0 +1,14 @@
+---
+enable_nexus: true
+
+nexus_port: 8004
+nexus_data_dir: "{{ opt_base }}/nexus/data"
+nexus_config_dir: "{{ opt_base }}/nexus/config"
+nexus_admin_password: changeme
+nexus_jvm_heap: 1g
+# Caching proxy repositories
+nexus_apt_proxy_url: "http://deb.debian.org/debian"
+nexus_apt_distribution: trixie
+nexus_pypi_proxy_url: "https://pypi.org"
+nexus_docker_proxy_url: "https://registry-1.docker.io"
+nexus_docker_proxy_port: 5000

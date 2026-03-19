@@ -1,0 +1,8 @@
+---
+enable_vaultwarden: true
+
+vaultwarden_port: 8010
+vaultwarden_data_dir: "{{ opt_base }}/vaultwarden/data"
+vaultwarden_config_dir: "{{ opt_base }}/vaultwarden/config"
+vaultwarden_admin_token: changeme-generate-long-random-string
+vaultwarden_signups_allowed: "true"

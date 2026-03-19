@@ -1,0 +1,9 @@
+---
+- name: Restart jellyfin
+  become: true
+  become_user: "{{ svc_user }}"
+  ansible.builtin.systemd:
+    name: jellyfin
+    scope: user
+    state: restarted
+    daemon_reload: true
