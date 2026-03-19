@@ -4,7 +4,7 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 RUN ARCH=$(dpkg --print-architecture) && \
     curl -fsSL -o /usr/local/bin/gitea \
-    "https://dl.gitea.com/gitea/{{ gitea_version | regex_replace('\\.[0-9]+$', '') }}/gitea-{{ gitea_version }}-linux-${ARCH}" && \
+    "https://dl.gitea.com/gitea/{{ gitea_version.split('.')[:2] | join('.') }}/gitea-{{ gitea_version }}-linux-${ARCH}" && \
     chmod +x /usr/local/bin/gitea
 
 FROM {{ container_base_image }}
