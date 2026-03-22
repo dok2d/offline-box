@@ -88,6 +88,13 @@
     proto: tcp
   when: enable_gitea | bool
 
+- name: Allow BigBlueButton FreeSWITCH media ports
+  community.general.ufw:
+    rule: allow
+    port: "{{ bigbluebutton_freeswitch_port_start | string }}:{{ bigbluebutton_freeswitch_port_end | string }}"
+    proto: udp
+  when: enable_bigbluebutton | bool
+
 - name: Enable UFW
   community.general.ufw:
     state: enabled

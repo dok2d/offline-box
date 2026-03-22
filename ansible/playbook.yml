@@ -51,3 +51,6 @@
 
     - role: services/paperless-ngx
       when: offlinebox_services['paperless-ngx'].enabled | bool
+
+    - role: services/bigbluebutton
+      when: offlinebox_services.bigbluebutton.enabled | bool
