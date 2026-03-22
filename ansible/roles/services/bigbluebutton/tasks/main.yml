@@ -23,6 +23,24 @@
     group: "{{ svc_user }}"
     mode: "0755"
 
+- name: Create containers env directory
+  ansible.builtin.file:
+    path: "{{ svc_home }}/.config/containers"
+    state: directory
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0700"
+
+- name: Deploy BigBlueButton env file
+  ansible.builtin.template:
+    src: bigbluebutton.env.j2
+    dest: "{{ svc_home }}/.config/containers/bigbluebutton.env"
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0600"
+  diff: false
+  notify: Restart bigbluebutton
+
 - name: Deploy BigBlueButton Containerfile
   ansible.builtin.template:
     src: Containerfile.j2
@@ -31,6 +49,7 @@
     group: "{{ svc_user }}"
     mode: "0644"
   diff: true
+  register: _containerfile
 
 - name: Deploy BigBlueButton properties
   ansible.builtin.template:
@@ -54,10 +73,10 @@
   become: true
   become_user: "{{ svc_user }}"
   containers.podman.podman_image:
-    name: localhost/bigbluebutton
-    tag: latest
+    name: "{{ bigbluebutton_image }}"
+    tag: "{{ bigbluebutton_tag }}"
     path: "{{ bigbluebutton_config_dir }}"
-    force: true
+    force: "{{ _containerfile.changed | default(true) }}"
 
 - name: Deploy BigBlueButton systemd user unit
   ansible.builtin.template:

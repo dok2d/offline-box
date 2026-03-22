@@ -12,14 +12,11 @@ ExecStart=/usr/bin/podman run \
   --cap-drop=ALL \
   --security-opt=no-new-privileges \
   -p {{ listen_addr }}:{{ vaultwarden_port }}:8010 \
+  --log-driver=k8s-file \
+  --log-opt=path={{ container_log_dir }}/vaultwarden/vaultwarden.log \
   -v {{ vaultwarden_data_dir }}:/data:rw \
-  -e ROCKET_PORT=8010 \
-  -e WEB_VAULT_FOLDER=/opt/web-vault \
-  -e DATA_FOLDER=/data \
-  -e DOMAIN={{ 'https' if use_ssl | bool else 'http' }}://{{ server_name }}/vaultwarden \
-  -e ADMIN_TOKEN={{ vaultwarden_admin_token }} \
-  -e SIGNUPS_ALLOWED={{ vaultwarden_signups_allowed }} \
-  localhost/vaultwarden:latest
+  --env-file={{ svc_home }}/.config/containers/vaultwarden.env \
+  {{ vaultwarden_image_full }}
 ExecStop=/usr/bin/podman stop vaultwarden
 MemoryMax=512M
 CPUQuota=100%

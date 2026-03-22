@@ -29,6 +29,15 @@ ssl_dhparam_path: /etc/nginx/ssl/dhparam.pem
 # Base container image for all services
 container_base_image: docker.io/library/debian:13-slim
 
+# Container image naming
+# Built images: {{ container_registry }}/{{ container_namespace }}/<service>:<tag>
+# With defaults: localhost/<service>:<tag>
+container_registry: "localhost"
+container_namespace: ""
+
+# Container logging
+container_log_dir: /var/log/containers
+
 
 ############################
 # Service registry
@@ -42,7 +51,7 @@ offlinebox_services:
   kiwix:
     container_name: kiwix
     enabled: "{{ enable_kiwix }}"
-    image: localhost/kiwix
+    image: "{{ kiwix_image_full }}"
     port: "{{ kiwix_port }}"
     data_dir: "{{ kiwix_data_dir }}"
     config_dir: "{{ kiwix_config_dir }}"
@@ -54,7 +63,7 @@ offlinebox_services:
   openstreetmap:
     container_name: openstreetmap
     enabled: "{{ enable_openstreetmap }}"
-    image: localhost/openstreetmap
+    image: "{{ openstreetmap_image_full }}"
     port: "{{ openstreetmap_port }}"
     data_dir: "{{ openstreetmap_data_dir }}"
     config_dir: "{{ openstreetmap_config_dir }}"
@@ -66,7 +75,7 @@ offlinebox_services:
   transmission:
     container_name: transmission
     enabled: "{{ enable_transmission }}"
-    image: localhost/transmission
+    image: "{{ transmission_image_full }}"
     port: "{{ transmission_port }}"
     data_dir: "{{ transmission_data_dir }}"
     config_dir: "{{ transmission_config_dir }}"
@@ -78,7 +87,7 @@ offlinebox_services:
   nexus:
     container_name: nexus
     enabled: "{{ enable_nexus }}"
-    image: localhost/nexus
+    image: "{{ nexus_image_full }}"
     port: "{{ nexus_port }}"
     data_dir: "{{ nexus_data_dir }}"
     config_dir: "{{ nexus_config_dir }}"
@@ -90,7 +99,7 @@ offlinebox_services:
   nextcloud:
     container_name: nextcloud
     enabled: "{{ enable_nextcloud }}"
-    image: localhost/nextcloud
+    image: "{{ nextcloud_image_full }}"
     port: "{{ nextcloud_port }}"
     data_dir: "{{ nextcloud_data_dir }}"
     config_dir: "{{ nextcloud_config_dir }}"
@@ -102,7 +111,7 @@ offlinebox_services:
   gitea:
     container_name: gitea
     enabled: "{{ enable_gitea }}"
-    image: localhost/gitea
+    image: "{{ gitea_image_full }}"
     port: "{{ gitea_port }}"
     data_dir: "{{ gitea_data_dir }}"
     config_dir: "{{ gitea_config_dir }}"
@@ -114,7 +123,7 @@ offlinebox_services:
   jellyfin:
     container_name: jellyfin
     enabled: "{{ enable_jellyfin }}"
-    image: localhost/jellyfin
+    image: "{{ jellyfin_image_full }}"
     port: "{{ jellyfin_port }}"
     data_dir: "{{ jellyfin_data_dir }}"
     config_dir: "{{ jellyfin_config_dir }}"
@@ -126,7 +135,7 @@ offlinebox_services:
   calibre-web:
     container_name: calibre-web
     enabled: "{{ enable_calibre_web }}"
-    image: localhost/calibre-web
+    image: "{{ calibre_web_image_full }}"
     port: "{{ calibre_web_port }}"
     data_dir: "{{ calibre_web_data_dir }}"
     config_dir: "{{ calibre_web_config_dir }}"
@@ -138,7 +147,7 @@ offlinebox_services:
   searxng:
     container_name: searxng
     enabled: "{{ enable_searxng }}"
-    image: localhost/searxng
+    image: "{{ searxng_image_full }}"
     port: "{{ searxng_port }}"
     data_dir: "{{ searxng_data_dir }}"
     config_dir: "{{ searxng_config_dir }}"
@@ -150,7 +159,7 @@ offlinebox_services:
   vaultwarden:
     container_name: vaultwarden
     enabled: "{{ enable_vaultwarden }}"
-    image: localhost/vaultwarden
+    image: "{{ vaultwarden_image_full }}"
     port: "{{ vaultwarden_port }}"
     data_dir: "{{ vaultwarden_data_dir }}"
     config_dir: "{{ vaultwarden_config_dir }}"
@@ -162,7 +171,7 @@ offlinebox_services:
   syncthing:
     container_name: syncthing
     enabled: "{{ enable_syncthing }}"
-    image: localhost/syncthing
+    image: "{{ syncthing_image_full }}"
     port: "{{ syncthing_port }}"
     data_dir: "{{ syncthing_data_dir }}"
     config_dir: "{{ syncthing_config_dir }}"
@@ -174,7 +183,7 @@ offlinebox_services:
   paperless-ngx:
     container_name: paperless-ngx
     enabled: "{{ enable_paperless_ngx }}"
-    image: localhost/paperless-ngx
+    image: "{{ paperless_ngx_image_full }}"
     port: "{{ paperless_ngx_port }}"
     data_dir: "{{ paperless_ngx_data_dir }}"
     config_dir: "{{ paperless_ngx_config_dir }}"
@@ -186,7 +195,7 @@ offlinebox_services:
   bigbluebutton:
     container_name: bigbluebutton
     enabled: "{{ enable_bigbluebutton }}"
-    image: localhost/bigbluebutton
+    image: "{{ bigbluebutton_image_full }}"
     port: "{{ bigbluebutton_port }}"
     data_dir: "{{ bigbluebutton_data_dir }}"
     config_dir: "{{ bigbluebutton_config_dir }}"

@@ -8,3 +8,7 @@ syncthing_sync_port: 22000
 syncthing_discovery_port: 21027
 syncthing_gui_user: admin
 syncthing_version: "1.29.2"
+
+syncthing_tag: "{{ syncthing_version }}"
+syncthing_image: "{{ (container_registry ~ '/' if container_registry else '') }}{{ (container_namespace ~ '/' if container_namespace else '') }}syncthing"
+syncthing_image_full: "{{ syncthing_image }}:{{ syncthing_tag }}"

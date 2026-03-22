@@ -12,9 +12,11 @@ ExecStart=/usr/bin/podman run \
   --cap-drop=ALL \
   --security-opt=no-new-privileges \
   -p {{ listen_addr }}:{{ nextcloud_port }}:8005 \
+  --log-driver=k8s-file \
+  --log-opt=path={{ container_log_dir }}/nextcloud/nextcloud.log \
   -v {{ nextcloud_data_dir }}:/data:rw \
   -v {{ nextcloud_config_dir }}:/opt/nextcloud/config:rw \
-  localhost/nextcloud:latest
+  {{ nextcloud_image_full }}
 ExecStop=/usr/bin/podman stop nextcloud
 MemoryMax=1G
 CPUQuota=200%

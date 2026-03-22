@@ -8,3 +8,7 @@ vaultwarden_config_dir: "{{ opt_base }}/vaultwarden/config"
 vaultwarden_signups_allowed: "true"
 vaultwarden_version: "1.32.7"
 vaultwarden_web_vault_version: "2024.12.0"
+
+vaultwarden_tag: "{{ vaultwarden_version }}"
+vaultwarden_image: "{{ (container_registry ~ '/' if container_registry else '') }}{{ (container_namespace ~ '/' if container_namespace else '') }}vaultwarden"
+vaultwarden_image_full: "{{ vaultwarden_image }}:{{ vaultwarden_tag }}"

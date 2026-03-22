@@ -15,12 +15,13 @@ ExecStart=/usr/bin/podman run \
   --security-opt=no-new-privileges \
   -p {{ listen_addr }}:{{ bigbluebutton_port }}:8013 \
   -p {{ bigbluebutton_freeswitch_port_start }}-{{ bigbluebutton_freeswitch_port_end }}:{{ bigbluebutton_freeswitch_port_start }}-{{ bigbluebutton_freeswitch_port_end }}/udp \
+  --log-driver=k8s-file \
+  --log-opt=path={{ container_log_dir }}/bigbluebutton/bigbluebutton.log \
   -v {{ bigbluebutton_data_dir }}:/data:rw \
   -v {{ bigbluebutton_config_dir }}/bigbluebutton.properties:/etc/bigbluebutton/bigbluebutton.properties:ro \
   -v {{ bigbluebutton_recordings_dir }}:/data/recordings:rw \
-  -e BBB_SECRET={{ bigbluebutton_secret_key }} \
-  -e BBB_SERVER_NAME={{ server_name }} \
-  localhost/bigbluebutton:latest
+  --env-file={{ svc_home }}/.config/containers/bigbluebutton.env \
+  {{ bigbluebutton_image_full }}
 ExecStop=/usr/bin/podman stop bigbluebutton
 MemoryMax=4G
 CPUQuota=800%

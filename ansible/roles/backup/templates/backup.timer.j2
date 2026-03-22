@@ -1,0 +1,10 @@
+[Unit]
+Description=Offline Box daily backup timer
+
+[Timer]
+OnCalendar={{ backup_timer_oncalendar }}
+Persistent=true
+RandomizedDelaySec=300
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,41 @@
+#!/bin/bash
+# Offline Box — daily backup script
+# Managed by Ansible — do not edit manually
+set -euo pipefail
+
+BACKUP_ROOT="{{ backup_dest }}"
+DATE="$(date +%Y-%m-%d_%H%M)"
+RETENTION={{ backup_retention_days }}
+
+log() { echo "[$(date '+%F %T')] $*"; }
+
+{% for svc_id, svc in offlinebox_services.items() %}
+{% if svc.enabled | bool %}
+# ── {{ svc.dashboard.name }} ──
+SVC_DIR="{{ svc.data_dir }}"
+DEST="${BACKUP_ROOT}/{{ svc_id }}"
+mkdir -p "${DEST}"
+if [ -d "${SVC_DIR}" ]; then
+    log "Backing up {{ svc_id }}..."
+    # Dump SQLite databases before archiving
+    find "${SVC_DIR}" -name '*.db' -type f 2>/dev/null | while read -r db; do
+        if file "${db}" | grep -qi sqlite; then
+            sqlite3 "${db}" ".backup '${db}.backup'" 2>/dev/null || true
+        fi
+    done
+    tar czf "${DEST}/{{ svc_id }}_${DATE}.tar.gz" \
+        -C "$(dirname "${SVC_DIR}")" "$(basename "${SVC_DIR}")" 2>/dev/null \
+        && log "  {{ svc_id }} OK" \
+        || log "  {{ svc_id }} WARN: tar exited with $?"
+    # Clean SQLite backup copies
+    find "${SVC_DIR}" -name '*.db.backup' -delete 2>/dev/null || true
+fi
+
+{% endif %}
+{% endfor %}
+
+# ── Prune old backups ──
+log "Pruning backups older than ${RETENTION} days..."
+find "${BACKUP_ROOT}" -name '*.tar.gz' -mtime +${RETENTION} -delete 2>/dev/null || true
+
+log "Backup complete."

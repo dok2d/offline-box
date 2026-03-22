@@ -12,10 +12,12 @@ ExecStart=/usr/bin/podman run \
   --cap-drop=ALL \
   --security-opt=no-new-privileges \
   -p {{ listen_addr }}:{{ jellyfin_port }}:8007 \
+  --log-driver=k8s-file \
+  --log-opt=path={{ container_log_dir }}/jellyfin/jellyfin.log \
   -v {{ jellyfin_config_dir }}:/config:rw \
   -v {{ jellyfin_cache_dir }}:/cache:rw \
   -v {{ jellyfin_media_dir }}:/media:ro \
-  localhost/jellyfin:latest
+  {{ jellyfin_image_full }}
 ExecStop=/usr/bin/podman stop jellyfin
 MemoryMax=4G
 CPUQuota=400%

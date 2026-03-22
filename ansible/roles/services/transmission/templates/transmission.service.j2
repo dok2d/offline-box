@@ -13,10 +13,12 @@ ExecStart=/usr/bin/podman run \
   --security-opt=no-new-privileges \
   -p {{ listen_addr }}:{{ transmission_port }}:8003 \
   -p {{ transmission_peer_port }}:51413 \
+  --log-driver=k8s-file \
+  --log-opt=path={{ container_log_dir }}/transmission/transmission.log \
   -v {{ transmission_config_dir }}:/config:rw \
   -v {{ transmission_download_dir }}:/downloads:rw \
   -v {{ transmission_watch_dir }}:/watch:rw \
-  localhost/transmission:latest
+  {{ transmission_image_full }}
 ExecStop=/usr/bin/podman stop transmission
 MemoryMax=1G
 CPUQuota=200%

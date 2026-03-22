@@ -23,15 +23,16 @@
     group: "{{ svc_user }}"
     mode: "0644"
   diff: true
+  register: _containerfile
 
 - name: Build Nexus container image
   become: true
   become_user: "{{ svc_user }}"
   containers.podman.podman_image:
-    name: localhost/nexus
-    tag: latest
+    name: "{{ nexus_image }}"
+    tag: "{{ nexus_tag }}"
     path: "{{ nexus_config_dir }}"
-    force: true
+    force: "{{ _containerfile.changed | default(true) }}"
 
 - name: Deploy Nexus systemd user unit
   ansible.builtin.template:

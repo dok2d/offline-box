@@ -34,15 +34,16 @@
     group: "{{ svc_user }}"
     mode: "0644"
   diff: true
+  register: _containerfile
 
 - name: Build Kiwix container image
   become: true
   become_user: "{{ svc_user }}"
   containers.podman.podman_image:
-    name: localhost/kiwix
-    tag: latest
+    name: "{{ kiwix_image }}"
+    tag: "{{ kiwix_tag }}"
     path: "{{ kiwix_config_dir }}"
-    force: true
+    force: "{{ _containerfile.changed | default(true) }}"
 
 - name: Generate Kiwix library.xml from ZIM files
   become: true

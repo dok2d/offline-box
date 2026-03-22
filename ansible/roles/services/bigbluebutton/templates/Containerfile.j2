@@ -12,7 +12,6 @@ RUN apt-get update && \
     nodejs npm \
     redis-server \
     postgresql postgresql-client \
-    nginx \
     supervisor \
     freeswitch freeswitch-mod-event-socket freeswitch-mod-conference \
     freeswitch-mod-dptools freeswitch-mod-dialplan-xml \
@@ -46,17 +45,17 @@ RUN useradd -r -u 10001 -m bigbluebutton && \
 RUN mkdir -p /app/bbb-web && \
     cd /app/bbb-web && \
     wget -q "https://github.com/bigbluebutton/bigbluebutton/releases/download/v${BBB_VERSION}.0/bbb-web.war" \
-      -O bbb-web.war || true
+      -O bbb-web.war
 
 # Install Etherpad-lite for shared notes
-RUN npm install -g etherpad-lite || true
+RUN npm install -g etherpad-lite
 
 # Configure PostgreSQL for BBB
 USER postgres
 RUN /etc/init.d/postgresql start && \
-    psql --command "CREATE USER bigbluebutton WITH PASSWORD 'bbb_password';" && \
+    psql --command "CREATE USER bigbluebutton WITH PASSWORD '{{ bigbluebutton_db_password }}';" && \
     createdb -O bigbluebutton bigbluebutton && \
-    /etc/init.d/postgresql stop || true
+    /etc/init.d/postgresql stop
 USER root
 
 # Configure FreeSWITCH for BBB

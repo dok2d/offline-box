@@ -17,8 +17,8 @@ SECRET_KEY = {{ gitea_secret_key }}
 INSTALL_LOCK = true
 
 [service]
-DISABLE_REGISTRATION = false
-REQUIRE_SIGNIN_VIEW = false
+DISABLE_REGISTRATION = {{ gitea_disable_registration | default(true) }}
+REQUIRE_SIGNIN_VIEW = {{ gitea_require_signin | default(true) }}
 
 [log]
 MODE = console

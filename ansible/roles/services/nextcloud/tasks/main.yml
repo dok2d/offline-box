@@ -23,6 +23,7 @@
     group: "{{ svc_user }}"
     mode: "0644"
   diff: true
+  register: _containerfile
 
 - name: Deploy Nextcloud autoconfig
   ansible.builtin.template:
@@ -37,10 +38,10 @@
   become: true
   become_user: "{{ svc_user }}"
   containers.podman.podman_image:
-    name: localhost/nextcloud
-    tag: latest
+    name: "{{ nextcloud_image }}"
+    tag: "{{ nextcloud_tag }}"
     path: "{{ nextcloud_config_dir }}"
-    force: true
+    force: "{{ _containerfile.changed | default(true) }}"
 
 - name: Deploy Nextcloud systemd user unit
   ansible.builtin.template:

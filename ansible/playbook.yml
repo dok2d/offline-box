@@ -11,6 +11,15 @@
           - server_name is defined
         fail_msg: "Required variables missing. Check group_vars/all.yml"
 
+    - name: Validate passwords.yml exists
+      ansible.builtin.assert:
+        that:
+          - transmission_rpc_password is defined
+          - transmission_rpc_password | length > 0
+        fail_msg: >
+          Credentials not configured.
+          Run: python3 tools/generate-passwords.py --init
+
   roles:
     - role: base
     - role: podman
@@ -54,3 +63,6 @@
 
     - role: services/bigbluebutton
       when: offlinebox_services.bigbluebutton.enabled | bool
+
+    - role: backup
+      when: enable_backup | default(true) | bool

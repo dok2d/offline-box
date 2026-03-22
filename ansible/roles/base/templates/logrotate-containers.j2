@@ -1,0 +1,10 @@
+/var/log/containers/*/*.log {
+    daily
+    rotate 14
+    compress
+    delaycompress
+    missingok
+    notifempty
+    copytruncate
+    create 0644 {{ svc_user }} {{ svc_user }}
+}

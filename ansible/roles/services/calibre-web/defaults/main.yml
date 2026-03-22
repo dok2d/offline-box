@@ -8,3 +8,7 @@ calibre_web_library_dir: "{{ opt_base }}/calibre-web/data/library"
 # URL to zip archive of Calibre library (must contain metadata.db)
 # If empty, an empty library will be initialized
 calibre_web_library_url: ""
+
+calibre_web_tag: "latest"
+calibre_web_image: "{{ (container_registry ~ '/' if container_registry else '') }}{{ (container_namespace ~ '/' if container_namespace else '') }}calibre-web"
+calibre_web_image_full: "{{ calibre_web_image }}:{{ calibre_web_tag }}"

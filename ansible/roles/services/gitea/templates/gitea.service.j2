@@ -13,9 +13,11 @@ ExecStart=/usr/bin/podman run \
   --security-opt=no-new-privileges \
   -p {{ listen_addr }}:{{ gitea_port }}:8006 \
   -p {{ gitea_ssh_port }}:2222 \
+  --log-driver=k8s-file \
+  --log-opt=path={{ container_log_dir }}/gitea/gitea.log \
   -v {{ gitea_data_dir }}:/data:rw \
   -v {{ gitea_config_dir }}:/etc/gitea:rw \
-  localhost/gitea:latest
+  {{ gitea_image_full }}
 ExecStop=/usr/bin/podman stop gitea
 MemoryMax=1G
 CPUQuota=200%

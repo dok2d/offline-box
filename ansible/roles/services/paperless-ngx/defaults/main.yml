@@ -8,3 +8,7 @@ paperless_ngx_consume_dir: "{{ opt_base }}/paperless-ngx/data/consume"
 paperless_ngx_media_dir: "{{ opt_base }}/paperless-ngx/data/media"
 paperless_ngx_admin_user: admin
 paperless_ngx_ocr_language: rus+eng
+
+paperless_ngx_tag: "latest"
+paperless_ngx_image: "{{ (container_registry ~ '/' if container_registry else '') }}{{ (container_namespace ~ '/' if container_namespace else '') }}paperless-ngx"
+paperless_ngx_image_full: "{{ paperless_ngx_image }}:{{ paperless_ngx_tag }}"

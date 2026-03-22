@@ -10,3 +10,6 @@ gitea_ssh_port: 2222
 gitea_admin_user: admin
 gitea_admin_email: admin@localhost
 gitea_version: "1.22.0"
+gitea_tag: "{{ gitea_version }}"
+gitea_image: "{{ (container_registry ~ '/' if container_registry else '') }}{{ (container_namespace ~ '/' if container_namespace else '') }}gitea"
+gitea_image_full: "{{ gitea_image }}:{{ gitea_tag }}"

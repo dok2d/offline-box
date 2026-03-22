@@ -85,15 +85,16 @@
     group: "{{ svc_user }}"
     mode: "0644"
   diff: true
+  register: _containerfile
 
 - name: Build Calibre-web container image
   become: true
   become_user: "{{ svc_user }}"
   containers.podman.podman_image:
-    name: localhost/calibre-web
-    tag: latest
+    name: "{{ calibre_web_image }}"
+    tag: "{{ calibre_web_tag }}"
     path: "{{ calibre_web_config_dir }}"
-    force: true
+    force: "{{ _containerfile.changed | default(true) }}"
 
 - name: Deploy Calibre-web systemd user unit
   ansible.builtin.template:

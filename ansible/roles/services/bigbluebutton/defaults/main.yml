@@ -8,3 +8,9 @@ bigbluebutton_recordings_dir: "{{ opt_base }}/bigbluebutton/data/recordings"
 bigbluebutton_freeswitch_port_start: 16384
 bigbluebutton_freeswitch_port_end: 32768
 bigbluebutton_version: "2.7"
+
+bigbluebutton_db_password: ""
+
+bigbluebutton_tag: "{{ bigbluebutton_version }}"
+bigbluebutton_image: "{{ (container_registry ~ '/' if container_registry else '') }}{{ (container_namespace ~ '/' if container_namespace else '') }}bigbluebutton"
+bigbluebutton_image_full: "{{ bigbluebutton_image }}:{{ bigbluebutton_tag }}"
