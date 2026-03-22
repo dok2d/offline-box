@@ -1,0 +1,58 @@
+# BigBlueButton configuration
+# Managed by Ansible — do not edit manually
+
+# Server settings
+bigbluebutton.web.serverURL=https://{{ server_name }}/bbb
+bigbluebutton.web.logoutURL=https://{{ server_name }}/bbb
+
+# Security
+securitySalt={{ bigbluebutton_secret_key }}
+supportedChecksumAlgorithms=sha256,sha512
+
+# Recording
+autoStartRecording=false
+allowStartStopRecording=true
+disableRecordingDefault=false
+recordingDirectory=/data/recordings
+
+# Meeting defaults
+defaultMeetingDuration=0
+maxInactivityTimeoutMinutes=120
+clientLogoutTimerInMinutes=0
+meetingExpireIfNoUserJoinedInMinutes=5
+meetingExpireWhenLastUserLeftInMinutes=1
+
+# User limits
+defaultMaxUsers=100
+maxNumPages=200
+maxFileSizeUpload=30000000
+maxSwfFileSize=500000000
+
+# Audio
+muteOnStart=false
+allowModsToUnmuteUsers=true
+
+# Webcam
+allowModsToEjectCameras=true
+
+# Welcome message
+defaultWelcomeMessage=Welcome to <b>%%CONFNAME%%</b>!
+defaultWelcomeMessageFooter=Use a headset to avoid echo.
+
+# SubPath configuration
+bigbluebutton.web.context=/bbb
+
+# FreeSWITCH
+freeswitch.ip=127.0.0.1
+freeswitch.port=8021
+freeswitch.password=ClueCon
+freeswitch.esl.port={{ bigbluebutton_freeswitch_port_start }}
+
+# Redis
+redisHost=127.0.0.1
+redisPort=6379
+
+# PostgreSQL
+databaseURL=jdbc:postgresql://127.0.0.1:5432/bigbluebutton
+databaseUsername=bigbluebutton
+databasePassword=bbb_password

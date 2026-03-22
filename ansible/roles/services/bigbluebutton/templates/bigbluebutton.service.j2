@@ -1,0 +1,31 @@
+[Unit]
+Description=BigBlueButton web conferencing (podman)
+After=default.target
+
+[Service]
+Environment="XDG_RUNTIME_DIR=/run/user/{{ svc_uid }}"
+ExecStartPre=-/usr/bin/podman rm -f bigbluebutton
+ExecStart=/usr/bin/podman run \
+  --name bigbluebutton \
+  --replace \
+  --rm \
+  --cap-drop=ALL \
+  --cap-add=NET_RAW \
+  --cap-add=SYS_NICE \
+  --security-opt=no-new-privileges \
+  -p {{ listen_addr }}:{{ bigbluebutton_port }}:8013 \
+  -p {{ bigbluebutton_freeswitch_port_start }}-{{ bigbluebutton_freeswitch_port_end }}:{{ bigbluebutton_freeswitch_port_start }}-{{ bigbluebutton_freeswitch_port_end }}/udp \
+  -v {{ bigbluebutton_data_dir }}:/data:rw \
+  -v {{ bigbluebutton_config_dir }}/bigbluebutton.properties:/etc/bigbluebutton/bigbluebutton.properties:ro \
+  -v {{ bigbluebutton_recordings_dir }}:/data/recordings:rw \
+  -e BBB_SECRET={{ bigbluebutton_secret_key }} \
+  -e BBB_SERVER_NAME={{ server_name }} \
+  localhost/bigbluebutton:latest
+ExecStop=/usr/bin/podman stop bigbluebutton
+MemoryMax=4G
+CPUQuota=800%
+Restart=on-failure
+RestartSec=10s
+
+[Install]
+WantedBy=default.target

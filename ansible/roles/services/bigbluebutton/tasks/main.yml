@@ -1,0 +1,96 @@
+---
+- name: Create BigBlueButton data directory
+  ansible.builtin.file:
+    path: "{{ bigbluebutton_data_dir }}"
+    state: directory
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0755"
+
+- name: Create BigBlueButton config directory
+  ansible.builtin.file:
+    path: "{{ bigbluebutton_config_dir }}"
+    state: directory
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0755"
+
+- name: Create BigBlueButton recordings directory
+  ansible.builtin.file:
+    path: "{{ bigbluebutton_recordings_dir }}"
+    state: directory
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0755"
+
+- name: Deploy BigBlueButton Containerfile
+  ansible.builtin.template:
+    src: Containerfile.j2
+    dest: "{{ bigbluebutton_config_dir }}/Containerfile"
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0644"
+  diff: true
+
+- name: Deploy BigBlueButton properties
+  ansible.builtin.template:
+    src: bigbluebutton.properties.j2
+    dest: "{{ bigbluebutton_config_dir }}/bigbluebutton.properties"
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0644"
+  diff: true
+  notify: Restart bigbluebutton
+
+- name: Copy BigBlueButton entrypoint script
+  ansible.builtin.copy:
+    src: entrypoint.sh
+    dest: "{{ bigbluebutton_config_dir }}/entrypoint.sh"
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0755"
+
+- name: Build BigBlueButton container image
+  become: true
+  become_user: "{{ svc_user }}"
+  containers.podman.podman_image:
+    name: localhost/bigbluebutton
+    tag: latest
+    path: "{{ bigbluebutton_config_dir }}"
+    force: true
+
+- name: Deploy BigBlueButton systemd user unit
+  ansible.builtin.template:
+    src: bigbluebutton.service.j2
+    dest: "{{ svc_home }}/.config/systemd/user/bigbluebutton.service"
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0644"
+  diff: true
+
+- name: Enable and start BigBlueButton service
+  become: true
+  become_user: "{{ svc_user }}"
+  ansible.builtin.systemd:
+    name: bigbluebutton
+    scope: user
+    enabled: true
+    state: started
+    daemon_reload: true
+
+- name: Wait for BigBlueButton to become available
+  ansible.builtin.uri:
+    url: "http://{{ listen_addr }}:{{ bigbluebutton_port }}/bbb/api"
+    status_code: [200, 302, 400]
+  register: bbb_health
+  retries: 60
+  delay: 5
+  until: bbb_health is not failed
+
+- name: Deploy nginx config for BigBlueButton
+  ansible.builtin.template:
+    src: nginx-bigbluebutton.conf.j2
+    dest: /etc/nginx/sites-enabled/bigbluebutton.conf
+    mode: "0644"
+  diff: true
+  notify: Reload nginx

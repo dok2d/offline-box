@@ -1,0 +1,10 @@
+---
+enable_bigbluebutton: true
+
+bigbluebutton_port: 8013
+bigbluebutton_data_dir: "{{ opt_base }}/bigbluebutton/data"
+bigbluebutton_config_dir: "{{ opt_base }}/bigbluebutton/config"
+bigbluebutton_recordings_dir: "{{ opt_base }}/bigbluebutton/data/recordings"
+bigbluebutton_freeswitch_port_start: 16384
+bigbluebutton_freeswitch_port_end: 32768
+bigbluebutton_version: "2.7"

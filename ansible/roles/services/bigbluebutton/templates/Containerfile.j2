@@ -1,0 +1,77 @@
+FROM docker.io/library/ubuntu:22.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV BBB_VERSION={{ bigbluebutton_version }}
+
+# Install base dependencies
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    wget curl gnupg2 ca-certificates apt-transport-https \
+    openjdk-17-jre-headless \
+    ruby ruby-dev build-essential \
+    nodejs npm \
+    redis-server \
+    postgresql postgresql-client \
+    nginx \
+    supervisor \
+    freeswitch freeswitch-mod-event-socket freeswitch-mod-conference \
+    freeswitch-mod-dptools freeswitch-mod-dialplan-xml \
+    freeswitch-mod-sofia freeswitch-mod-local-stream \
+    freeswitch-mod-native-file freeswitch-mod-sndfile \
+    freeswitch-mod-tone-stream freeswitch-mod-lua \
+    freeswitch-mod-console freeswitch-mod-say-en \
+    freeswitch-mod-loopback freeswitch-mod-commands \
+    freeswitch-sounds-en-us-callie \
+    python3 python3-pip \
+    netcat-openbsd procps \
+    libreoffice-core libreoffice-writer libreoffice-calc libreoffice-impress \
+    ghostscript poppler-utils imagemagick ffmpeg && \
+    rm -rf /var/lib/apt/lists/*
+
+# Create application user and directories
+RUN useradd -r -u 10001 -m bigbluebutton && \
+    mkdir -p /app /data/recordings /config \
+    /var/bigbluebutton /var/bigbluebutton/published \
+    /var/bigbluebutton/unpublished \
+    /var/bigbluebutton/recording/raw \
+    /var/log/bigbluebutton \
+    /run/redis /run/postgresql \
+    /etc/bigbluebutton && \
+    chown -R bigbluebutton:bigbluebutton /app /data /config \
+    /var/bigbluebutton /var/log/bigbluebutton && \
+    chown -R redis:redis /run/redis && \
+    chown -R postgres:postgres /run/postgresql
+
+# Install bbb-web (Grails application)
+RUN mkdir -p /app/bbb-web && \
+    cd /app/bbb-web && \
+    wget -q "https://github.com/bigbluebutton/bigbluebutton/releases/download/v${BBB_VERSION}.0/bbb-web.war" \
+      -O bbb-web.war || true
+
+# Install Etherpad-lite for shared notes
+RUN npm install -g etherpad-lite || true
+
+# Configure PostgreSQL for BBB
+USER postgres
+RUN /etc/init.d/postgresql start && \
+    psql --command "CREATE USER bigbluebutton WITH PASSWORD 'bbb_password';" && \
+    createdb -O bigbluebutton bigbluebutton && \
+    /etc/init.d/postgresql stop || true
+USER root
+
+# Configure FreeSWITCH for BBB
+RUN mkdir -p /etc/freeswitch/dialplan /etc/freeswitch/sip_profiles && \
+    chown -R freeswitch:freeswitch /etc/freeswitch
+
+# Copy configuration and entrypoint
+COPY bigbluebutton.properties /etc/bigbluebutton/bigbluebutton.properties
+COPY entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
+
+EXPOSE {{ bigbluebutton_port }}
+EXPOSE {{ bigbluebutton_freeswitch_port_start }}-{{ bigbluebutton_freeswitch_port_end }}/udp
+
+HEALTHCHECK --interval=30s --timeout=10s --retries=5 \
+  CMD curl -fs http://localhost:{{ bigbluebutton_port }}/bbb/api || exit 1
+
+ENTRYPOINT ["/bin/bash", "/app/entrypoint.sh"]
