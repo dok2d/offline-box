@@ -12,9 +12,11 @@ ExecStart=/usr/bin/podman run \
   --cap-drop=ALL \
   --security-opt=no-new-privileges \
   -p {{ listen_addr }}:{{ calibre_web_port }}:8008 \
+  --log-driver=k8s-file \
+  --log-opt=path={{ container_log_dir }}/calibre-web/calibre-web.log \
   -v {{ calibre_web_config_dir }}:/config:rw \
   -v {{ calibre_web_library_dir }}:/books:rw \
-  localhost/calibre-web:latest
+  {{ calibre_web_image_full }}
 ExecStop=/usr/bin/podman stop calibre-web
 MemoryMax=512M
 CPUQuota=100%

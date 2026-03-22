@@ -1,0 +1,7 @@
+[Unit]
+Description=Offline Box backup
+
+[Service]
+Type=oneshot
+ExecStart={{ svc_home }}/bin/offlinebox-backup.sh
+Environment="XDG_RUNTIME_DIR=/run/user/{{ svc_uid }}"

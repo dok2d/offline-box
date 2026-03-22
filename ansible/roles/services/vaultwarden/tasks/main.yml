@@ -15,6 +15,24 @@
     group: "{{ svc_user }}"
     mode: "0755"
 
+- name: Create containers env directory
+  ansible.builtin.file:
+    path: "{{ svc_home }}/.config/containers"
+    state: directory
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0700"
+
+- name: Deploy Vaultwarden env file
+  ansible.builtin.template:
+    src: vaultwarden.env.j2
+    dest: "{{ svc_home }}/.config/containers/vaultwarden.env"
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0600"
+  diff: false
+  notify: Restart vaultwarden
+
 - name: Deploy Vaultwarden Containerfile
   ansible.builtin.template:
     src: Containerfile.j2
@@ -23,15 +41,16 @@
     group: "{{ svc_user }}"
     mode: "0644"
   diff: true
+  register: _containerfile
 
 - name: Build Vaultwarden container image
   become: true
   become_user: "{{ svc_user }}"
   containers.podman.podman_image:
-    name: localhost/vaultwarden
-    tag: latest
+    name: "{{ vaultwarden_image }}"
+    tag: "{{ vaultwarden_tag }}"
     path: "{{ vaultwarden_config_dir }}"
-    force: true
+    force: "{{ _containerfile.changed | default(true) }}"
 
 - name: Deploy Vaultwarden systemd user unit
   ansible.builtin.template:

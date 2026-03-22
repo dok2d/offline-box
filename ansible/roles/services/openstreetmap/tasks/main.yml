@@ -33,15 +33,16 @@
     group: "{{ svc_user }}"
     mode: "0644"
   diff: true
+  register: _containerfile
 
 - name: Build OpenStreetMap container image
   become: true
   become_user: "{{ svc_user }}"
   containers.podman.podman_image:
-    name: localhost/openstreetmap
-    tag: latest
+    name: "{{ openstreetmap_image }}"
+    tag: "{{ openstreetmap_tag }}"
     path: "{{ openstreetmap_config_dir }}"
-    force: true
+    force: "{{ _containerfile.changed | default(true) }}"
 
 - name: Deploy OpenStreetMap systemd user unit
   ansible.builtin.template:

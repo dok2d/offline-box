@@ -31,6 +31,24 @@
     group: "{{ svc_user }}"
     mode: "0755"
 
+- name: Create containers env directory
+  ansible.builtin.file:
+    path: "{{ svc_home }}/.config/containers"
+    state: directory
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0700"
+
+- name: Deploy Paperless-ngx env file
+  ansible.builtin.template:
+    src: paperless-ngx.env.j2
+    dest: "{{ svc_home }}/.config/containers/paperless-ngx.env"
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0600"
+  diff: false
+  notify: Restart paperless-ngx
+
 - name: Deploy Paperless-ngx Containerfile
   ansible.builtin.template:
     src: Containerfile.j2
@@ -39,6 +57,7 @@
     group: "{{ svc_user }}"
     mode: "0644"
   diff: true
+  register: _containerfile
 
 - name: Copy Paperless-ngx entrypoint script
   ansible.builtin.copy:
@@ -52,10 +71,10 @@
   become: true
   become_user: "{{ svc_user }}"
   containers.podman.podman_image:
-    name: localhost/paperless-ngx
-    tag: latest
+    name: "{{ paperless_ngx_image }}"
+    tag: "{{ paperless_ngx_tag }}"
     path: "{{ paperless_ngx_config_dir }}"
-    force: true
+    force: "{{ _containerfile.changed | default(true) }}"
 
 - name: Deploy Paperless-ngx systemd user unit
   ansible.builtin.template:

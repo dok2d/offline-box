@@ -32,6 +32,7 @@
     - { key: net.ipv4.ip_unprivileged_port_start, value: "80" }
     - { key: kernel.unprivileged_userns_clone, value: "1" }
     - { key: net.ipv4.ip_forward, value: "1" }
+    - { key: net.ipv4.ip_nonlocal_bind, value: "1" }
 
 - name: Create service user {{ svc_user }}
   ansible.builtin.user:
@@ -40,6 +41,36 @@
     shell: /bin/bash
     create_home: true
     home: "{{ svc_home }}"
+
+- name: Install logrotate
+  ansible.builtin.apt:
+    name: logrotate
+    state: present
+    install_recommends: false
+
+- name: Create container log directory
+  ansible.builtin.file:
+    path: "{{ container_log_dir }}"
+    state: directory
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0755"
+
+- name: Create per-service log directories
+  ansible.builtin.file:
+    path: "{{ container_log_dir }}/{{ item.key }}"
+    state: directory
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0755"
+  loop: "{{ offlinebox_services | dict2items }}"
+  when: item.value.enabled | bool
+
+- name: Deploy container logrotate config
+  ansible.builtin.template:
+    src: logrotate-containers.j2
+    dest: /etc/logrotate.d/offlinebox-containers
+    mode: "0644"
 
 - name: Configure UFW defaults
   community.general.ufw:

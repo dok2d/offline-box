@@ -23,6 +23,7 @@
     group: "{{ svc_user }}"
     mode: "0644"
   diff: true
+  register: _containerfile
 
 - name: Deploy Gitea configuration
   ansible.builtin.template:
@@ -37,10 +38,10 @@
   become: true
   become_user: "{{ svc_user }}"
   containers.podman.podman_image:
-    name: localhost/gitea
-    tag: latest
+    name: "{{ gitea_image }}"
+    tag: "{{ gitea_tag }}"
     path: "{{ gitea_config_dir }}"
-    force: true
+    force: "{{ _containerfile.changed | default(true) }}"
 
 - name: Deploy Gitea systemd user unit
   ansible.builtin.template:

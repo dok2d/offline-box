@@ -1,0 +1,8 @@
+---
+enable_backup: true
+
+backup_dest: /backup
+backup_retention_days: 14
+backup_schedule: "daily"
+# Calendar spec for systemd timer (default: 03:00 daily)
+backup_timer_oncalendar: "*-*-* 03:00:00"

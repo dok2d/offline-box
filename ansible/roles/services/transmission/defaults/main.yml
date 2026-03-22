@@ -12,3 +12,6 @@ transmission_speed_limit_up_enabled: "false"
 transmission_speed_limit_up: 1000
 transmission_speed_limit_down_enabled: "false"
 transmission_speed_limit_down: 5000
+transmission_tag: "latest"
+transmission_image: "{{ (container_registry ~ '/' if container_registry else '') }}{{ (container_namespace ~ '/' if container_namespace else '') }}transmission"
+transmission_image_full: "{{ transmission_image }}:{{ transmission_tag }}"

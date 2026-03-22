@@ -12,8 +12,10 @@ ExecStart=/usr/bin/podman run \
   --cap-drop=ALL \
   --security-opt=no-new-privileges \
   -p {{ listen_addr }}:{{ searxng_port }}:8009 \
+  --log-driver=k8s-file \
+  --log-opt=path={{ container_log_dir }}/searxng/searxng.log \
   -v {{ searxng_config_dir }}:/config:rw \
-  localhost/searxng:latest
+  {{ searxng_image_full }}
 ExecStop=/usr/bin/podman stop searxng
 MemoryMax=512M
 CPUQuota=100%

@@ -48,15 +48,16 @@
     group: "{{ svc_user }}"
     mode: "0644"
   diff: true
+  register: _containerfile
 
 - name: Build Transmission container image
   become: true
   become_user: "{{ svc_user }}"
   containers.podman.podman_image:
-    name: localhost/transmission
-    tag: latest
+    name: "{{ transmission_image }}"
+    tag: "{{ transmission_tag }}"
     path: "{{ transmission_config_dir }}"
-    force: true
+    force: "{{ _containerfile.changed | default(true) }}"
 
 - name: Deploy Transmission systemd user unit
   ansible.builtin.template:

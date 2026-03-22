@@ -1,0 +1,27 @@
+# Generated credentials — never commit
+ansible/group_vars/passwords.yml
+
+# Ansible runtime
+*.retry
+.ansible/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Environment files
+*.env
+!*.env.j2
+!*.example.env
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db

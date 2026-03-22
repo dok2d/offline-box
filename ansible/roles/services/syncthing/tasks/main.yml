@@ -23,15 +23,16 @@
     group: "{{ svc_user }}"
     mode: "0644"
   diff: true
+  register: _containerfile
 
 - name: Build Syncthing container image
   become: true
   become_user: "{{ svc_user }}"
   containers.podman.podman_image:
-    name: localhost/syncthing
-    tag: latest
+    name: "{{ syncthing_image }}"
+    tag: "{{ syncthing_tag }}"
     path: "{{ syncthing_config_dir }}"
-    force: true
+    force: "{{ _containerfile.changed | default(true) }}"
 
 - name: Deploy Syncthing systemd user unit
   ansible.builtin.template:
