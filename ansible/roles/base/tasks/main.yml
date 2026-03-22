@@ -29,7 +29,7 @@
     sysctl_set: true
     reload: true
   loop:
-    - { key: net.ipv4.ip_unprivileged_port_start, value: "80" }
+    - { key: net.ipv4.ip_unprivileged_port_start, value: "1024" }
     - { key: kernel.unprivileged_userns_clone, value: "1" }
     - { key: net.ipv4.ip_forward, value: "1" }
     - { key: net.ipv4.ip_nonlocal_bind, value: "1" }
