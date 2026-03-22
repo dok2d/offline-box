@@ -1,0 +1,111 @@
+---
+- name: Create Syncthing data directory
+  ansible.builtin.file:
+    path: "{{ syncthing_data_dir }}"
+    state: directory
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0755"
+
+- name: Create Syncthing config directory
+  ansible.builtin.file:
+    path: "{{ syncthing_config_dir }}"
+    state: directory
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0755"
+
+- name: Deploy Syncthing Containerfile
+  ansible.builtin.template:
+    src: Containerfile.j2
+    dest: "{{ syncthing_config_dir }}/Containerfile"
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0644"
+  diff: true
+
+- name: Build Syncthing container image
+  become: true
+  become_user: "{{ svc_user }}"
+  containers.podman.podman_image:
+    name: localhost/syncthing
+    tag: latest
+    path: "{{ syncthing_config_dir }}"
+    force: true
+
+- name: Deploy Syncthing systemd user unit
+  ansible.builtin.template:
+    src: syncthing.service.j2
+    dest: "{{ svc_home }}/.config/systemd/user/syncthing.service"
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0644"
+  diff: true
+
+- name: Enable and start Syncthing service
+  become: true
+  become_user: "{{ svc_user }}"
+  ansible.builtin.systemd:
+    name: syncthing
+    scope: user
+    enabled: true
+    state: started
+    daemon_reload: true
+
+- name: Wait for Syncthing to become available
+  ansible.builtin.uri:
+    url: "http://{{ listen_addr }}:{{ syncthing_port }}/syncthing/rest/noauth/health"
+    status_code: [200]
+  register: syncthing_health
+  retries: 30
+  delay: 5
+  until: syncthing_health is not failed
+
+- name: Get Syncthing API key from config
+  become: true
+  become_user: "{{ svc_user }}"
+  ansible.builtin.shell: |
+    podman exec syncthing cat /config/config.xml | grep -oP '<apikey>\K[^<]+'
+  args:
+    executable: /bin/bash
+  register: syncthing_apikey
+  changed_when: false
+
+- name: Set Syncthing GUI credentials
+  ansible.builtin.uri:
+    url: "http://{{ listen_addr }}:{{ syncthing_port }}/syncthing/rest/config/gui"
+    method: PATCH
+    body_format: json
+    body:
+      user: "{{ syncthing_gui_user }}"
+      password: "{{ syncthing_gui_password }}"
+    headers:
+      X-API-Key: "{{ syncthing_apikey.stdout }}"
+    status_code: [200]
+  when: syncthing_apikey.stdout | length > 0
+
+- name: Create default Syncthing shared folder
+  ansible.builtin.uri:
+    url: "http://{{ listen_addr }}:{{ syncthing_port }}/syncthing/rest/config/folders"
+    method: POST
+    body_format: json
+    body:
+      id: default
+      label: Default
+      path: /data/Sync
+      type: sendreceive
+      rescanIntervalS: 3600
+      fsWatcherEnabled: true
+    headers:
+      X-API-Key: "{{ syncthing_apikey.stdout }}"
+    status_code: [200]
+  failed_when: false
+  when: syncthing_apikey.stdout | length > 0
+
+- name: Deploy nginx config for Syncthing
+  ansible.builtin.template:
+    src: nginx-syncthing.conf.j2
+    dest: /etc/nginx/sites-enabled/syncthing.conf
+    mode: "0644"
+  diff: true
+  notify: Reload nginx

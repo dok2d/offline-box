@@ -1,0 +1,121 @@
+---
+- name: Create Paperless-ngx data directory
+  ansible.builtin.file:
+    path: "{{ paperless_ngx_data_dir }}"
+    state: directory
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0755"
+
+- name: Create Paperless-ngx config directory
+  ansible.builtin.file:
+    path: "{{ paperless_ngx_config_dir }}"
+    state: directory
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0755"
+
+- name: Create Paperless-ngx consume directory
+  ansible.builtin.file:
+    path: "{{ paperless_ngx_consume_dir }}"
+    state: directory
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0755"
+
+- name: Create Paperless-ngx media directory
+  ansible.builtin.file:
+    path: "{{ paperless_ngx_media_dir }}"
+    state: directory
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0755"
+
+- name: Deploy Paperless-ngx Containerfile
+  ansible.builtin.template:
+    src: Containerfile.j2
+    dest: "{{ paperless_ngx_config_dir }}/Containerfile"
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0644"
+  diff: true
+
+- name: Copy Paperless-ngx entrypoint script
+  ansible.builtin.copy:
+    src: entrypoint.sh
+    dest: "{{ paperless_ngx_config_dir }}/entrypoint.sh"
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0755"
+
+- name: Build Paperless-ngx container image
+  become: true
+  become_user: "{{ svc_user }}"
+  containers.podman.podman_image:
+    name: localhost/paperless-ngx
+    tag: latest
+    path: "{{ paperless_ngx_config_dir }}"
+    force: true
+
+- name: Deploy Paperless-ngx systemd user unit
+  ansible.builtin.template:
+    src: paperless-ngx.service.j2
+    dest: "{{ svc_home }}/.config/systemd/user/paperless-ngx.service"
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0644"
+  diff: true
+
+- name: Enable and start Paperless-ngx service
+  become: true
+  become_user: "{{ svc_user }}"
+  ansible.builtin.systemd:
+    name: paperless-ngx
+    scope: user
+    enabled: true
+    state: started
+    daemon_reload: true
+
+- name: Wait for Paperless-ngx to become available
+  ansible.builtin.uri:
+    url: "http://{{ listen_addr }}:{{ paperless_ngx_port }}/"
+    status_code: [200, 302, 400]
+  register: paperless_health
+  retries: 30
+  delay: 5
+  until: paperless_health is not failed
+
+- name: Create Paperless-ngx superuser
+  become: true
+  become_user: "{{ svc_user }}"
+  ansible.builtin.shell: |
+    podman exec -e ADMIN_USER={{ paperless_ngx_admin_user | quote }} \
+                -e ADMIN_PASS={{ paperless_ngx_admin_password | quote }} \
+      paperless-ngx /app/venv/bin/python3 -c "
+    import django, os
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'paperless.settings')
+    django.setup()
+    from django.contrib.auth.models import User
+    user = os.environ['ADMIN_USER']
+    passwd = os.environ['ADMIN_PASS']
+    if not User.objects.filter(username=user).exists():
+        User.objects.create_superuser(user, '', passwd)
+        print('created')
+    else:
+        print('exists')
+    "
+  args:
+    executable: /bin/bash
+  register: paperless_superuser
+  changed_when: "'created' in paperless_superuser.stdout"
+  failed_when:
+    - paperless_superuser.rc != 0
+    - "'exists' not in paperless_superuser.stdout"
+
+- name: Deploy nginx config for Paperless-ngx
+  ansible.builtin.template:
+    src: nginx-paperless-ngx.conf.j2
+    dest: /etc/nginx/sites-enabled/paperless-ngx.conf
+    mode: "0644"
+  diff: true
+  notify: Reload nginx

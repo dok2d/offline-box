@@ -1,0 +1,18 @@
+FROM {{ container_base_image }}
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    php php-gd php-curl php-mbstring php-intl \
+    php-xml php-zip php-bz2 php-sqlite3 php-apcu \
+    php-bcmath php-gmp php-opcache php-readline \
+    curl bzip2 && \
+    rm -rf /var/lib/apt/lists/*
+RUN curl -fsSL https://download.nextcloud.com/server/releases/latest.tar.bz2 | \
+    tar xj -C /opt
+RUN useradd -r -u 10001 -m nextcloud && \
+    mkdir -p /data && \
+    chown -R nextcloud:nextcloud /opt/nextcloud /data
+USER nextcloud
+EXPOSE {{ nextcloud_port }}
+WORKDIR /opt/nextcloud
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD curl -fs http://localhost:{{ nextcloud_port }}/status.php || exit 1
+ENTRYPOINT ["php", "-d", "memory_limit={{ nextcloud_php_memory_limit }}", "-S", "0.0.0.0:{{ nextcloud_port }}", "-t", "/opt/nextcloud"]

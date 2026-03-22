@@ -1,0 +1,25 @@
+[Unit]
+Description=Calibre-web ebook library (podman)
+After=default.target
+
+[Service]
+Environment="XDG_RUNTIME_DIR=/run/user/{{ svc_uid }}"
+ExecStartPre=-/usr/bin/podman rm -f calibre-web
+ExecStart=/usr/bin/podman run \
+  --name calibre-web \
+  --replace \
+  --rm \
+  --cap-drop=ALL \
+  --security-opt=no-new-privileges \
+  -p {{ listen_addr }}:{{ calibre_web_port }}:8008 \
+  -v {{ calibre_web_config_dir }}:/config:rw \
+  -v {{ calibre_web_library_dir }}:/books:rw \
+  localhost/calibre-web:latest
+ExecStop=/usr/bin/podman stop calibre-web
+MemoryMax=512M
+CPUQuota=100%
+Restart=on-failure
+RestartSec=10s
+
+[Install]
+WantedBy=default.target

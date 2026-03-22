@@ -1,0 +1,71 @@
+---
+- name: Create OpenStreetMap data directory
+  ansible.builtin.file:
+    path: "{{ openstreetmap_data_dir }}"
+    state: directory
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0755"
+
+- name: Create OpenStreetMap config directory
+  ansible.builtin.file:
+    path: "{{ openstreetmap_config_dir }}"
+    state: directory
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0755"
+
+- name: Download MBTiles map file
+  ansible.builtin.get_url:
+    url: "{{ openstreetmap_mbtiles_url }}"
+    dest: "{{ openstreetmap_data_dir }}/{{ openstreetmap_mbtiles_url | basename }}"
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0644"
+    timeout: 3600
+  when: openstreetmap_mbtiles_url | default('') | length > 0
+
+- name: Deploy OpenStreetMap Containerfile
+  ansible.builtin.template:
+    src: Containerfile.j2
+    dest: "{{ openstreetmap_config_dir }}/Containerfile"
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0644"
+  diff: true
+
+- name: Build OpenStreetMap container image
+  become: true
+  become_user: "{{ svc_user }}"
+  containers.podman.podman_image:
+    name: localhost/openstreetmap
+    tag: latest
+    path: "{{ openstreetmap_config_dir }}"
+    force: true
+
+- name: Deploy OpenStreetMap systemd user unit
+  ansible.builtin.template:
+    src: openstreetmap.service.j2
+    dest: "{{ svc_home }}/.config/systemd/user/openstreetmap.service"
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0644"
+  diff: true
+
+- name: Enable and start OpenStreetMap service
+  become: true
+  become_user: "{{ svc_user }}"
+  ansible.builtin.systemd:
+    name: openstreetmap
+    scope: user
+    enabled: true
+    state: started
+    daemon_reload: true
+
+- name: Deploy nginx config for OpenStreetMap
+  ansible.builtin.template:
+    src: nginx-openstreetmap.conf.j2
+    dest: /etc/nginx/sites-enabled/openstreetmap.conf
+    mode: "0644"
+  diff: true
+  notify: Reload nginx

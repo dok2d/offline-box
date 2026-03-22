@@ -1,0 +1,61 @@
+---
+- name: Create Vaultwarden data directory
+  ansible.builtin.file:
+    path: "{{ vaultwarden_data_dir }}"
+    state: directory
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0755"
+
+- name: Create Vaultwarden config directory
+  ansible.builtin.file:
+    path: "{{ vaultwarden_config_dir }}"
+    state: directory
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0755"
+
+- name: Deploy Vaultwarden Containerfile
+  ansible.builtin.template:
+    src: Containerfile.j2
+    dest: "{{ vaultwarden_config_dir }}/Containerfile"
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0644"
+  diff: true
+
+- name: Build Vaultwarden container image
+  become: true
+  become_user: "{{ svc_user }}"
+  containers.podman.podman_image:
+    name: localhost/vaultwarden
+    tag: latest
+    path: "{{ vaultwarden_config_dir }}"
+    force: true
+
+- name: Deploy Vaultwarden systemd user unit
+  ansible.builtin.template:
+    src: vaultwarden.service.j2
+    dest: "{{ svc_home }}/.config/systemd/user/vaultwarden.service"
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0644"
+  diff: true
+
+- name: Enable and start Vaultwarden service
+  become: true
+  become_user: "{{ svc_user }}"
+  ansible.builtin.systemd:
+    name: vaultwarden
+    scope: user
+    enabled: true
+    state: started
+    daemon_reload: true
+
+- name: Deploy nginx config for Vaultwarden
+  ansible.builtin.template:
+    src: nginx-vaultwarden.conf.j2
+    dest: /etc/nginx/sites-enabled/vaultwarden.conf
+    mode: "0644"
+  diff: true
+  notify: Reload nginx

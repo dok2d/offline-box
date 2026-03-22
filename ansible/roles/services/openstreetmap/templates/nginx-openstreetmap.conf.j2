@@ -1,0 +1,13 @@
+# OpenStreetMap tile server
+location /osm/ {
+    proxy_pass http://{{ listen_addr }}:{{ openstreetmap_port }}/osm/;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    include /etc/nginx/snippets/security-headers.conf;
+    limit_req zone=general burst=30 nodelay;
+    proxy_buffering on;
+    proxy_buffer_size 8k;
+    proxy_buffers 16 8k;
+}

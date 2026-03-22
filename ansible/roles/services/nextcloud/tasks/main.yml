@@ -1,0 +1,90 @@
+---
+- name: Create Nextcloud data directory
+  ansible.builtin.file:
+    path: "{{ nextcloud_data_dir }}"
+    state: directory
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0755"
+
+- name: Create Nextcloud config directory
+  ansible.builtin.file:
+    path: "{{ nextcloud_config_dir }}"
+    state: directory
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0755"
+
+- name: Deploy Nextcloud Containerfile
+  ansible.builtin.template:
+    src: Containerfile.j2
+    dest: "{{ nextcloud_config_dir }}/Containerfile"
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0644"
+  diff: true
+
+- name: Deploy Nextcloud autoconfig
+  ansible.builtin.template:
+    src: nextcloud-autoconfig.php.j2
+    dest: "{{ nextcloud_config_dir }}/autoconfig.php"
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0644"
+  diff: true
+
+- name: Build Nextcloud container image
+  become: true
+  become_user: "{{ svc_user }}"
+  containers.podman.podman_image:
+    name: localhost/nextcloud
+    tag: latest
+    path: "{{ nextcloud_config_dir }}"
+    force: true
+
+- name: Deploy Nextcloud systemd user unit
+  ansible.builtin.template:
+    src: nextcloud.service.j2
+    dest: "{{ svc_home }}/.config/systemd/user/nextcloud.service"
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0644"
+  diff: true
+
+- name: Enable and start Nextcloud service
+  become: true
+  become_user: "{{ svc_user }}"
+  ansible.builtin.systemd:
+    name: nextcloud
+    scope: user
+    enabled: true
+    state: started
+    daemon_reload: true
+
+- name: Wait for Nextcloud to become available
+  ansible.builtin.uri:
+    url: "http://{{ listen_addr }}:{{ nextcloud_port }}/status.php"
+    return_content: true
+    status_code: [200, 302, 400]
+  register: nc_health
+  retries: 30
+  delay: 5
+  until: nc_health is not failed
+
+- name: Trigger Nextcloud auto-install (first run)
+  ansible.builtin.uri:
+    url: "http://{{ listen_addr }}:{{ nextcloud_port }}/index.php"
+    method: GET
+    status_code: [200, 302, 303, 400]
+    timeout: 120
+  register: nc_install
+  changed_when: nc_install.status in [200, 302, 303]
+  failed_when: false
+
+- name: Deploy nginx config for Nextcloud
+  ansible.builtin.template:
+    src: nginx-nextcloud.conf.j2
+    dest: /etc/nginx/sites-enabled/nextcloud.conf
+    mode: "0644"
+  diff: true
+  notify: Reload nginx

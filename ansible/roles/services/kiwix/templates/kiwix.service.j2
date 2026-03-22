@@ -1,0 +1,24 @@
+[Unit]
+Description=Kiwix offline wiki (podman)
+After=default.target
+
+[Service]
+Environment="XDG_RUNTIME_DIR=/run/user/{{ svc_uid }}"
+ExecStartPre=-/usr/bin/podman rm -f kiwix
+ExecStart=/usr/bin/podman run \
+  --name kiwix \
+  --replace \
+  --rm \
+  --cap-drop=ALL \
+  --security-opt=no-new-privileges \
+  -p {{ listen_addr }}:{{ kiwix_port }}:8001 \
+  -v {{ kiwix_data_dir }}:/data:ro \
+  localhost/kiwix:latest
+ExecStop=/usr/bin/podman stop kiwix
+MemoryMax=512M
+CPUQuota=100%
+Restart=on-failure
+RestartSec=10s
+
+[Install]
+WantedBy=default.target

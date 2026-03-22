@@ -1,0 +1,22 @@
+FROM {{ container_base_image }} AS build
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends curl ca-certificates && \
+    rm -rf /var/lib/apt/lists/*
+RUN ARCH=$(dpkg --print-architecture) && \
+    curl -fsSL -o /usr/local/bin/gitea \
+    "https://dl.gitea.com/gitea/{{ gitea_version.split('.')[:2] | join('.') }}/gitea-{{ gitea_version }}-linux-${ARCH}" && \
+    chmod +x /usr/local/bin/gitea
+
+FROM {{ container_base_image }}
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends git git-lfs curl && \
+    rm -rf /var/lib/apt/lists/*
+COPY --from=build /usr/local/bin/gitea /usr/local/bin/gitea
+RUN useradd -r -u 10001 -m -s /bin/bash gitea && \
+    mkdir -p /data /etc/gitea && \
+    chown -R gitea:gitea /data /etc/gitea
+USER gitea
+ENV GITEA_WORK_DIR=/data
+EXPOSE {{ gitea_port }} {{ gitea_ssh_port }}
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD curl -fs http://localhost:8006/gitea/ || exit 1
+ENTRYPOINT ["gitea", "web", "--config", "/etc/gitea/app.ini"]

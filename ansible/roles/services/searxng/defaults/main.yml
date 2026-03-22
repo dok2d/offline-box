@@ -1,0 +1,8 @@
+---
+enable_searxng: true
+
+searxng_port: 8009
+searxng_data_dir: "{{ opt_base }}/searxng/data"
+searxng_config_dir: "{{ opt_base }}/searxng/config"
+# searxng_secret_key — defined in group_vars/passwords.yml
+searxng_base_url: "/searxng/"

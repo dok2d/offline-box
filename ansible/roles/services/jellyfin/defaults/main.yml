@@ -1,0 +1,11 @@
+---
+enable_jellyfin: true
+
+jellyfin_port: 8007
+jellyfin_data_dir: "{{ opt_base }}/jellyfin/data"
+jellyfin_config_dir: "{{ opt_base }}/jellyfin/config"
+jellyfin_media_dir: "{{ opt_base }}/jellyfin/data/media"
+jellyfin_cache_dir: "{{ opt_base }}/jellyfin/data/cache"
+jellyfin_admin_user: admin
+jellyfin_language: ru
+jellyfin_country: RU

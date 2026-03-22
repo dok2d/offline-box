@@ -1,0 +1,20 @@
+{
+    "download-dir": "/downloads",
+    "watch-dir": "/watch",
+    "watch-dir-enabled": true,
+    "rpc-port": 8003,
+    "rpc-bind-address": "0.0.0.0",
+    "rpc-whitelist-enabled": true,
+    "rpc-whitelist": "127.0.0.1,10.*.*.*,172.16.*.*,192.168.*.*",
+    "rpc-authentication-required": true,
+    "rpc-username": "{{ transmission_rpc_username }}",
+    "rpc-password": "{{ transmission_rpc_password }}",
+    "peer-port": 51413,
+    "speed-limit-up-enabled": {{ transmission_speed_limit_up_enabled }},
+    "speed-limit-up": {{ transmission_speed_limit_up }},
+    "speed-limit-down-enabled": {{ transmission_speed_limit_down_enabled }},
+    "speed-limit-down": {{ transmission_speed_limit_down }},
+    "encryption": 2,
+    "umask": 18,
+    "rpc-url": "/transmission/"
+}

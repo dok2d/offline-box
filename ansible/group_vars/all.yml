@@ -1,0 +1,185 @@
+---
+####################
+# Global settings
+####################
+
+# Service user (rootless podman)
+svc_user: svc
+svc_uid: 1001
+svc_home: /home/svc
+
+# Base directory for service data and config
+opt_base: /opt
+
+# All services listen on loopback only; nginx exposes them
+listen_addr: 127.0.0.1
+
+# Server address (used in nginx server_name and self-signed cert)
+# Override with your actual IP or hostname
+server_name: "{{ ansible_default_ipv4.address | default(ansible_host) }}"
+
+# Enable HTTPS with self-signed certificate (set false for plain HTTP)
+use_ssl: true
+
+# TLS (self-signed)
+ssl_cert_path: /etc/nginx/ssl/box.crt
+ssl_key_path: /etc/nginx/ssl/box.key
+ssl_dhparam_path: /etc/nginx/ssl/dhparam.pem
+
+# Base container image for all services
+container_base_image: docker.io/library/debian:13-slim
+
+
+############################
+# Service registry
+############################
+# Central dict describing every service — analogous to kolla-ansible's
+# *_services dicts.  The dashboard template, playbook, and nginx all
+# consume this structure.  Per-service defaults are in each role's
+# defaults/main.yml; override them in host_vars or here.
+
+offlinebox_services:
+  kiwix:
+    container_name: kiwix
+    enabled: "{{ enable_kiwix }}"
+    image: localhost/kiwix
+    port: "{{ kiwix_port }}"
+    data_dir: "{{ kiwix_data_dir }}"
+    config_dir: "{{ kiwix_config_dir }}"
+    dashboard:
+      name: Kiwix
+      desc: "Wikipedia & offline content"
+      icon: "\U0001F4DA"
+      url: /kiwix/
+  openstreetmap:
+    container_name: openstreetmap
+    enabled: "{{ enable_openstreetmap }}"
+    image: localhost/openstreetmap
+    port: "{{ openstreetmap_port }}"
+    data_dir: "{{ openstreetmap_data_dir }}"
+    config_dir: "{{ openstreetmap_config_dir }}"
+    dashboard:
+      name: OpenStreetMap
+      desc: "Offline maps & navigation"
+      icon: "\U0001F5FA\uFE0F"
+      url: /osm/
+  transmission:
+    container_name: transmission
+    enabled: "{{ enable_transmission }}"
+    image: localhost/transmission
+    port: "{{ transmission_port }}"
+    data_dir: "{{ transmission_data_dir }}"
+    config_dir: "{{ transmission_config_dir }}"
+    dashboard:
+      name: Transmission
+      desc: "Torrent downloads"
+      icon: "\u2B07\uFE0F"
+      url: /transmission/
+  nexus:
+    container_name: nexus
+    enabled: "{{ enable_nexus }}"
+    image: localhost/nexus
+    port: "{{ nexus_port }}"
+    data_dir: "{{ nexus_data_dir }}"
+    config_dir: "{{ nexus_config_dir }}"
+    dashboard:
+      name: Nexus
+      desc: "Package & artifact repository"
+      icon: "\U0001F4E6"
+      url: /nexus/
+  nextcloud:
+    container_name: nextcloud
+    enabled: "{{ enable_nextcloud }}"
+    image: localhost/nextcloud
+    port: "{{ nextcloud_port }}"
+    data_dir: "{{ nextcloud_data_dir }}"
+    config_dir: "{{ nextcloud_config_dir }}"
+    dashboard:
+      name: Nextcloud
+      desc: "Cloud storage & collaboration"
+      icon: "\u2601\uFE0F"
+      url: /nextcloud/
+  gitea:
+    container_name: gitea
+    enabled: "{{ enable_gitea }}"
+    image: localhost/gitea
+    port: "{{ gitea_port }}"
+    data_dir: "{{ gitea_data_dir }}"
+    config_dir: "{{ gitea_config_dir }}"
+    dashboard:
+      name: Gitea
+      desc: "Git repositories & code hosting"
+      icon: "\U0001F500"
+      url: /gitea/
+  jellyfin:
+    container_name: jellyfin
+    enabled: "{{ enable_jellyfin }}"
+    image: localhost/jellyfin
+    port: "{{ jellyfin_port }}"
+    data_dir: "{{ jellyfin_data_dir }}"
+    config_dir: "{{ jellyfin_config_dir }}"
+    dashboard:
+      name: Jellyfin
+      desc: "Media streaming server"
+      icon: "\U0001F3AC"
+      url: /jellyfin/
+  calibre-web:
+    container_name: calibre-web
+    enabled: "{{ enable_calibre_web }}"
+    image: localhost/calibre-web
+    port: "{{ calibre_web_port }}"
+    data_dir: "{{ calibre_web_data_dir }}"
+    config_dir: "{{ calibre_web_config_dir }}"
+    dashboard:
+      name: Calibre-web
+      desc: "E-book library"
+      icon: "\U0001F4D6"
+      url: /calibre/
+  searxng:
+    container_name: searxng
+    enabled: "{{ enable_searxng }}"
+    image: localhost/searxng
+    port: "{{ searxng_port }}"
+    data_dir: "{{ searxng_data_dir }}"
+    config_dir: "{{ searxng_config_dir }}"
+    dashboard:
+      name: SearXNG
+      desc: "Meta search engine"
+      icon: "\U0001F50D"
+      url: /searxng/
+  vaultwarden:
+    container_name: vaultwarden
+    enabled: "{{ enable_vaultwarden }}"
+    image: localhost/vaultwarden
+    port: "{{ vaultwarden_port }}"
+    data_dir: "{{ vaultwarden_data_dir }}"
+    config_dir: "{{ vaultwarden_config_dir }}"
+    dashboard:
+      name: Vaultwarden
+      desc: "Password manager"
+      icon: "\U0001F510"
+      url: /vaultwarden/
+  syncthing:
+    container_name: syncthing
+    enabled: "{{ enable_syncthing }}"
+    image: localhost/syncthing
+    port: "{{ syncthing_port }}"
+    data_dir: "{{ syncthing_data_dir }}"
+    config_dir: "{{ syncthing_config_dir }}"
+    dashboard:
+      name: Syncthing
+      desc: "File synchronization"
+      icon: "\U0001F504"
+      url: /syncthing/
+  paperless-ngx:
+    container_name: paperless-ngx
+    enabled: "{{ enable_paperless_ngx }}"
+    image: localhost/paperless-ngx
+    port: "{{ paperless_ngx_port }}"
+    data_dir: "{{ paperless_ngx_data_dir }}"
+    config_dir: "{{ paperless_ngx_config_dir }}"
+    dashboard:
+      name: Paperless-ngx
+      desc: "Document management & OCR"
+      icon: "\U0001F4C4"
+      url: /paperless/

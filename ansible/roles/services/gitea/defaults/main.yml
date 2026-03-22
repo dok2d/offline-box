@@ -1,0 +1,12 @@
+---
+enable_gitea: true
+
+gitea_port: 8006
+gitea_data_dir: "{{ opt_base }}/gitea/data"
+gitea_config_dir: "{{ opt_base }}/gitea/config"
+gitea_db_type: sqlite3
+gitea_lfs_enabled: "true"
+gitea_ssh_port: 2222
+gitea_admin_user: admin
+gitea_admin_email: admin@localhost
+gitea_version: "1.22.0"

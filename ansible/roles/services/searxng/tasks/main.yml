@@ -1,0 +1,70 @@
+---
+- name: Create SearXNG data directory
+  ansible.builtin.file:
+    path: "{{ searxng_data_dir }}"
+    state: directory
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0755"
+
+- name: Create SearXNG config directory
+  ansible.builtin.file:
+    path: "{{ searxng_config_dir }}"
+    state: directory
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0755"
+
+- name: Deploy SearXNG Containerfile
+  ansible.builtin.template:
+    src: Containerfile.j2
+    dest: "{{ searxng_config_dir }}/Containerfile"
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0644"
+  diff: true
+
+- name: Deploy SearXNG settings
+  ansible.builtin.template:
+    src: searxng-settings.yml.j2
+    dest: "{{ searxng_config_dir }}/settings.yml"
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0644"
+  diff: true
+
+- name: Build SearXNG container image
+  become: true
+  become_user: "{{ svc_user }}"
+  containers.podman.podman_image:
+    name: localhost/searxng
+    tag: latest
+    path: "{{ searxng_config_dir }}"
+    force: true
+
+- name: Deploy SearXNG systemd user unit
+  ansible.builtin.template:
+    src: searxng.service.j2
+    dest: "{{ svc_home }}/.config/systemd/user/searxng.service"
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0644"
+  diff: true
+
+- name: Enable and start SearXNG service
+  become: true
+  become_user: "{{ svc_user }}"
+  ansible.builtin.systemd:
+    name: searxng
+    scope: user
+    enabled: true
+    state: started
+    daemon_reload: true
+
+- name: Deploy nginx config for SearXNG
+  ansible.builtin.template:
+    src: nginx-searxng.conf.j2
+    dest: /etc/nginx/sites-enabled/searxng.conf
+    mode: "0644"
+  diff: true
+  notify: Reload nginx

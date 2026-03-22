@@ -1,0 +1,25 @@
+[Unit]
+Description=Nexus Repository Manager (podman)
+After=default.target
+
+[Service]
+Environment="XDG_RUNTIME_DIR=/run/user/{{ svc_uid }}"
+ExecStartPre=-/usr/bin/podman rm -f nexus
+ExecStart=/usr/bin/podman run \
+  --name nexus \
+  --replace \
+  --rm \
+  --cap-drop=ALL \
+  --security-opt=no-new-privileges \
+  -p {{ listen_addr }}:{{ nexus_port }}:8004 \
+  -v {{ nexus_data_dir }}:/opt/sonatype-work:rw \
+  -e INSTALL4J_ADD_VM_PARAMS="-Xms512m -Xmx{{ nexus_jvm_heap }} -Djava.util.prefs.userRoot=/opt/sonatype-work/javaprefs" \
+  localhost/nexus:latest
+ExecStop=/usr/bin/podman stop nexus
+MemoryMax=2G
+CPUQuota=200%
+Restart=on-failure
+RestartSec=10s
+
+[Install]
+WantedBy=default.target

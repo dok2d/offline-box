@@ -1,0 +1,10 @@
+---
+enable_kiwix: true
+
+kiwix_port: 8001
+kiwix_data_dir: "{{ opt_base }}/kiwix/data"
+kiwix_config_dir: "{{ opt_base }}/kiwix/config"
+# List of ZIM file URLs to download (browse https://download.kiwix.org/zim/)
+# Mirrors: https://ftp.fau.de/kiwix/zim/ , https://dumps.wikimedia.org/other/kiwix/zim/
+kiwix_zim_urls:
+  - "https://download.kiwix.org/zim/wikipedia/wikipedia_ru_all_maxi_2025-01.zim"

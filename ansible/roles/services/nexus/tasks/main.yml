@@ -1,0 +1,245 @@
+---
+- name: Create Nexus data directory
+  ansible.builtin.file:
+    path: "{{ nexus_data_dir }}"
+    state: directory
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0755"
+
+- name: Create Nexus config directory
+  ansible.builtin.file:
+    path: "{{ nexus_config_dir }}"
+    state: directory
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0755"
+
+- name: Deploy Nexus Containerfile
+  ansible.builtin.template:
+    src: Containerfile.j2
+    dest: "{{ nexus_config_dir }}/Containerfile"
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0644"
+  diff: true
+
+- name: Build Nexus container image
+  become: true
+  become_user: "{{ svc_user }}"
+  containers.podman.podman_image:
+    name: localhost/nexus
+    tag: latest
+    path: "{{ nexus_config_dir }}"
+    force: true
+
+- name: Deploy Nexus systemd user unit
+  ansible.builtin.template:
+    src: nexus.service.j2
+    dest: "{{ svc_home }}/.config/systemd/user/nexus.service"
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0644"
+  diff: true
+
+- name: Enable and start Nexus service
+  become: true
+  become_user: "{{ svc_user }}"
+  ansible.builtin.systemd:
+    name: nexus
+    scope: user
+    enabled: true
+    state: started
+    daemon_reload: true
+
+- name: Wait for Nexus to become available
+  ansible.builtin.uri:
+    url: "http://{{ listen_addr }}:{{ nexus_port }}/nexus/service/rest/v1/status"
+    status_code: [200]
+  register: nexus_health
+  retries: 60
+  delay: 10
+  until: nexus_health is not failed
+
+- name: Check if Nexus initial admin password file exists
+  ansible.builtin.stat:
+    path: "{{ nexus_data_dir }}/admin.password"
+  register: nexus_initial_pw_file
+
+- name: Read initial Nexus admin password
+  ansible.builtin.slurp:
+    src: "{{ nexus_data_dir }}/admin.password"
+  register: nexus_initial_pw
+  when: nexus_initial_pw_file.stat.exists
+
+- name: Change Nexus admin password
+  ansible.builtin.uri:
+    url: "http://{{ listen_addr }}:{{ nexus_port }}/nexus/service/rest/v1/security/users/admin/change-password"
+    method: PUT
+    body: "{{ nexus_admin_password }}"
+    headers:
+      Content-Type: "text/plain"
+    url_username: admin
+    url_password: "{{ nexus_initial_pw.content | b64decode }}"
+    force_basic_auth: true
+    status_code: [204]
+  when: nexus_initial_pw_file.stat.exists
+
+- name: Enable anonymous access for read-only browsing
+  ansible.builtin.uri:
+    url: "http://{{ listen_addr }}:{{ nexus_port }}/nexus/service/rest/v1/security/anonymous"
+    method: PUT
+    body_format: json
+    body:
+      enabled: true
+      userId: anonymous
+      realmName: NexusAuthorizingRealm
+    url_username: admin
+    url_password: "{{ nexus_admin_password }}"
+    force_basic_auth: true
+    status_code: [200]
+  failed_when: false
+
+- name: Check existing Nexus repositories
+  ansible.builtin.uri:
+    url: "http://{{ listen_addr }}:{{ nexus_port }}/nexus/service/rest/v1/repositories"
+    method: GET
+    url_username: admin
+    url_password: "{{ nexus_admin_password }}"
+    force_basic_auth: true
+    return_content: true
+  register: nexus_existing_repos
+
+- name: Create APT proxy repository (Debian)
+  ansible.builtin.uri:
+    url: "http://{{ listen_addr }}:{{ nexus_port }}/nexus/service/rest/v1/repositories/apt/proxy"
+    method: POST
+    body_format: json
+    body:
+      name: apt-debian
+      online: true
+      storage:
+        blobStoreName: default
+        strictContentTypeValidation: true
+      proxy:
+        remoteUrl: "{{ nexus_apt_proxy_url }}"
+        contentMaxAge: -1
+        metadataMaxAge: -1
+      negativeCache:
+        enabled: false
+        timeToLive: 0
+      httpClient:
+        blocked: false
+        autoBlock: true
+      apt:
+        distribution: "{{ nexus_apt_distribution }}"
+        flat: false
+    url_username: admin
+    url_password: "{{ nexus_admin_password }}"
+    force_basic_auth: true
+    status_code: [201]
+  when: nexus_existing_repos.json | selectattr('name', 'equalto', 'apt-debian') | list | length == 0
+
+- name: Create PyPI proxy repository
+  ansible.builtin.uri:
+    url: "http://{{ listen_addr }}:{{ nexus_port }}/nexus/service/rest/v1/repositories/pypi/proxy"
+    method: POST
+    body_format: json
+    body:
+      name: pypi-proxy
+      online: true
+      storage:
+        blobStoreName: default
+        strictContentTypeValidation: true
+      proxy:
+        remoteUrl: "{{ nexus_pypi_proxy_url }}"
+        contentMaxAge: -1
+        metadataMaxAge: -1
+      negativeCache:
+        enabled: false
+        timeToLive: 0
+      httpClient:
+        blocked: false
+        autoBlock: true
+    url_username: admin
+    url_password: "{{ nexus_admin_password }}"
+    force_basic_auth: true
+    status_code: [201]
+  when: nexus_existing_repos.json | selectattr('name', 'equalto', 'pypi-proxy') | list | length == 0
+
+- name: Create Docker proxy repository
+  ansible.builtin.uri:
+    url: "http://{{ listen_addr }}:{{ nexus_port }}/nexus/service/rest/v1/repositories/docker/proxy"
+    method: POST
+    body_format: json
+    body:
+      name: docker-proxy
+      online: true
+      storage:
+        blobStoreName: default
+        strictContentTypeValidation: true
+      proxy:
+        remoteUrl: "{{ nexus_docker_proxy_url }}"
+        contentMaxAge: -1
+        metadataMaxAge: -1
+      negativeCache:
+        enabled: false
+        timeToLive: 0
+      httpClient:
+        blocked: false
+        autoBlock: true
+      docker:
+        v1Enabled: false
+        forceBasicAuth: true
+        httpPort: "{{ nexus_docker_proxy_port }}"
+      dockerProxy:
+        indexType: HUB
+        indexUrl: "https://index.docker.io/"
+    url_username: admin
+    url_password: "{{ nexus_admin_password }}"
+    force_basic_auth: true
+    status_code: [201]
+  when: nexus_existing_repos.json | selectattr('name', 'equalto', 'docker-proxy') | list | length == 0
+
+- name: Create Raw hosted repository
+  ansible.builtin.uri:
+    url: "http://{{ listen_addr }}:{{ nexus_port }}/nexus/service/rest/v1/repositories/raw/hosted"
+    method: POST
+    body_format: json
+    body:
+      name: raw-hosted
+      online: true
+      storage:
+        blobStoreName: default
+        strictContentTypeValidation: false
+        writePolicy: ALLOW
+      cleanup:
+        policyNames: []
+    url_username: admin
+    url_password: "{{ nexus_admin_password }}"
+    force_basic_auth: true
+    status_code: [201]
+  when: nexus_existing_repos.json | selectattr('name', 'equalto', 'raw-hosted') | list | length == 0
+
+- name: Enable Docker Bearer Token realm
+  ansible.builtin.uri:
+    url: "http://{{ listen_addr }}:{{ nexus_port }}/nexus/service/rest/v1/security/realms/active"
+    method: PUT
+    body_format: json
+    body:
+      - NexusAuthenticatingRealm
+      - NexusAuthorizingRealm
+      - DockerToken
+    url_username: admin
+    url_password: "{{ nexus_admin_password }}"
+    force_basic_auth: true
+    status_code: [204]
+  failed_when: false
+
+- name: Deploy nginx config for Nexus
+  ansible.builtin.template:
+    src: nginx-nexus.conf.j2
+    dest: /etc/nginx/sites-enabled/nexus.conf
+    mode: "0644"
+  diff: true
+  notify: Reload nginx

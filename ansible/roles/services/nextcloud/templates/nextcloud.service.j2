@@ -1,0 +1,25 @@
+[Unit]
+Description=Nextcloud file hosting (podman)
+After=default.target
+
+[Service]
+Environment="XDG_RUNTIME_DIR=/run/user/{{ svc_uid }}"
+ExecStartPre=-/usr/bin/podman rm -f nextcloud
+ExecStart=/usr/bin/podman run \
+  --name nextcloud \
+  --replace \
+  --rm \
+  --cap-drop=ALL \
+  --security-opt=no-new-privileges \
+  -p {{ listen_addr }}:{{ nextcloud_port }}:8005 \
+  -v {{ nextcloud_data_dir }}:/data:rw \
+  -v {{ nextcloud_config_dir }}:/opt/nextcloud/config:rw \
+  localhost/nextcloud:latest
+ExecStop=/usr/bin/podman stop nextcloud
+MemoryMax=1G
+CPUQuota=200%
+Restart=on-failure
+RestartSec=10s
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,24 @@
+[Unit]
+Description=SearXNG metasearch engine (podman)
+After=default.target
+
+[Service]
+Environment="XDG_RUNTIME_DIR=/run/user/{{ svc_uid }}"
+ExecStartPre=-/usr/bin/podman rm -f searxng
+ExecStart=/usr/bin/podman run \
+  --name searxng \
+  --replace \
+  --rm \
+  --cap-drop=ALL \
+  --security-opt=no-new-privileges \
+  -p {{ listen_addr }}:{{ searxng_port }}:8009 \
+  -v {{ searxng_config_dir }}:/config:rw \
+  localhost/searxng:latest
+ExecStop=/usr/bin/podman stop searxng
+MemoryMax=512M
+CPUQuota=100%
+Restart=on-failure
+RestartSec=10s
+
+[Install]
+WantedBy=default.target

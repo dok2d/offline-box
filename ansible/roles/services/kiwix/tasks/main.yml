@@ -1,0 +1,89 @@
+---
+- name: Create Kiwix data directory
+  ansible.builtin.file:
+    path: "{{ kiwix_data_dir }}"
+    state: directory
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0755"
+
+- name: Create Kiwix config directory
+  ansible.builtin.file:
+    path: "{{ kiwix_config_dir }}"
+    state: directory
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0755"
+
+- name: Download ZIM files
+  ansible.builtin.get_url:
+    url: "{{ item }}"
+    dest: "{{ kiwix_data_dir }}/{{ item | basename }}"
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0644"
+    timeout: 3600
+  loop: "{{ kiwix_zim_urls }}"
+  when: kiwix_zim_urls | length > 0
+
+- name: Deploy Kiwix Containerfile
+  ansible.builtin.template:
+    src: Containerfile.j2
+    dest: "{{ kiwix_config_dir }}/Containerfile"
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0644"
+  diff: true
+
+- name: Build Kiwix container image
+  become: true
+  become_user: "{{ svc_user }}"
+  containers.podman.podman_image:
+    name: localhost/kiwix
+    tag: latest
+    path: "{{ kiwix_config_dir }}"
+    force: true
+
+- name: Generate Kiwix library.xml from ZIM files
+  become: true
+  become_user: "{{ svc_user }}"
+  ansible.builtin.shell: |
+    set -e
+    rm -f {{ kiwix_data_dir }}/library.xml
+    for zim in {{ kiwix_data_dir }}/*.zim; do
+      [ -f "$zim" ] || continue
+      podman run --rm -v {{ kiwix_data_dir }}:/data:rw \
+        localhost/kiwix:latest \
+        kiwix-manage /data/library.xml add "/data/$(basename "$zim")"
+    done
+  args:
+    executable: /bin/bash
+  register: kiwix_library
+  changed_when: kiwix_library.rc == 0
+
+- name: Deploy Kiwix systemd user unit
+  ansible.builtin.template:
+    src: kiwix.service.j2
+    dest: "{{ svc_home }}/.config/systemd/user/kiwix.service"
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0644"
+  diff: true
+
+- name: Enable and start Kiwix service
+  become: true
+  become_user: "{{ svc_user }}"
+  ansible.builtin.systemd:
+    name: kiwix
+    scope: user
+    enabled: true
+    state: started
+    daemon_reload: true
+
+- name: Deploy nginx config for Kiwix
+  ansible.builtin.template:
+    src: nginx-kiwix.conf.j2
+    dest: /etc/nginx/sites-enabled/kiwix.conf
+    mode: "0644"
+  diff: true
+  notify: Reload nginx

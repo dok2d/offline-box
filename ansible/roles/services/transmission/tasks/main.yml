@@ -1,0 +1,86 @@
+---
+- name: Create Transmission data directory
+  ansible.builtin.file:
+    path: "{{ transmission_data_dir }}"
+    state: directory
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0755"
+
+- name: Create Transmission config directory
+  ansible.builtin.file:
+    path: "{{ transmission_config_dir }}"
+    state: directory
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0755"
+
+- name: Create Transmission download directory
+  ansible.builtin.file:
+    path: "{{ transmission_download_dir }}"
+    state: directory
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0755"
+
+- name: Create Transmission watch directory
+  ansible.builtin.file:
+    path: "{{ transmission_watch_dir }}"
+    state: directory
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0755"
+
+- name: Deploy Transmission settings.json
+  ansible.builtin.template:
+    src: settings.json.j2
+    dest: "{{ transmission_config_dir }}/settings.json"
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0644"
+  diff: true
+
+- name: Deploy Transmission Containerfile
+  ansible.builtin.template:
+    src: Containerfile.j2
+    dest: "{{ transmission_config_dir }}/Containerfile"
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0644"
+  diff: true
+
+- name: Build Transmission container image
+  become: true
+  become_user: "{{ svc_user }}"
+  containers.podman.podman_image:
+    name: localhost/transmission
+    tag: latest
+    path: "{{ transmission_config_dir }}"
+    force: true
+
+- name: Deploy Transmission systemd user unit
+  ansible.builtin.template:
+    src: transmission.service.j2
+    dest: "{{ svc_home }}/.config/systemd/user/transmission.service"
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0644"
+  diff: true
+
+- name: Enable and start Transmission service
+  become: true
+  become_user: "{{ svc_user }}"
+  ansible.builtin.systemd:
+    name: transmission
+    scope: user
+    enabled: true
+    state: started
+    daemon_reload: true
+
+- name: Deploy nginx config for Transmission
+  ansible.builtin.template:
+    src: nginx-transmission.conf.j2
+    dest: /etc/nginx/sites-enabled/transmission.conf
+    mode: "0644"
+  diff: true
+  notify: Reload nginx

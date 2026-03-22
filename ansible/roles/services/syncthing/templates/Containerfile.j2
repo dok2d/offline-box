@@ -1,0 +1,18 @@
+FROM {{ container_base_image }} AS build
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends curl ca-certificates && \
+    rm -rf /var/lib/apt/lists/*
+RUN ARCH=$(dpkg --print-architecture) && \
+    curl -fsSL "https://github.com/syncthing/syncthing/releases/download/v{{ syncthing_version }}/syncthing-linux-${ARCH}-v{{ syncthing_version }}.tar.gz" | \
+    tar xz --strip-components=1 -C /usr/local/bin/ --wildcards '*/syncthing'
+
+FROM {{ container_base_image }}
+RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/*
+COPY --from=build /usr/local/bin/syncthing /usr/local/bin/syncthing
+RUN useradd -r -u 10001 -m syncthing && \
+    mkdir -p /config /data && \
+    chown -R syncthing:syncthing /config /data
+USER syncthing
+EXPOSE {{ syncthing_port }} {{ syncthing_sync_port }} {{ syncthing_discovery_port }}/udp
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD curl -fs http://localhost:8011/rest/noauth/health || exit 1
+ENTRYPOINT ["syncthing", "--gui-address=0.0.0.0:{{ syncthing_port }}", "--home=/config", "--no-browser"]

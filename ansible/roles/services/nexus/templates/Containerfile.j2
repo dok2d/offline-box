@@ -1,0 +1,23 @@
+FROM {{ container_base_image }} AS build
+RUN apt-get update && apt-get install -y --no-install-recommends curl tar && \
+    curl -fsSL https://download.sonatype.com/nexus/3/nexus-{{ nexus_version }}-java17-unix.tar.gz \
+      | tar xz -C /opt && \
+    mv /opt/nexus-{{ nexus_version }} /opt/nexus && \
+    rm -rf /var/lib/apt/lists/*
+
+FROM {{ container_base_image }}
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends openjdk-17-jre-headless curl && \
+    rm -rf /var/lib/apt/lists/*
+COPY --from=build /opt/nexus /opt/nexus
+COPY --from=build /opt/sonatype-work /opt/sonatype-work
+RUN echo "application-port={{ nexus_port }}" >> /opt/nexus/etc/nexus-default.properties && \
+    echo "nexus-context-path=/nexus" >> /opt/nexus/etc/nexus-default.properties
+RUN useradd -r -u 10001 -m nexus && \
+    chown -R nexus:nexus /opt/nexus /opt/sonatype-work
+USER nexus
+ENV NEXUS_CONTEXT=/nexus
+EXPOSE {{ nexus_port }}
+WORKDIR /opt/nexus
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD curl -fs http://localhost:8004/nexus/service/rest/v1/status || exit 1
+ENTRYPOINT ["bin/nexus", "run"]

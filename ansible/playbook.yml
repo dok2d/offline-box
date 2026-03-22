@@ -1,0 +1,53 @@
+---
+- name: Deploy offline home server
+  hosts: box
+  become: true
+
+  pre_tasks:
+    - name: Validate required variables
+      ansible.builtin.assert:
+        that:
+          - svc_user is defined
+          - server_name is defined
+        fail_msg: "Required variables missing. Check group_vars/all.yml"
+
+  roles:
+    - role: base
+    - role: podman
+    - role: nginx
+
+    - role: services/kiwix
+      when: offlinebox_services.kiwix.enabled | bool
+
+    - role: services/openstreetmap
+      when: offlinebox_services.openstreetmap.enabled | bool
+
+    - role: services/transmission
+      when: offlinebox_services.transmission.enabled | bool
+
+    - role: services/nexus
+      when: offlinebox_services.nexus.enabled | bool
+
+    - role: services/nextcloud
+      when: offlinebox_services.nextcloud.enabled | bool
+
+    - role: services/gitea
+      when: offlinebox_services.gitea.enabled | bool
+
+    - role: services/jellyfin
+      when: offlinebox_services.jellyfin.enabled | bool
+
+    - role: services/calibre-web
+      when: offlinebox_services['calibre-web'].enabled | bool
+
+    - role: services/searxng
+      when: offlinebox_services.searxng.enabled | bool
+
+    - role: services/vaultwarden
+      when: offlinebox_services.vaultwarden.enabled | bool
+
+    - role: services/syncthing
+      when: offlinebox_services.syncthing.enabled | bool
+
+    - role: services/paperless-ngx
+      when: offlinebox_services['paperless-ngx'].enabled | bool

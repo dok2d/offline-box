@@ -1,0 +1,13 @@
+---
+enable_openstreetmap: true
+
+openstreetmap_port: 8002
+openstreetmap_data_dir: "{{ opt_base }}/openstreetmap/data"
+openstreetmap_config_dir: "{{ opt_base }}/openstreetmap/config"
+# MBTiles URL for tileserver-gl-light (pre-rendered vector tiles)
+# Free downloads: https://data.maptiler.com/downloads/ (registration, newer data)
+# Archive.org (no registration, 2019 data):
+#   Europe: https://archive.org/download/osm_europe_z11-z14_2019.mbtiles/osm_europe_z11-z14_2019.mbtiles
+#   Planet:  https://archive.org/download/osm-vector-mbtiles/2020-10-planet-14.mbtiles (83 GB)
+openstreetmap_mbtiles_url: "https://archive.org/download/osm_europe_z11-z14_2019.mbtiles/osm_europe_z11-z14_2019.mbtiles"
+tileserver_gl_version: "4"

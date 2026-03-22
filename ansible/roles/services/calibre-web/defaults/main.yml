@@ -1,0 +1,10 @@
+---
+enable_calibre_web: true
+
+calibre_web_port: 8008
+calibre_web_data_dir: "{{ opt_base }}/calibre-web/data"
+calibre_web_config_dir: "{{ opt_base }}/calibre-web/config"
+calibre_web_library_dir: "{{ opt_base }}/calibre-web/data/library"
+# URL to zip archive of Calibre library (must contain metadata.db)
+# If empty, an empty library will be initialized
+calibre_web_library_url: ""

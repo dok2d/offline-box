@@ -1,0 +1,26 @@
+[Unit]
+Description=Jellyfin media server (podman)
+After=default.target
+
+[Service]
+Environment="XDG_RUNTIME_DIR=/run/user/{{ svc_uid }}"
+ExecStartPre=-/usr/bin/podman rm -f jellyfin
+ExecStart=/usr/bin/podman run \
+  --name jellyfin \
+  --replace \
+  --rm \
+  --cap-drop=ALL \
+  --security-opt=no-new-privileges \
+  -p {{ listen_addr }}:{{ jellyfin_port }}:8007 \
+  -v {{ jellyfin_config_dir }}:/config:rw \
+  -v {{ jellyfin_cache_dir }}:/cache:rw \
+  -v {{ jellyfin_media_dir }}:/media:ro \
+  localhost/jellyfin:latest
+ExecStop=/usr/bin/podman stop jellyfin
+MemoryMax=4G
+CPUQuota=400%
+Restart=on-failure
+RestartSec=10s
+
+[Install]
+WantedBy=default.target

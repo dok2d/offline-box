@@ -1,0 +1,10 @@
+---
+enable_syncthing: true
+
+syncthing_port: 8011
+syncthing_data_dir: "{{ opt_base }}/syncthing/data"
+syncthing_config_dir: "{{ opt_base }}/syncthing/config"
+syncthing_sync_port: 22000
+syncthing_discovery_port: 21027
+syncthing_gui_user: admin
+syncthing_version: "1.29.2"
