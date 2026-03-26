@@ -1,0 +1,112 @@
+---
+- name: Create Dendrite data directory
+  ansible.builtin.file:
+    path: "{{ dendrite_data_dir }}"
+    state: directory
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0755"
+
+- name: Create Dendrite config directory
+  ansible.builtin.file:
+    path: "{{ dendrite_config_dir }}"
+    state: directory
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0755"
+
+- name: Deploy Dendrite Containerfile
+  ansible.builtin.template:
+    src: Containerfile.j2
+    dest: "{{ dendrite_config_dir }}/Containerfile"
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0644"
+  diff: true
+  register: _containerfile
+
+- name: Deploy Dendrite configuration
+  ansible.builtin.template:
+    src: dendrite.yaml.j2
+    dest: "{{ dendrite_config_dir }}/dendrite.yaml"
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0640"
+  diff: true
+  notify: Restart dendrite
+
+- name: Generate Dendrite signing key
+  become: true
+  become_user: "{{ svc_user }}"
+  ansible.builtin.command:
+    cmd: >
+      podman run --rm
+      -v {{ dendrite_config_dir }}:/etc/dendrite:rw
+      --entrypoint /usr/local/bin/generate-keys
+      {{ dendrite_image_full }}
+      -private-key /etc/dendrite/matrix_key.pem
+    creates: "{{ dendrite_config_dir }}/matrix_key.pem"
+
+- name: Build Dendrite container image
+  become: true
+  become_user: "{{ svc_user }}"
+  containers.podman.podman_image:
+    name: "{{ dendrite_image }}"
+    tag: "{{ dendrite_tag }}"
+    path: "{{ dendrite_config_dir }}"
+    force: "{{ _containerfile.changed | default(true) }}"
+
+- name: Deploy Dendrite systemd user unit
+  ansible.builtin.template:
+    src: dendrite.service.j2
+    dest: "{{ svc_home }}/.config/systemd/user/dendrite.service"
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0644"
+  diff: true
+
+- name: Enable and start Dendrite service
+  become: true
+  become_user: "{{ svc_user }}"
+  ansible.builtin.systemd:
+    name: dendrite
+    scope: user
+    enabled: true
+    state: started
+    daemon_reload: true
+
+- name: Wait for Dendrite to become available
+  ansible.builtin.uri:
+    url: "http://{{ listen_addr }}:{{ dendrite_port }}/_matrix/client/versions"
+    status_code: [200]
+  register: dendrite_health
+  retries: 30
+  delay: 5
+  until: dendrite_health is not failed
+
+- name: Create Dendrite admin user
+  become: true
+  become_user: "{{ svc_user }}"
+  ansible.builtin.shell: |
+    podman exec dendrite \
+      /usr/local/bin/create-account \
+      -config /etc/dendrite/dendrite.yaml \
+      -username admin \
+      -password {{ dendrite_admin_password | quote }} \
+      -admin 2>&1
+  args:
+    executable: /bin/bash
+  register: dendrite_admin
+  changed_when: "'created' in dendrite_admin.stdout | lower"
+  failed_when:
+    - dendrite_admin.rc != 0
+    - "'already exists' not in dendrite_admin.stdout | lower"
+    - "'already exists' not in dendrite_admin.stderr | lower"
+
+- name: Deploy nginx config for Dendrite
+  ansible.builtin.template:
+    src: nginx-dendrite.conf.j2
+    dest: /etc/nginx/sites-enabled/dendrite.conf
+    mode: "0644"
+  diff: true
+  notify: Reload nginx

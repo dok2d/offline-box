@@ -1,0 +1,12 @@
+---
+enable_dendrite: true
+
+dendrite_port: 8016
+dendrite_data_dir: "{{ opt_base }}/dendrite/data"
+dendrite_config_dir: "{{ opt_base }}/dendrite/config"
+dendrite_server_name: "{{ server_name }}"
+dendrite_registration_disabled: true
+dendrite_version: "0.13.7"
+dendrite_tag: "{{ dendrite_version }}"
+dendrite_image: "{{ (container_registry ~ '/' if container_registry else '') }}{{ (container_namespace ~ '/' if container_namespace else '') }}dendrite"
+dendrite_image_full: "{{ dendrite_image }}:{{ dendrite_tag }}"

@@ -216,3 +216,27 @@ offlinebox_services:
       desc: "File sync & share platform"
       icon: "\U0001F4C1"
       url: /opencloud/
+  mattermost:
+    container_name: mattermost
+    enabled: "{{ enable_mattermost }}"
+    image: "{{ mattermost_image_full }}"
+    port: "{{ mattermost_port }}"
+    data_dir: "{{ mattermost_data_dir }}"
+    config_dir: "{{ mattermost_config_dir }}"
+    dashboard:
+      name: Mattermost
+      desc: "Team messaging & chat"
+      icon: "\U0001F4AC"
+      url: /mattermost/
+  dendrite:
+    container_name: dendrite
+    enabled: "{{ enable_dendrite }}"
+    image: "{{ dendrite_image_full }}"
+    port: "{{ dendrite_port }}"
+    data_dir: "{{ dendrite_data_dir }}"
+    config_dir: "{{ dendrite_config_dir }}"
+    dashboard:
+      name: Dendrite
+      desc: "Matrix homeserver"
+      icon: "\U0001F310"
+      url: /dendrite/

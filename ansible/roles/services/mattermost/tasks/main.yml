@@ -1,0 +1,81 @@
+---
+- name: Create Mattermost data directory
+  ansible.builtin.file:
+    path: "{{ mattermost_data_dir }}"
+    state: directory
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0755"
+
+- name: Create Mattermost config directory
+  ansible.builtin.file:
+    path: "{{ mattermost_config_dir }}"
+    state: directory
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0755"
+
+- name: Deploy Mattermost environment file
+  ansible.builtin.template:
+    src: mattermost.env.j2
+    dest: "{{ mattermost_config_dir }}/mattermost.env"
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0640"
+  diff: false
+  notify: Restart mattermost
+
+- name: Deploy Mattermost Containerfile
+  ansible.builtin.template:
+    src: Containerfile.j2
+    dest: "{{ mattermost_config_dir }}/Containerfile"
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0644"
+  diff: true
+  register: _containerfile
+
+- name: Build Mattermost container image
+  become: true
+  become_user: "{{ svc_user }}"
+  containers.podman.podman_image:
+    name: "{{ mattermost_image }}"
+    tag: "{{ mattermost_tag }}"
+    path: "{{ mattermost_config_dir }}"
+    force: "{{ _containerfile.changed | default(true) }}"
+
+- name: Deploy Mattermost systemd user unit
+  ansible.builtin.template:
+    src: mattermost.service.j2
+    dest: "{{ svc_home }}/.config/systemd/user/mattermost.service"
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0644"
+  diff: true
+
+- name: Enable and start Mattermost service
+  become: true
+  become_user: "{{ svc_user }}"
+  ansible.builtin.systemd:
+    name: mattermost
+    scope: user
+    enabled: true
+    state: started
+    daemon_reload: true
+
+- name: Wait for Mattermost to become available
+  ansible.builtin.uri:
+    url: "http://{{ listen_addr }}:{{ mattermost_port }}/mattermost/api/v4/system/ping"
+    status_code: [200, 302]
+  register: mattermost_health
+  retries: 30
+  delay: 5
+  until: mattermost_health is not failed
+
+- name: Deploy nginx config for Mattermost
+  ansible.builtin.template:
+    src: nginx-mattermost.conf.j2
+    dest: /etc/nginx/sites-enabled/mattermost.conf
+    mode: "0644"
+  diff: true
+  notify: Reload nginx

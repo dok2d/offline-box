@@ -38,6 +38,10 @@ SPECIAL_RULES: dict[str, tuple[int, str, str]] = {
     "opencloud_secret_key":       (64, ALPHA_DIGITS, "OpenCloud secret key"),
     # DB passwords — avoid shell-unsafe chars
     "bigbluebutton_db_password":  (32, ALPHA_DIGITS, "PostgreSQL password"),
+    # Mattermost
+    "mattermost_admin_password":  (32, ALPHA_DIGITS, "Mattermost admin password"),
+    # Dendrite
+    "dendrite_admin_password":    (32, ALPHA_DIGITS, "Dendrite admin password"),
 }
 
 DEFAULT_LENGTH = 32

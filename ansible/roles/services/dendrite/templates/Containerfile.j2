@@ -1,0 +1,26 @@
+FROM {{ container_base_image }} AS build
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    curl ca-certificates && \
+    rm -rf /var/lib/apt/lists/*
+RUN ARCH=$(dpkg --print-architecture) && \
+    curl -fsSL "https://github.com/matrix-org/dendrite/releases/download/v{{ dendrite_version }}/dendrite-${ARCH}.tar.gz" \
+    -o /tmp/dendrite.tar.gz && \
+    tar -xzf /tmp/dendrite.tar.gz -C /usr/local/bin && \
+    chmod +x /usr/local/bin/dendrite /usr/local/bin/generate-keys /usr/local/bin/create-account
+
+FROM {{ container_base_image }}
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends curl ca-certificates && \
+    rm -rf /var/lib/apt/lists/*
+COPY --from=build /usr/local/bin/dendrite /usr/local/bin/dendrite
+COPY --from=build /usr/local/bin/generate-keys /usr/local/bin/generate-keys
+COPY --from=build /usr/local/bin/create-account /usr/local/bin/create-account
+RUN useradd -r -u 10001 -m dendrite && \
+    mkdir -p /data /etc/dendrite && \
+    chown -R dendrite:dendrite /data /etc/dendrite
+USER dendrite
+EXPOSE {{ dendrite_port }}
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
+  CMD curl -fs http://localhost:{{ dendrite_port }}/_matrix/client/versions || exit 1
+ENTRYPOINT ["dendrite", "--config", "/etc/dendrite/dendrite.yaml", "--http-bind-address", "0.0.0.0:{{ dendrite_port }}"]
