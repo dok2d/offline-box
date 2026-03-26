@@ -1,0 +1,12 @@
+---
+enable_minidlna: true
+
+minidlna_port: 8017
+minidlna_data_dir: "{{ opt_base }}/minidlna/data"
+minidlna_config_dir: "{{ opt_base }}/minidlna/config"
+minidlna_media_dir: "{{ opt_base }}/minidlna/data/media"
+minidlna_db_dir: "{{ opt_base }}/minidlna/data/db"
+minidlna_friendly_name: "Offline Box DLNA"
+minidlna_tag: "latest"
+minidlna_image: "{{ (container_registry ~ '/' if container_registry else '') }}{{ (container_namespace ~ '/' if container_namespace else '') }}minidlna"
+minidlna_image_full: "{{ minidlna_image }}:{{ minidlna_tag }}"

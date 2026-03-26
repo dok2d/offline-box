@@ -1,0 +1,10 @@
+FROM {{ container_base_image }}
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends minidlna && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+RUN useradd -r -u 10001 -m minidlna && \
+    mkdir -p /media /db /etc/minidlna && \
+    chown -R minidlna:minidlna /media /db /etc/minidlna
+USER minidlna
+EXPOSE {{ minidlna_port }}
+ENTRYPOINT ["/usr/sbin/minidlnad", "-d", "-f", "/etc/minidlna/minidlna.conf", "-P", "/tmp/minidlna.pid"]

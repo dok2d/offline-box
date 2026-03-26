@@ -1,0 +1,97 @@
+---
+- name: Create MiniDLNA data directory
+  ansible.builtin.file:
+    path: "{{ minidlna_data_dir }}"
+    state: directory
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0755"
+
+- name: Create MiniDLNA config directory
+  ansible.builtin.file:
+    path: "{{ minidlna_config_dir }}"
+    state: directory
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0755"
+
+- name: Create MiniDLNA media directory
+  ansible.builtin.file:
+    path: "{{ minidlna_media_dir }}"
+    state: directory
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0755"
+
+- name: Create MiniDLNA database directory
+  ansible.builtin.file:
+    path: "{{ minidlna_db_dir }}"
+    state: directory
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0755"
+
+- name: Deploy MiniDLNA Containerfile
+  ansible.builtin.template:
+    src: Containerfile.j2
+    dest: "{{ minidlna_config_dir }}/Containerfile"
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0644"
+  diff: true
+  register: _containerfile
+
+- name: Deploy MiniDLNA configuration
+  ansible.builtin.template:
+    src: minidlna.conf.j2
+    dest: "{{ minidlna_config_dir }}/minidlna.conf"
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0644"
+  diff: true
+  notify: Restart minidlna
+
+- name: Build MiniDLNA container image
+  become: true
+  become_user: "{{ svc_user }}"
+  containers.podman.podman_image:
+    name: "{{ minidlna_image }}"
+    tag: "{{ minidlna_tag }}"
+    path: "{{ minidlna_config_dir }}"
+    force: "{{ _containerfile.changed | default(true) }}"
+
+- name: Deploy MiniDLNA systemd user unit
+  ansible.builtin.template:
+    src: minidlna.service.j2
+    dest: "{{ svc_home }}/.config/systemd/user/minidlna.service"
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0644"
+  diff: true
+
+- name: Enable and start MiniDLNA service
+  become: true
+  become_user: "{{ svc_user }}"
+  ansible.builtin.systemd:
+    name: minidlna
+    scope: user
+    enabled: true
+    state: started
+    daemon_reload: true
+
+- name: Wait for MiniDLNA to become available
+  ansible.builtin.uri:
+    url: "http://{{ listen_addr }}:{{ minidlna_port }}/"
+    status_code: [200]
+  register: minidlna_health
+  retries: 15
+  delay: 3
+  until: minidlna_health is not failed
+
+- name: Deploy nginx config for MiniDLNA
+  ansible.builtin.template:
+    src: nginx-minidlna.conf.j2
+    dest: /etc/nginx/sites-enabled/minidlna.conf
+    mode: "0644"
+  diff: true
+  notify: Reload nginx

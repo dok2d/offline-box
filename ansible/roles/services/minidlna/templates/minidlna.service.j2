@@ -1,0 +1,28 @@
+[Unit]
+Description=MiniDLNA media server (podman)
+After=default.target
+
+[Service]
+Environment="XDG_RUNTIME_DIR=/run/user/{{ svc_uid }}"
+ExecStartPre=-/usr/bin/podman rm -f minidlna
+ExecStart=/usr/bin/podman run \
+  --name minidlna \
+  --replace \
+  --rm \
+  --cap-drop=ALL \
+  --security-opt=no-new-privileges \
+  --network=host \
+  --log-driver=k8s-file \
+  --log-opt=path={{ container_log_dir }}/minidlna/minidlna.log \
+  -v {{ minidlna_config_dir }}/minidlna.conf:/etc/minidlna/minidlna.conf:ro \
+  -v {{ minidlna_media_dir }}:/media:ro \
+  -v {{ minidlna_db_dir }}:/db:rw \
+  {{ minidlna_image_full }}
+ExecStop=/usr/bin/podman stop minidlna
+MemoryMax=512M
+CPUQuota=200%
+Restart=on-failure
+RestartSec=10s
+
+[Install]
+WantedBy=default.target

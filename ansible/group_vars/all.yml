@@ -240,3 +240,15 @@ offlinebox_services:
       desc: "Matrix homeserver"
       icon: "\U0001F310"
       url: /dendrite/
+  minidlna:
+    container_name: minidlna
+    enabled: "{{ enable_minidlna }}"
+    image: "{{ minidlna_image_full }}"
+    port: "{{ minidlna_port }}"
+    data_dir: "{{ minidlna_data_dir }}"
+    config_dir: "{{ minidlna_config_dir }}"
+    dashboard:
+      name: MiniDLNA
+      desc: "DLNA/UPnP media server"
+      icon: "\U0001F4E1"
+      url: /minidlna/
