@@ -1,0 +1,71 @@
+---
+- name: Create OpenCloud data directory
+  ansible.builtin.file:
+    path: "{{ opencloud_data_dir }}"
+    state: directory
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0755"
+
+- name: Create OpenCloud config directory
+  ansible.builtin.file:
+    path: "{{ opencloud_config_dir }}"
+    state: directory
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0755"
+
+- name: Deploy OpenCloud environment file
+  ansible.builtin.template:
+    src: opencloud.env.j2
+    dest: "{{ opencloud_config_dir }}/opencloud.env"
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0640"
+  diff: true
+
+- name: Deploy OpenCloud Containerfile
+  ansible.builtin.template:
+    src: Containerfile.j2
+    dest: "{{ opencloud_config_dir }}/Containerfile"
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0644"
+  diff: true
+  register: _containerfile
+
+- name: Build OpenCloud container image
+  become: true
+  become_user: "{{ svc_user }}"
+  containers.podman.podman_image:
+    name: "{{ opencloud_image }}"
+    tag: "{{ opencloud_tag }}"
+    path: "{{ opencloud_config_dir }}"
+    force: "{{ _containerfile.changed | default(true) }}"
+
+- name: Deploy OpenCloud systemd user unit
+  ansible.builtin.template:
+    src: opencloud.service.j2
+    dest: "{{ svc_home }}/.config/systemd/user/opencloud.service"
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0644"
+  diff: true
+
+- name: Enable and start OpenCloud service
+  become: true
+  become_user: "{{ svc_user }}"
+  ansible.builtin.systemd:
+    name: opencloud
+    scope: user
+    enabled: true
+    state: started
+    daemon_reload: true
+
+- name: Deploy nginx config for OpenCloud
+  ansible.builtin.template:
+    src: nginx-opencloud.conf.j2
+    dest: /etc/nginx/sites-enabled/opencloud.conf
+    mode: "0644"
+  diff: true
+  notify: Reload nginx

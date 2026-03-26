@@ -1,0 +1,20 @@
+# OpenCloud file sync & share
+location /opencloud/ {
+    proxy_pass http://{{ listen_addr }}:{{ opencloud_port }}/;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    include /etc/nginx/snippets/security-headers.conf;
+    limit_req zone=upload burst=10 nodelay;
+    client_max_body_size {{ opencloud_upload_max_size }};
+
+    # WebDAV
+    proxy_set_header X-Forwarded-Host $host;
+    proxy_set_header X-Forwarded-Prefix /opencloud;
+
+    # Timeouts for large uploads
+    proxy_read_timeout 3600;
+    proxy_send_timeout 3600;
+    proxy_connect_timeout 300;
+}

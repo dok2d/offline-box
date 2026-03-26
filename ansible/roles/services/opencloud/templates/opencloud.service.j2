@@ -1,0 +1,27 @@
+[Unit]
+Description=OpenCloud file sync & share (podman)
+After=default.target
+
+[Service]
+Environment="XDG_RUNTIME_DIR=/run/user/{{ svc_uid }}"
+ExecStartPre=-/usr/bin/podman rm -f opencloud
+ExecStart=/usr/bin/podman run \
+  --name opencloud \
+  --replace \
+  --rm \
+  --cap-drop=ALL \
+  --security-opt=no-new-privileges \
+  -p {{ listen_addr }}:{{ opencloud_port }}:{{ opencloud_port }} \
+  --log-driver=k8s-file \
+  --log-opt=path={{ container_log_dir }}/opencloud/opencloud.log \
+  --env-file={{ opencloud_config_dir }}/opencloud.env \
+  -v {{ opencloud_data_dir }}:/data:rw \
+  {{ opencloud_image_full }}
+ExecStop=/usr/bin/podman stop opencloud
+MemoryMax=1G
+CPUQuota=200%
+Restart=on-failure
+RestartSec=10s
+
+[Install]
+WantedBy=default.target
