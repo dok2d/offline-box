@@ -11,11 +11,11 @@
 | `gitea_data_dir` | Каталог для хранения данных | `/opt/gitea/data` |
 | `gitea_config_dir` | Каталог конфигурации | `/opt/gitea/config` |
 | `gitea_db_type` | Тип базы данных | `sqlite3` |
-| `gitea_secret_key` | Секретный ключ для подписи токенов | `changeme-generate-long-random-string` |
+| `gitea_secret_key` | Секретный ключ для подписи токенов | (из passwords.yml) |
 | `gitea_lfs_enabled` | Включить поддержку Git LFS | `true` |
 | `gitea_ssh_port` | Порт SSH для Git-операций | `2222` |
 | `gitea_admin_user` | Имя пользователя администратора | `admin` |
-| `gitea_admin_password` | Пароль администратора | `changeme` |
+| `gitea_admin_password` | Пароль администратора | (из passwords.yml) |
 | `gitea_admin_email` | Email администратора | `admin@localhost` |
 
 ## Порт

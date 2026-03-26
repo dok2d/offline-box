@@ -10,7 +10,7 @@
 | `searxng_port` | Порт веб-интерфейса | `8009` |
 | `searxng_data_dir` | Каталог для хранения данных | `/opt/searxng/data` |
 | `searxng_config_dir` | Каталог конфигурации | `/opt/searxng/config` |
-| `searxng_secret_key` | Секретный ключ для подписи сессий | `changeme-generate-long-random-string` |
+| `searxng_secret_key` | Секретный ключ для подписи сессий | (из passwords.yml) |
 | `searxng_base_url` | Базовый URL-путь | `/searxng/` |
 
 ## Порт

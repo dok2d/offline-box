@@ -10,7 +10,7 @@
 | `vaultwarden_port` | Порт веб-интерфейса | `8010` |
 | `vaultwarden_data_dir` | Каталог для хранения данных | `/opt/vaultwarden/data` |
 | `vaultwarden_config_dir` | Каталог конфигурации | `/opt/vaultwarden/config` |
-| `vaultwarden_admin_token` | Токен для доступа к панели администратора (`/admin`) | `changeme-generate-long-random-string` |
+| `vaultwarden_admin_token` | Токен для доступа к панели администратора (`/admin`) | (из passwords.yml) |
 | `vaultwarden_signups_allowed` | Разрешить самостоятельную регистрацию пользователей | `true` |
 
 ## Порт

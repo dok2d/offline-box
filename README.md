@@ -83,6 +83,10 @@
 | `opt_base` | Базовый каталог для данных сервисов | `/opt` |
 | `listen_addr` | Адрес, на котором слушают сервисы | `127.0.0.1` |
 | `server_name` | Имя сервера для nginx и TLS-сертификата | автоопределение IP |
+| `use_ssl` | Включить HTTPS с self-signed сертификатом | `true` |
+| `ssl_cert_path` | Путь к TLS-сертификату | `/etc/nginx/ssl/box.crt` |
+| `ssl_key_path` | Путь к приватному ключу TLS | `/etc/nginx/ssl/box.key` |
+| `ssl_dhparam_path` | Путь к DH-параметрам | `/etc/nginx/ssl/dhparam.pem` |
 | `container_base_image` | Базовый образ контейнеров | `docker.io/library/debian:13-slim` |
 
 ### Переменные сервисов
@@ -93,7 +97,7 @@
 - в `ansible/host_vars/<хост>.yml` -- для конкретного хоста
 - через `-e` при запуске плейбука:
   ```bash
-  ansible-playbook -i inventory playbook.yml -e "enable_kiwix=false"
+  ansible-playbook -i ansible/inventory/hosts.yml ansible/playbook.yml -e "enable_kiwix=false"
   ```
 
 ## Dashboard

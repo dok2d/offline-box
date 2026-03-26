@@ -11,7 +11,7 @@
 | `nextcloud_data_dir` | Каталог для хранения данных | `/opt/nextcloud/data` |
 | `nextcloud_config_dir` | Каталог конфигурации | `/opt/nextcloud/config` |
 | `nextcloud_admin_user` | Имя пользователя администратора | `admin` |
-| `nextcloud_admin_password` | Пароль администратора | `changeme` |
+| `nextcloud_admin_password` | Пароль администратора | (из passwords.yml) |
 | `nextcloud_db_type` | Тип базы данных | `sqlite` |
 | `nextcloud_upload_max_size` | Максимальный размер загружаемого файла | `10G` |
 | `nextcloud_php_memory_limit` | Лимит памяти PHP | `512M` |
