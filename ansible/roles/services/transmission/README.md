@@ -13,7 +13,7 @@
 | `transmission_download_dir` | Каталог для загруженных файлов | `/opt/transmission/data/downloads` |
 | `transmission_watch_dir` | Каталог наблюдения за торрент-файлами | `/opt/transmission/data/watch` |
 | `transmission_rpc_username` | Имя пользователя для веб-интерфейса | `admin` |
-| `transmission_rpc_password` | Пароль для веб-интерфейса | `changeme` |
+| `transmission_rpc_password` | Пароль для веб-интерфейса | (из passwords.yml) |
 | `transmission_peer_port` | Порт для входящих соединений от пиров | `51413` |
 | `transmission_speed_limit_up_enabled` | Включить ограничение скорости отдачи | `false` |
 | `transmission_speed_limit_up` | Ограничение скорости отдачи (КБ/с) | `1000` |

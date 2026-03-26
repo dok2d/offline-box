@@ -13,7 +13,7 @@
 | `syncthing_sync_port` | Порт для синхронизации между устройствами | `22000` |
 | `syncthing_discovery_port` | Порт для обнаружения устройств (UDP) | `21027` |
 | `syncthing_gui_user` | Имя пользователя для веб-интерфейса | `admin` |
-| `syncthing_gui_password` | Пароль для веб-интерфейса | `changeme` |
+| `syncthing_gui_password` | Пароль для веб-интерфейса | (из passwords.yml) |
 
 ## Порт
 

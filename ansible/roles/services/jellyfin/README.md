@@ -13,7 +13,7 @@
 | `jellyfin_media_dir` | Каталог для медиафайлов | `/opt/jellyfin/data/media` |
 | `jellyfin_cache_dir` | Каталог кеша | `/opt/jellyfin/data/cache` |
 | `jellyfin_admin_user` | Имя пользователя администратора | `admin` |
-| `jellyfin_admin_password` | Пароль администратора | `changeme` |
+| `jellyfin_admin_password` | Пароль администратора | (из passwords.yml) |
 | `jellyfin_language` | Язык интерфейса и метаданных | `ru` |
 | `jellyfin_country` | Страна для метаданных | `RU` |
 

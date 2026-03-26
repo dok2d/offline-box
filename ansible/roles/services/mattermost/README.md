@@ -12,6 +12,7 @@
 | `mattermost_config_dir` | Каталог конфигурации | `/opt/mattermost/config` |
 | `mattermost_admin_user` | Имя пользователя администратора | `admin` |
 | `mattermost_admin_email` | Email администратора | `admin@localhost` |
+| `mattermost_admin_password` | Пароль администратора | (из passwords.yml) |
 
 ## Порт
 

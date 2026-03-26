@@ -12,9 +12,9 @@
 | `paperless_ngx_config_dir` | Каталог конфигурации | `/opt/paperless-ngx/config` |
 | `paperless_ngx_consume_dir` | Каталог для загрузки документов (входящие) | `/opt/paperless-ngx/data/consume` |
 | `paperless_ngx_media_dir` | Каталог для обработанных документов | `/opt/paperless-ngx/data/media` |
-| `paperless_ngx_secret_key` | Секретный ключ Django | `changeme-generate-long-random-string` |
+| `paperless_ngx_secret_key` | Секретный ключ Django | (из passwords.yml) |
 | `paperless_ngx_admin_user` | Имя пользователя суперадминистратора | `admin` |
-| `paperless_ngx_admin_password` | Пароль суперадминистратора | `changeme` |
+| `paperless_ngx_admin_password` | Пароль суперадминистратора | (из passwords.yml) |
 | `paperless_ngx_ocr_language` | Языки для OCR-распознавания | `rus+eng` |
 
 ## Порт
