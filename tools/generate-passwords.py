@@ -35,6 +35,7 @@ SPECIAL_RULES: dict[str, tuple[int, str, str]] = {
     "searxng_secret_key":         (64, ALPHA_DIGITS, "SearXNG secret"),
     "vaultwarden_admin_token":    (64, ALPHA_DIGITS, "Vaultwarden admin token"),
     "bigbluebutton_secret_key":   (64, ALPHA_DIGITS, "BBB security salt"),
+    "opencloud_secret_key":       (64, ALPHA_DIGITS, "OpenCloud secret key"),
     # DB passwords — avoid shell-unsafe chars
     "bigbluebutton_db_password":  (32, ALPHA_DIGITS, "PostgreSQL password"),
 }

@@ -1,0 +1,15 @@
+FROM {{ container_base_image }}
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    curl ca-certificates && \
+    rm -rf /var/lib/apt/lists/*
+RUN curl -fsSL "https://github.com/opencloud-eu/opencloud/releases/download/v{{ opencloud_version }}/opencloud-{{ opencloud_version }}-linux-amd64" \
+    -o /usr/local/bin/opencloud && \
+    chmod +x /usr/local/bin/opencloud
+RUN useradd -r -u 10001 -m opencloud && \
+    mkdir -p /data /etc/opencloud && \
+    chown -R opencloud:opencloud /data /etc/opencloud
+USER opencloud
+EXPOSE {{ opencloud_port }}
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD curl -fs http://localhost:{{ opencloud_port }}/healthz || exit 1
+ENTRYPOINT ["opencloud", "server"]

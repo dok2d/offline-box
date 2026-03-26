@@ -64,5 +64,8 @@
     - role: services/bigbluebutton
       when: offlinebox_services.bigbluebutton.enabled | bool
 
+    - role: services/opencloud
+      when: offlinebox_services.opencloud.enabled | bool
+
     - role: backup
       when: enable_backup | default(true) | bool
