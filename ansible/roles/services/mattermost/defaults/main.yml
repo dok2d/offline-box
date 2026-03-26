@@ -1,0 +1,12 @@
+---
+enable_mattermost: true
+
+mattermost_port: 8015
+mattermost_data_dir: "{{ opt_base }}/mattermost/data"
+mattermost_config_dir: "{{ opt_base }}/mattermost/config"
+mattermost_admin_user: admin
+mattermost_admin_email: admin@localhost
+mattermost_version: "10.4.1"
+mattermost_tag: "{{ mattermost_version }}"
+mattermost_image: "{{ (container_registry ~ '/' if container_registry else '') }}{{ (container_namespace ~ '/' if container_namespace else '') }}mattermost"
+mattermost_image_full: "{{ mattermost_image }}:{{ mattermost_tag }}"

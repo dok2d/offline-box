@@ -67,5 +67,11 @@
     - role: services/opencloud
       when: offlinebox_services.opencloud.enabled | bool
 
+    - role: services/mattermost
+      when: offlinebox_services.mattermost.enabled | bool
+
+    - role: services/dendrite
+      when: offlinebox_services.dendrite.enabled | bool
+
     - role: backup
       when: enable_backup | default(true) | bool

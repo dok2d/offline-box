@@ -1,0 +1,52 @@
+# Dendrite Matrix homeserver configuration
+# Managed by Ansible — do not edit manually
+
+version: 2
+
+global:
+  server_name: "{{ dendrite_server_name }}"
+  private_key: /etc/dendrite/matrix_key.pem
+  key_validity_period: 168h0m0s
+
+  database:
+    connection_string: "file:/data/dendrite.db"
+    max_open_conns: 90
+    max_idle_conns: 5
+    conn_max_lifetime: -1
+
+  jetstream:
+    storage_path: /data/jetstream
+    in_memory: false
+
+  cache:
+    max_size_estimated: 512m
+    max_age: 1h
+
+  well_known_server_name: "{{ dendrite_server_name }}:443"
+  well_known_client_name: "{{ 'https' if use_ssl | bool else 'http' }}://{{ dendrite_server_name }}/dendrite"
+
+logging:
+  - type: std
+    level: warn
+
+client_api:
+  registration_disabled: {{ dendrite_registration_disabled | lower }}
+  rate_limiting:
+    enabled: true
+    threshold: 20
+    cooloff_ms: 500
+
+federation_api:
+  send_max_retries: 16
+  disable_tls_validation: true
+  prefer_direct_fetch: true
+
+media_api:
+  base_path: /data/media
+  max_file_size_bytes: 104857600
+  dynamic_thumbnails: true
+
+sync_api:
+  search:
+    enabled: true
+    index_path: /data/searchindex
