@@ -163,9 +163,27 @@ dl_paperless_ngx() {
     download_pip_with_deps "$DEPS_DIR/paperless-ngx" "paperless-ngx==${PAPERLESS_NGX_VERSION}" "gunicorn" "uvicorn"
 }
 
+# ── Ansible Galaxy collection ──────────────────────────────────────
+
+dl_ansible() {
+    echo "==> Ansible Galaxy collection: containers.podman"
+    local dest="$DEPS_DIR/ansible"
+    mkdir -p "$dest"
+    if ls "$dest"/containers-podman-*.tar.gz >/dev/null 2>&1; then
+        echo "  [skip] containers.podman already downloaded"
+    else
+        echo "  [download] containers.podman collection"
+        ansible-galaxy collection download containers.podman -p "$dest" 2>/dev/null || \
+        echo "  [warn] ansible-galaxy download failed; trying direct download"
+    fi
+    # Also download the collection as installable tarball
+    ansible-galaxy collection download -r "$REPO_ROOT/ansible/requirements.yml" -p "$dest" 2>/dev/null || true
+}
+
 # ── Main ───────────────────────────────────────────────────────────
 
 ALL_SERVICES=(
+    ansible
     nexus nextcloud gitea vaultwarden syncthing opencloud
     mattermost dendrite bigbluebutton jellyfin openstreetmap
     calibre_web searxng paperless_ngx
@@ -198,4 +216,7 @@ for svc in "${SERVICES[@]}"; do
 done
 
 echo "===================================="
+echo "To install Ansible collection offline:"
+echo "  ansible-galaxy collection install deps/ansible/containers-podman-*.tar.gz"
+echo ""
 echo "Done! Set offline_mode: true in ansible/group_vars/all.yml to use local deps."

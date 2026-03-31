@@ -47,28 +47,33 @@
 - Управляющая машина с Ansible 2.14+
 - Коллекция `containers.podman`:
   ```bash
-  ansible-galaxy collection install containers.podman
+  ansible-galaxy collection install -r ansible/requirements.yml
   ```
 - Целевой сервер с Debian 13 (Trixie) и SSH-доступом
 
 ### Развёртывание (онлайн)
 
-1. Отредактируйте инвентарь:
+1. Установите зависимости Ansible:
+   ```bash
+   ansible-galaxy collection install -r ansible/requirements.yml
+   ```
+
+2. Отредактируйте инвентарь:
    ```bash
    vim ansible/inventory/hosts.yml
    ```
 
-2. При необходимости измените переменные:
+3. При необходимости измените переменные:
    ```bash
    vim ansible/group_vars/all.yml
    ```
 
-3. Сгенерируйте пароли:
+4. Сгенерируйте пароли:
    ```bash
    python3 tools/generate-passwords.py --init
    ```
 
-4. Запустите плейбук:
+5. Запустите плейбук:
    ```bash
    ansible-playbook -i ansible/inventory/hosts.yml ansible/playbook.yml
    ```
@@ -85,12 +90,17 @@
 
 2. Скопируйте весь репозиторий (включая `deps/`) на целевой сервер.
 
-3. Включите офлайн-режим в `ansible/group_vars/all.yml`:
+3. Установите Ansible-коллекцию из локального архива:
+   ```bash
+   ansible-galaxy collection install deps/ansible/containers-podman-*.tar.gz
+   ```
+
+4. Включите офлайн-режим в `ansible/group_vars/all.yml`:
    ```yaml
    offline_mode: true
    ```
 
-4. Запустите плейбук:
+5. Запустите плейбук:
    ```bash
    ansible-playbook -i ansible/inventory/hosts.yml ansible/playbook.yml
    ```
@@ -137,6 +147,7 @@
 
 | Сервис | Что скачивается |
 |--------|----------------|
+| Ansible | Коллекция `containers.podman` (ansible-galaxy) |
 | Nexus | `nexus-*-java17-unix.tar.gz` от Sonatype |
 | Nextcloud | `nextcloud-*.tar.bz2` с nextcloud.com |
 | Gitea | Бинарник с dl.gitea.com |
