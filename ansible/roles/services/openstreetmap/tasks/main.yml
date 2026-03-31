@@ -35,6 +35,15 @@
   diff: true
   register: _containerfile
 
+- name: Copy offline npm packages for OpenStreetMap
+  ansible.builtin.copy:
+    src: "{{ offline_deps_dir }}/openstreetmap/"
+    dest: "{{ openstreetmap_config_dir }}/npm-packages/"
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0644"
+  when: offline_mode | default(false)
+
 - name: Build OpenStreetMap container image
   become: true
   become_user: "{{ svc_user }}"

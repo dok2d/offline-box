@@ -34,6 +34,15 @@
     mode: "0644"
   diff: true
 
+- name: Copy offline deps for Nextcloud
+  ansible.builtin.copy:
+    src: "{{ offline_deps_dir }}/nextcloud/nextcloud-{{ nextcloud_version }}.tar.bz2"
+    dest: "{{ nextcloud_config_dir }}/nextcloud-{{ nextcloud_version }}.tar.bz2"
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0644"
+  when: offline_mode | default(false)
+
 - name: Build Nextcloud container image
   become: true
   become_user: "{{ svc_user }}"

@@ -1,4 +1,10 @@
 FROM {{ container_base_image }} AS build
+{% if offline_mode | default(false) %}
+COPY dendrite-{{ dendrite_version }}-*.tar.gz /tmp/dendrite.tar.gz
+RUN tar -xzf /tmp/dendrite.tar.gz -C /usr/local/bin && \
+    chmod +x /usr/local/bin/dendrite /usr/local/bin/generate-keys /usr/local/bin/create-account && \
+    rm /tmp/dendrite.tar.gz
+{% else %}
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     curl ca-certificates && \
@@ -8,6 +14,7 @@ RUN ARCH=$(dpkg --print-architecture) && \
     -o /tmp/dendrite.tar.gz && \
     tar -xzf /tmp/dendrite.tar.gz -C /usr/local/bin && \
     chmod +x /usr/local/bin/dendrite /usr/local/bin/generate-keys /usr/local/bin/create-account
+{% endif %}
 
 FROM {{ container_base_image }}
 RUN apt-get update && \

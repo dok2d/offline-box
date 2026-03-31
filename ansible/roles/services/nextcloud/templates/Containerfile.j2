@@ -6,8 +6,13 @@ RUN apt-get update && \
     php-bcmath php-gmp php-opcache php-readline \
     curl bzip2 && \
     rm -rf /var/lib/apt/lists/*
+{% if offline_mode | default(false) %}
+COPY nextcloud-{{ nextcloud_version }}.tar.bz2 /tmp/nextcloud.tar.bz2
+RUN tar xj -C /opt -f /tmp/nextcloud.tar.bz2 && rm /tmp/nextcloud.tar.bz2
+{% else %}
 RUN curl -fsSL "https://download.nextcloud.com/server/releases/nextcloud-{{ nextcloud_version }}.tar.bz2" | \
     tar xj -C /opt
+{% endif %}
 RUN useradd -r -u 10001 -m nextcloud && \
     mkdir -p /data && \
     chown -R nextcloud:nextcloud /opt/nextcloud /data

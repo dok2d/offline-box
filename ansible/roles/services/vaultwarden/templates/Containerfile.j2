@@ -1,4 +1,10 @@
 FROM {{ container_base_image }} AS build
+{% if offline_mode | default(false) %}
+COPY vaultwarden-linux-x86_64 /usr/local/bin/vaultwarden
+RUN chmod +x /usr/local/bin/vaultwarden
+COPY bw_web_v{{ vaultwarden_web_vault_version }}.tar.gz /tmp/web-vault.tar.gz
+RUN tar xz -C /opt -f /tmp/web-vault.tar.gz && rm /tmp/web-vault.tar.gz
+{% else %}
 RUN apt-get update && \
     apt-get install -y --no-install-recommends curl ca-certificates && \
     rm -rf /var/lib/apt/lists/*
@@ -8,6 +14,7 @@ RUN curl -fsSL -o /usr/local/bin/vaultwarden \
 RUN mkdir -p /opt/web-vault && \
     curl -fsSL -L "https://github.com/dani-garcia/bw_web_builds/releases/download/v{{ vaultwarden_web_vault_version }}/bw_web_v{{ vaultwarden_web_vault_version }}.tar.gz" | \
     tar xz -C /opt
+{% endif %}
 
 FROM {{ container_base_image }}
 RUN apt-get update && \

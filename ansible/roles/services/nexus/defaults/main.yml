@@ -12,7 +12,7 @@ nexus_apt_distribution: trixie
 nexus_pypi_proxy_url: "https://pypi.org"
 nexus_docker_proxy_url: "https://registry-1.docker.io"
 nexus_docker_proxy_port: 5000
-nexus_version: "3.75.1-01"
+nexus_version: "3.90.2-06"
 nexus_tag: "{{ nexus_version }}"
 nexus_image: "{{ (container_registry ~ '/' if container_registry else '') }}{{ (container_namespace ~ '/' if container_namespace else '') }}nexus"
 nexus_image_full: "{{ nexus_image }}:{{ nexus_tag }}"

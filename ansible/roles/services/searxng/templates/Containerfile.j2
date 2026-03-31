@@ -8,8 +8,15 @@ RUN useradd -r -u 10001 -m searxng && \
     mkdir -p /app /config && \
     chown -R searxng:searxng /app /config
 USER searxng
+{% if offline_mode | default(false) %}
+COPY pip-packages/ /tmp/pip-packages/
 RUN python3 -m venv /app/venv && \
-    /app/venv/bin/pip install --no-cache-dir searxng
+    /app/venv/bin/pip install --no-cache-dir --no-index --find-links /tmp/pip-packages searxng=={{ searxng_version }} && \
+    rm -rf /tmp/pip-packages
+{% else %}
+RUN python3 -m venv /app/venv && \
+    /app/venv/bin/pip install --no-cache-dir searxng=={{ searxng_version }}
+{% endif %}
 EXPOSE {{ searxng_port }}
 ENV SEARXNG_SETTINGS_PATH=/config/settings.yml
 HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD curl -fs http://localhost:8009/searxng/ || exit 1

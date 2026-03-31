@@ -7,6 +7,10 @@ bigbluebutton_config_dir: "{{ opt_base }}/bigbluebutton/config"
 bigbluebutton_recordings_dir: "{{ opt_base }}/bigbluebutton/data/recordings"
 bigbluebutton_freeswitch_port_start: 16384
 bigbluebutton_freeswitch_port_end: 32768
+# NOTE: BBB 3.0 is available but requires a complete rewrite of the
+# Containerfile (GraphQL/Hasura architecture, mediasoup instead of Kurento).
+# The bbb-web.war must be built from source or extracted from .deb packages;
+# GitHub releases do not include binary assets.
 bigbluebutton_version: "2.7"
 
 bigbluebutton_db_password: ""

@@ -13,8 +13,16 @@ RUN useradd -r -u 10001 -m paperless && \
     mkdir -p /app /data/consume /data/media /data/data /config /run/redis && \
     chown -R paperless:paperless /app /data /config /run/redis
 USER paperless
+{% if offline_mode | default(false) %}
+COPY pip-packages/ /tmp/pip-packages/
 RUN python3 -m venv /app/venv && \
-    /app/venv/bin/pip install --no-cache-dir paperless-ngx gunicorn uvicorn
+    /app/venv/bin/pip install --no-cache-dir --no-index --find-links /tmp/pip-packages \
+    paperless-ngx=={{ paperless_ngx_version }} gunicorn uvicorn && \
+    rm -rf /tmp/pip-packages
+{% else %}
+RUN python3 -m venv /app/venv && \
+    /app/venv/bin/pip install --no-cache-dir paperless-ngx=={{ paperless_ngx_version }} gunicorn uvicorn
+{% endif %}
 EXPOSE {{ paperless_ngx_port }}
 COPY entrypoint.sh /app/entrypoint.sh
 HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD curl -fs http://localhost:8012/ || exit 1

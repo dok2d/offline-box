@@ -9,6 +9,7 @@ jellyfin_cache_dir: "{{ opt_base }}/jellyfin/data/cache"
 jellyfin_admin_user: admin
 jellyfin_language: ru
 jellyfin_country: RU
-jellyfin_tag: "latest"
+jellyfin_version: "10.11.6"
+jellyfin_tag: "{{ jellyfin_version }}"
 jellyfin_image: "{{ (container_registry ~ '/' if container_registry else '') }}{{ (container_namespace ~ '/' if container_namespace else '') }}jellyfin"
 jellyfin_image_full: "{{ jellyfin_image }}:{{ jellyfin_tag }}"

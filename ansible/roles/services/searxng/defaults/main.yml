@@ -7,6 +7,7 @@ searxng_config_dir: "{{ opt_base }}/searxng/config"
 # searxng_secret_key — defined in group_vars/passwords.yml
 searxng_base_url: "/searxng/"
 
-searxng_tag: "latest"
+searxng_version: "2026.3.29"
+searxng_tag: "{{ searxng_version }}"
 searxng_image: "{{ (container_registry ~ '/' if container_registry else '') }}{{ (container_namespace ~ '/' if container_namespace else '') }}searxng"
 searxng_image_full: "{{ searxng_image }}:{{ searxng_tag }}"

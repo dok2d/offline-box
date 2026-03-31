@@ -3,11 +3,16 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     curl ca-certificates && \
     rm -rf /var/lib/apt/lists/*
+{% if offline_mode | default(false) %}
+COPY mattermost-{{ mattermost_version }}-linux-*.tar.gz /tmp/mattermost.tar.gz
+RUN tar -xzf /tmp/mattermost.tar.gz -C /opt && rm /tmp/mattermost.tar.gz
+{% else %}
 RUN ARCH=$(dpkg --print-architecture) && \
     curl -fsSL "https://releases.mattermost.com/{{ mattermost_version }}/mattermost-{{ mattermost_version }}-linux-${ARCH}.tar.gz" \
     -o /tmp/mattermost.tar.gz && \
     tar -xzf /tmp/mattermost.tar.gz -C /opt && \
     rm /tmp/mattermost.tar.gz
+{% endif %}
 RUN useradd -r -u 10001 -m mattermost && \
     mkdir -p /opt/mattermost/data /opt/mattermost/logs /opt/mattermost/config && \
     chown -R mattermost:mattermost /opt/mattermost

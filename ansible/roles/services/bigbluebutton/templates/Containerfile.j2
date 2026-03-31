@@ -42,10 +42,14 @@ RUN useradd -r -u 10001 -m bigbluebutton && \
     chown -R postgres:postgres /run/postgresql
 
 # Install bbb-web (Grails application)
+{% if offline_mode | default(false) %}
+COPY bbb-web.war /app/bbb-web/bbb-web.war
+{% else %}
 RUN mkdir -p /app/bbb-web && \
     cd /app/bbb-web && \
     wget -q "https://github.com/bigbluebutton/bigbluebutton/releases/download/v${BBB_VERSION}.0/bbb-web.war" \
       -O bbb-web.war
+{% endif %}
 
 # Install Etherpad-lite for shared notes
 RUN npm install -g etherpad-lite

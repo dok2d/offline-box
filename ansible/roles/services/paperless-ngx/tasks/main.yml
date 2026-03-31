@@ -67,6 +67,15 @@
     group: "{{ svc_user }}"
     mode: "0755"
 
+- name: Copy offline pip packages for Paperless-ngx
+  ansible.builtin.copy:
+    src: "{{ offline_deps_dir }}/paperless-ngx/"
+    dest: "{{ paperless_ngx_config_dir }}/pip-packages/"
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0644"
+  when: offline_mode | default(false)
+
 - name: Build Paperless-ngx container image
   become: true
   become_user: "{{ svc_user }}"
