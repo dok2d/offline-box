@@ -21,6 +21,12 @@ get_var() {
     grep "^${key}:" "$file" | head -1 | sed 's/^[^:]*:[[:space:]]*//' | tr -d '"' | tr -d "'"
 }
 
+# Parse YAML list values (e.g. kiwix_zim_urls)
+get_list_var() {
+    local file="$1" key="$2"
+    sed -n "/^${key}:/,/^[^ ]/p" "$file" | grep '^\s*-' | sed 's/^\s*-\s*//' | tr -d '"' | tr -d "'"
+}
+
 # Service versions
 NEXUS_VERSION=$(get_var "$REPO_ROOT/ansible/roles/services/nexus/defaults/main.yml" "nexus_version")
 NEXTCLOUD_VERSION=$(get_var "$REPO_ROOT/ansible/roles/services/nextcloud/defaults/main.yml" "nextcloud_version")
@@ -37,6 +43,7 @@ CALIBRE_WEB_VERSION=$(get_var "$REPO_ROOT/ansible/roles/services/calibre-web/def
 SEARXNG_VERSION=$(get_var "$REPO_ROOT/ansible/roles/services/searxng/defaults/main.yml" "searxng_version")
 PAPERLESS_NGX_VERSION=$(get_var "$REPO_ROOT/ansible/roles/services/paperless-ngx/defaults/main.yml" "paperless_ngx_version")
 JELLYFIN_VERSION=$(get_var "$REPO_ROOT/ansible/roles/services/jellyfin/defaults/main.yml" "jellyfin_version")
+OSM_MBTILES_URL=$(get_var "$REPO_ROOT/ansible/roles/services/openstreetmap/defaults/main.yml" "openstreetmap_mbtiles_url")
 
 ARCH="${ARCH:-amd64}"
 
@@ -49,16 +56,6 @@ download() {
     echo "  [download] $url"
     mkdir -p "$(dirname "$dest")"
     curl -fSL --retry 3 --retry-delay 5 -o "$dest" "$url"
-}
-
-download_pip_packages() {
-    local dest_dir="$1"
-    shift
-    mkdir -p "$dest_dir"
-    echo "  [pip download] $*"
-    pip download --dest "$dest_dir" --no-deps "$@" 2>/dev/null || \
-    python3 -m pip download --dest "$dest_dir" --no-deps "$@" 2>/dev/null || \
-    echo "  [warn] pip download failed for: $* (install python3-pip to download pip packages)"
 }
 
 download_pip_with_deps() {
@@ -79,7 +76,74 @@ download_npm_package() {
     echo "  [warn] npm pack failed for: $pkg (install npm to download npm packages)"
 }
 
-# ── Service download functions ─────────────────────────────────────
+# ── Container base images ─────────────────────────────────────────
+
+dl_images() {
+    echo "==> Container base images"
+    local dest="$DEPS_DIR/images"
+    mkdir -p "$dest"
+
+    for img in "docker.io/library/debian:13-slim" "docker.io/library/ubuntu:22.04"; do
+        local fname
+        fname=$(echo "$img" | sed 's|[/:]|_|g').tar
+        if [ -f "$dest/$fname" ]; then
+            echo "  [skip] $fname already exists"
+            continue
+        fi
+        echo "  [pull+save] $img"
+        if command -v skopeo >/dev/null 2>&1; then
+            skopeo copy "docker://$img" "docker-archive:$dest/$fname:$img"
+        elif command -v podman >/dev/null 2>&1; then
+            podman pull "$img" && podman save -o "$dest/$fname" "$img"
+        elif command -v docker >/dev/null 2>&1; then
+            docker pull "$img" && docker save -o "$dest/$fname" "$img"
+        else
+            echo "  [warn] skopeo/podman/docker not found, cannot save $img"
+        fi
+    done
+}
+
+# ── Ansible Galaxy collection ─────────────────────────────────────
+
+dl_ansible() {
+    echo "==> Ansible Galaxy collection: containers.podman"
+    local dest="$DEPS_DIR/ansible"
+    mkdir -p "$dest"
+    if ls "$dest"/containers-podman-*.tar.gz >/dev/null 2>&1; then
+        echo "  [skip] containers.podman already downloaded"
+    else
+        echo "  [download] containers.podman collection"
+        ansible-galaxy collection download -r "$REPO_ROOT/ansible/requirements.yml" -p "$dest" 2>/dev/null || \
+        echo "  [warn] ansible-galaxy download failed (install ansible to download collections)"
+    fi
+}
+
+# ── Data files (large, optional) ──────────────────────────────────
+
+dl_kiwix() {
+    echo "==> Kiwix ZIM files"
+    local dest="$DEPS_DIR/kiwix"
+    local urls
+    urls=$(get_list_var "$REPO_ROOT/ansible/roles/services/kiwix/defaults/main.yml" "kiwix_zim_urls")
+    if [ -z "$urls" ]; then
+        echo "  [skip] no ZIM URLs configured"
+        return 0
+    fi
+    while IFS= read -r url; do
+        [ -z "$url" ] && continue
+        download "$url" "$dest/$(basename "$url")"
+    done <<< "$urls"
+}
+
+dl_openstreetmap() {
+    echo "==> OpenStreetMap (tileserver-gl-light $TILESERVER_VERSION + MBTiles)"
+    download_npm_package "$DEPS_DIR/openstreetmap" "tileserver-gl-light@${TILESERVER_VERSION}"
+    if [ -n "${OSM_MBTILES_URL:-}" ]; then
+        download "$OSM_MBTILES_URL" "$DEPS_DIR/openstreetmap/$(basename "$OSM_MBTILES_URL")"
+    fi
+}
+
+# ── Service download functions ────────────────────────────────────
 
 dl_nexus() {
     echo "==> Nexus $NEXUS_VERSION"
@@ -135,17 +199,14 @@ dl_bigbluebutton() {
     echo "==> BigBlueButton $BBB_VERSION"
     download "https://github.com/bigbluebutton/bigbluebutton/releases/download/v${BBB_VERSION}.0/bbb-web.war" \
         "$DEPS_DIR/bigbluebutton/bbb-web.war"
+    echo "  [npm pack] etherpad-lite"
+    download_npm_package "$DEPS_DIR/bigbluebutton" "etherpad-lite"
 }
 
 dl_jellyfin() {
-    echo "==> Jellyfin $JELLYFIN_VERSION (GPG key + deb packages)"
+    echo "==> Jellyfin $JELLYFIN_VERSION (GPG key)"
     download "https://repo.jellyfin.org/jellyfin_team.gpg.key" \
         "$DEPS_DIR/jellyfin/jellyfin_team.gpg.key"
-}
-
-dl_openstreetmap() {
-    echo "==> OpenStreetMap (tileserver-gl-light $TILESERVER_VERSION)"
-    download_npm_package "$DEPS_DIR/openstreetmap" "tileserver-gl-light@${TILESERVER_VERSION}"
 }
 
 dl_calibre_web() {
@@ -163,30 +224,13 @@ dl_paperless_ngx() {
     download_pip_with_deps "$DEPS_DIR/paperless-ngx" "paperless-ngx==${PAPERLESS_NGX_VERSION}" "gunicorn" "uvicorn"
 }
 
-# ── Ansible Galaxy collection ──────────────────────────────────────
-
-dl_ansible() {
-    echo "==> Ansible Galaxy collection: containers.podman"
-    local dest="$DEPS_DIR/ansible"
-    mkdir -p "$dest"
-    if ls "$dest"/containers-podman-*.tar.gz >/dev/null 2>&1; then
-        echo "  [skip] containers.podman already downloaded"
-    else
-        echo "  [download] containers.podman collection"
-        ansible-galaxy collection download containers.podman -p "$dest" 2>/dev/null || \
-        echo "  [warn] ansible-galaxy download failed; trying direct download"
-    fi
-    # Also download the collection as installable tarball
-    ansible-galaxy collection download -r "$REPO_ROOT/ansible/requirements.yml" -p "$dest" 2>/dev/null || true
-}
-
-# ── Main ───────────────────────────────────────────────────────────
+# ── Main ──────────────────────────────────────────────────────────
 
 ALL_SERVICES=(
-    ansible
+    images ansible
     nexus nextcloud gitea vaultwarden syncthing opencloud
     mattermost dendrite bigbluebutton jellyfin openstreetmap
-    calibre_web searxng paperless_ngx
+    kiwix calibre_web searxng paperless_ngx
 )
 
 # Determine which services to download
@@ -216,7 +260,9 @@ for svc in "${SERVICES[@]}"; do
 done
 
 echo "===================================="
-echo "To install Ansible collection offline:"
-echo "  ansible-galaxy collection install deps/ansible/containers-podman-*.tar.gz"
+echo "To prepare for offline deployment:"
+echo "  1. Load base images:  podman load -i deps/images/docker.io_library_debian_13-slim.tar"
+echo "  2. Install collection: ansible-galaxy collection install deps/ansible/containers-podman-*.tar.gz"
+echo "  3. Set offline_mode: true in ansible/group_vars/all.yml"
 echo ""
-echo "Done! Set offline_mode: true in ansible/group_vars/all.yml to use local deps."
+echo "Done!"

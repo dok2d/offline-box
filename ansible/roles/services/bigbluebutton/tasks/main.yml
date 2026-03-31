@@ -71,8 +71,8 @@
 
 - name: Copy offline deps for BigBlueButton
   ansible.builtin.copy:
-    src: "{{ offline_deps_dir }}/bigbluebutton/bbb-web.war"
-    dest: "{{ bigbluebutton_config_dir }}/bbb-web.war"
+    src: "{{ offline_deps_dir }}/bigbluebutton/"
+    dest: "{{ bigbluebutton_config_dir }}/"
     owner: "{{ svc_user }}"
     group: "{{ svc_user }}"
     mode: "0644"

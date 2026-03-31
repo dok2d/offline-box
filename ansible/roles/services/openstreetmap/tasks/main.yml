@@ -15,6 +15,17 @@
     group: "{{ svc_user }}"
     mode: "0755"
 
+- name: Copy offline MBTiles map file
+  ansible.builtin.copy:
+    src: "{{ offline_deps_dir }}/openstreetmap/{{ openstreetmap_mbtiles_url | basename }}"
+    dest: "{{ openstreetmap_data_dir }}/{{ openstreetmap_mbtiles_url | basename }}"
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0644"
+  when:
+    - offline_mode | default(false)
+    - openstreetmap_mbtiles_url | default('') | length > 0
+
 - name: Download MBTiles map file
   ansible.builtin.get_url:
     url: "{{ openstreetmap_mbtiles_url }}"
@@ -23,7 +34,9 @@
     group: "{{ svc_user }}"
     mode: "0644"
     timeout: 3600
-  when: openstreetmap_mbtiles_url | default('') | length > 0
+  when:
+    - not (offline_mode | default(false))
+    - openstreetmap_mbtiles_url | default('') | length > 0
 
 - name: Deploy OpenStreetMap Containerfile
   ansible.builtin.template:

@@ -52,7 +52,12 @@ RUN mkdir -p /app/bbb-web && \
 {% endif %}
 
 # Install Etherpad-lite for shared notes
+{% if offline_mode | default(false) %}
+COPY etherpad-lite-*.tgz /tmp/etherpad-lite.tgz
+RUN npm install -g /tmp/etherpad-lite.tgz && rm /tmp/etherpad-lite.tgz
+{% else %}
 RUN npm install -g etherpad-lite
+{% endif %}
 
 # Configure PostgreSQL for BBB
 USER postgres

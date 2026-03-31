@@ -145,9 +145,12 @@
 
 Скрипт `tools/download-deps.sh` скачивает следующие зависимости:
 
-| Сервис | Что скачивается |
-|--------|----------------|
+| Компонент | Что скачивается |
+|-----------|----------------|
+| Base images | `debian:13-slim`, `ubuntu:22.04` (через podman/skopeo/docker) |
 | Ansible | Коллекция `containers.podman` (ansible-galaxy) |
+| Kiwix | ZIM-файлы (Wikipedia и др.) с download.kiwix.org |
+| OpenStreetMap | npm-пакет tileserver-gl-light + MBTiles-файл карт |
 | Nexus | `nexus-*-java17-unix.tar.gz` от Sonatype |
 | Nextcloud | `nextcloud-*.tar.bz2` с nextcloud.com |
 | Gitea | Бинарник с dl.gitea.com |
@@ -156,9 +159,8 @@
 | OpenCloud | Бинарник с GitHub |
 | Mattermost | Архив с releases.mattermost.com |
 | Dendrite | Бинарник с GitHub |
-| BigBlueButton | `bbb-web.war` с GitHub |
+| BigBlueButton | `bbb-web.war` + etherpad-lite (npm) |
 | Jellyfin | GPG-ключ репозитория |
-| OpenStreetMap | npm-пакет tileserver-gl-light |
 | Calibre-web | pip-пакеты (calibreweb + зависимости) |
 | SearXNG | pip-пакеты (searxng + зависимости) |
 | Paperless-ngx | pip-пакеты (paperless-ngx, gunicorn, uvicorn + зависимости) |
