@@ -2,20 +2,21 @@ FROM {{ container_base_image }}
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     python3 python3-pip python3-venv \
-    libxml2 libxslt1.1 libffi8 curl && \
+    libxml2 libxslt1.1 libffi8 curl git && \
     rm -rf /var/lib/apt/lists/*
 RUN useradd -r -u 10001 -m searxng && \
     mkdir -p /app /config && \
     chown -R searxng:searxng /app /config
 USER searxng
 {% if offline_mode | default(false) %}
-COPY pip-packages/ /tmp/pip-packages/
+COPY searxng-src.tar.gz /tmp/searxng-src.tar.gz
 RUN python3 -m venv /app/venv && \
-    /app/venv/bin/pip install --no-cache-dir --no-index --find-links /tmp/pip-packages searxng=={{ searxng_version }} && \
-    rm -rf /tmp/pip-packages
+    /app/venv/bin/pip install --no-cache-dir /tmp/searxng-src.tar.gz && \
+    rm /tmp/searxng-src.tar.gz
 {% else %}
 RUN python3 -m venv /app/venv && \
-    /app/venv/bin/pip install --no-cache-dir searxng=={{ searxng_version }}
+    /app/venv/bin/pip install --no-cache-dir \
+    "https://github.com/searxng/searxng/archive/refs/heads/{{ searxng_git_ref }}.tar.gz"
 {% endif %}
 EXPOSE {{ searxng_port }}
 ENV SEARXNG_SETTINGS_PATH=/config/settings.yml

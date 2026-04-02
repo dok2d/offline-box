@@ -14,14 +14,15 @@ RUN useradd -r -u 10001 -m paperless && \
     chown -R paperless:paperless /app /data /config /run/redis
 USER paperless
 {% if offline_mode | default(false) %}
-COPY pip-packages/ /tmp/pip-packages/
+COPY paperless-ngx-src.tar.gz /tmp/paperless-ngx-src.tar.gz
 RUN python3 -m venv /app/venv && \
-    /app/venv/bin/pip install --no-cache-dir --no-index --find-links /tmp/pip-packages \
-    paperless-ngx=={{ paperless_ngx_version }} gunicorn uvicorn && \
-    rm -rf /tmp/pip-packages
+    /app/venv/bin/pip install --no-cache-dir /tmp/paperless-ngx-src.tar.gz gunicorn uvicorn && \
+    rm /tmp/paperless-ngx-src.tar.gz
 {% else %}
 RUN python3 -m venv /app/venv && \
-    /app/venv/bin/pip install --no-cache-dir paperless-ngx=={{ paperless_ngx_version }} gunicorn uvicorn
+    /app/venv/bin/pip install --no-cache-dir \
+    "https://github.com/paperless-ngx/paperless-ngx/archive/refs/tags/v{{ paperless_ngx_version }}.tar.gz" \
+    gunicorn uvicorn
 {% endif %}
 EXPOSE {{ paperless_ngx_port }}
 COPY entrypoint.sh /app/entrypoint.sh

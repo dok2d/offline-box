@@ -7,7 +7,9 @@ searxng_config_dir: "{{ opt_base }}/searxng/config"
 # searxng_secret_key — defined in group_vars/passwords.yml
 searxng_base_url: "/searxng/"
 
-searxng_version: "2026.3.29"
-searxng_tag: "{{ searxng_version }}"
+# SearXNG is a rolling release (no versioned PyPI/GitHub releases).
+# searxng_git_ref pins to a branch or commit hash for reproducibility.
+searxng_git_ref: "master"
+searxng_tag: "latest"
 searxng_image: "{{ (container_registry ~ '/' if container_registry else '') }}{{ (container_namespace ~ '/' if container_namespace else '') }}searxng"
 searxng_image_full: "{{ searxng_image }}:{{ searxng_tag }}"

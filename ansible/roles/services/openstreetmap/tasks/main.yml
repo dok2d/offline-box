@@ -48,10 +48,10 @@
   diff: true
   register: _containerfile
 
-- name: Copy offline npm packages for OpenStreetMap
+- name: Copy offline tileserver tarball for OpenStreetMap
   ansible.builtin.copy:
-    src: "{{ offline_deps_dir }}/openstreetmap/"
-    dest: "{{ openstreetmap_config_dir }}/npm-packages/"
+    src: "{{ offline_deps_dir }}/openstreetmap/tileserver-gl-light-{{ tileserver_gl_version }}.tgz"
+    dest: "{{ openstreetmap_config_dir }}/tileserver-gl-light-{{ tileserver_gl_version }}.tgz"
     owner: "{{ svc_user }}"
     group: "{{ svc_user }}"
     mode: "0644"

@@ -49,10 +49,10 @@ COPY bbb-web.war /app/bbb-web/bbb-web.war
 
 # Install Etherpad-lite for shared notes
 {% if offline_mode | default(false) %}
-COPY etherpad-lite-*.tgz /tmp/etherpad-lite.tgz
-RUN npm install -g /tmp/etherpad-lite.tgz && rm /tmp/etherpad-lite.tgz
+COPY ep_etherpad-lite-*.tgz /tmp/ep_etherpad-lite.tgz
+RUN npm install -g /tmp/ep_etherpad-lite.tgz && rm /tmp/ep_etherpad-lite.tgz
 {% else %}
-RUN npm install -g etherpad-lite
+RUN npm install -g ep_etherpad-lite
 {% endif %}
 
 # Configure PostgreSQL for BBB

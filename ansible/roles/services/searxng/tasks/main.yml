@@ -34,10 +34,10 @@
     mode: "0644"
   diff: true
 
-- name: Copy offline pip packages for SearXNG
+- name: Copy offline source tarball for SearXNG
   ansible.builtin.copy:
-    src: "{{ offline_deps_dir }}/searxng/"
-    dest: "{{ searxng_config_dir }}/pip-packages/"
+    src: "{{ offline_deps_dir }}/searxng/searxng-src.tar.gz"
+    dest: "{{ searxng_config_dir }}/searxng-src.tar.gz"
     owner: "{{ svc_user }}"
     group: "{{ svc_user }}"
     mode: "0644"

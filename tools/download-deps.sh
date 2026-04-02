@@ -61,7 +61,7 @@ DENDRITE_VERSION=$(get_var "$REPO_ROOT/ansible/roles/services/dendrite/defaults/
 BBB_VERSION=$(get_var "$REPO_ROOT/ansible/roles/services/bigbluebutton/defaults/main.yml" "bigbluebutton_version")
 TILESERVER_VERSION=$(get_var "$REPO_ROOT/ansible/roles/services/openstreetmap/defaults/main.yml" "tileserver_gl_version")
 CALIBRE_WEB_VERSION=$(get_var "$REPO_ROOT/ansible/roles/services/calibre-web/defaults/main.yml" "calibre_web_version")
-SEARXNG_VERSION=$(get_var "$REPO_ROOT/ansible/roles/services/searxng/defaults/main.yml" "searxng_version")
+SEARXNG_GIT_REF=$(get_var "$REPO_ROOT/ansible/roles/services/searxng/defaults/main.yml" "searxng_git_ref")
 PAPERLESS_NGX_VERSION=$(get_var "$REPO_ROOT/ansible/roles/services/paperless-ngx/defaults/main.yml" "paperless_ngx_version")
 JELLYFIN_VERSION=$(get_var "$REPO_ROOT/ansible/roles/services/jellyfin/defaults/main.yml" "jellyfin_version")
 OSM_MBTILES_URL=$(get_var "$REPO_ROOT/ansible/roles/services/openstreetmap/defaults/main.yml" "openstreetmap_mbtiles_url")
@@ -130,23 +130,11 @@ download_pip_with_deps() {
     fi
 }
 
-download_npm_package() {
-    local dest_dir="$1" pkg="$2"
-    mkdir -p "$dest_dir"
-    echo "  [npm pack] $pkg"
-    local output
-    if output=$(cd "$dest_dir" && npm pack "$pkg" 2>&1) && [ -n "$output" ]; then
-        # npm pack prints the tarball filename on the last line
-        local tgz
-        tgz=$(echo "$output" | grep '\.tgz$' | tail -1)
-        if [ -n "$tgz" ] && [ -f "$dest_dir/$tgz" ]; then
-            ok "npm: $pkg → $tgz"
-        else
-            ok "npm: $pkg"
-        fi
-    else
-        fail "npm pack failed for: $pkg (install npm)"
-    fi
+# Download npm package tarball directly from registry (no npm required)
+download_npm_tarball() {
+    local pkg="$1" version="$2" dest="$3"
+    local url="https://registry.npmjs.org/${pkg}/-/${pkg}-${version}.tgz"
+    download "$url" "$dest"
 }
 
 # ── Container base images ─────────────────────────────────────────
@@ -202,7 +190,8 @@ dl_kiwix() {
 
 dl_openstreetmap() {
     echo "==> OpenStreetMap (tileserver-gl-light $TILESERVER_VERSION + MBTiles)"
-    download_npm_package "$DEPS_DIR/openstreetmap" "tileserver-gl-light@${TILESERVER_VERSION}" || true
+    download_npm_tarball "tileserver-gl-light" "$TILESERVER_VERSION" \
+        "$DEPS_DIR/openstreetmap/tileserver-gl-light-${TILESERVER_VERSION}.tgz" || true
     if [ -n "${OSM_MBTILES_URL:-}" ]; then
         download "$OSM_MBTILES_URL" "$DEPS_DIR/openstreetmap/$(basename "$OSM_MBTILES_URL")" || true
     else
@@ -274,7 +263,9 @@ dl_bigbluebutton() {
     echo "==> BigBlueButton $BBB_VERSION"
     warn "bbb-web.war must be built from source or extracted from .deb packages"
     echo "         GitHub releases do not include binary assets."
-    download_npm_package "$DEPS_DIR/bigbluebutton" "etherpad-lite" || true
+    # etherpad-lite is published as ep_etherpad-lite on npm
+    download_npm_tarball "ep_etherpad-lite" "1.8.14" \
+        "$DEPS_DIR/bigbluebutton/ep_etherpad-lite-1.8.14.tgz" || true
 }
 
 dl_jellyfin() {
@@ -289,13 +280,15 @@ dl_calibre_web() {
 }
 
 dl_searxng() {
-    echo "==> SearXNG $SEARXNG_VERSION"
-    download_pip_with_deps "$DEPS_DIR/searxng" "searxng==${SEARXNG_VERSION}" || true
+    echo "==> SearXNG (git: $SEARXNG_GIT_REF)"
+    download "https://github.com/searxng/searxng/archive/refs/heads/${SEARXNG_GIT_REF}.tar.gz" \
+        "$DEPS_DIR/searxng/searxng-src.tar.gz" || true
 }
 
 dl_paperless_ngx() {
     echo "==> Paperless-NGX $PAPERLESS_NGX_VERSION"
-    download_pip_with_deps "$DEPS_DIR/paperless-ngx" "paperless-ngx==${PAPERLESS_NGX_VERSION}" "gunicorn" "uvicorn" || true
+    download "https://github.com/paperless-ngx/paperless-ngx/archive/refs/tags/v${PAPERLESS_NGX_VERSION}.tar.gz" \
+        "$DEPS_DIR/paperless-ngx/paperless-ngx-src.tar.gz" || true
 }
 
 # ── Main ──────────────────────────────────────────────────────────

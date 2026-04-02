@@ -3,9 +3,9 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends nodejs npm curl ca-certificates && \
     rm -rf /var/lib/apt/lists/*
 {% if offline_mode | default(false) %}
-COPY npm-packages/ /tmp/npm-packages/
-RUN npm install -g /tmp/npm-packages/tileserver-gl-light-{{ tileserver_gl_version }}.tgz && \
-    rm -rf /tmp/npm-packages && npm cache clean --force
+COPY tileserver-gl-light-{{ tileserver_gl_version }}.tgz /tmp/tileserver-gl-light.tgz
+RUN npm install -g /tmp/tileserver-gl-light.tgz && \
+    rm /tmp/tileserver-gl-light.tgz && npm cache clean --force
 {% else %}
 RUN npm install -g tileserver-gl-light@{{ tileserver_gl_version }} && npm cache clean --force
 {% endif %}
