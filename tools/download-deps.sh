@@ -209,8 +209,8 @@ dl_dendrite() {
 
 dl_bigbluebutton() {
     echo "==> BigBlueButton $BBB_VERSION"
-    download "https://github.com/bigbluebutton/bigbluebutton/releases/download/v${BBB_VERSION}.0/bbb-web.war" \
-        "$DEPS_DIR/bigbluebutton/bbb-web.war"
+    echo "  [warn] bbb-web.war must be built from source or extracted from .deb packages"
+    echo "         GitHub releases do not include binary assets. Skipping WAR download."
     echo "  [npm pack] etherpad-lite"
     download_npm_package "$DEPS_DIR/bigbluebutton" "etherpad-lite"
 }
