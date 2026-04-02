@@ -67,13 +67,12 @@
     group: "{{ svc_user }}"
     mode: "0755"
 
-- name: Copy offline source tarball for Paperless-ngx
+- name: Copy offline Paperless-ngx source
   ansible.builtin.copy:
-    src: "{{ offline_deps_dir }}/paperless-ngx/paperless-ngx-src.tar.gz"
-    dest: "{{ paperless_ngx_config_dir }}/paperless-ngx-src.tar.gz"
+    src: "{{ offline_deps_dir }}/paperless-ngx/paperless-ngx-src/"
+    dest: "{{ paperless_ngx_config_dir }}/paperless-ngx-src/"
     owner: "{{ svc_user }}"
     group: "{{ svc_user }}"
-    mode: "0644"
   when: offline_mode | default(false)
 
 - name: Build Paperless-ngx container image

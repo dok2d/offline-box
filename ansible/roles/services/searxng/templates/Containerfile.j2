@@ -9,14 +9,14 @@ RUN useradd -r -u 10001 -m searxng && \
     chown -R searxng:searxng /app /config
 USER searxng
 {% if offline_mode | default(false) %}
-COPY searxng-src.tar.gz /tmp/searxng-src.tar.gz
+COPY searxng-src/ /tmp/searxng-src/
 RUN python3 -m venv /app/venv && \
-    /app/venv/bin/pip install --no-cache-dir /tmp/searxng-src.tar.gz && \
-    rm /tmp/searxng-src.tar.gz
+    /app/venv/bin/pip install --no-cache-dir /tmp/searxng-src && \
+    rm -rf /tmp/searxng-src
 {% else %}
 RUN python3 -m venv /app/venv && \
     /app/venv/bin/pip install --no-cache-dir \
-    "https://github.com/searxng/searxng/archive/refs/heads/{{ searxng_git_ref }}.tar.gz"
+    "git+https://github.com/searxng/searxng.git@{{ searxng_git_ref }}"
 {% endif %}
 EXPOSE {{ searxng_port }}
 ENV SEARXNG_SETTINGS_PATH=/config/settings.yml

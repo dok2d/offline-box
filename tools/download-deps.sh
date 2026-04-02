@@ -116,6 +116,25 @@ save_image() {
     return 1
 }
 
+# Clone a git repo (shallow, single branch). Reusable for pip-installable projects.
+clone_repo() {
+    local url="$1" ref="$2" dest="$3"
+    if [ -d "$dest" ]; then
+        ok "$(basename "$dest") already cloned"
+        return 0
+    fi
+    echo "  [git clone] $url (ref: $ref)"
+    mkdir -p "$(dirname "$dest")"
+    if git clone --depth 1 --single-branch --branch "$ref" "$url" "$dest" 2>/dev/null; then
+        ok "$(basename "$dest") (ref: $ref)"
+        return 0
+    else
+        rm -rf "$dest"
+        fail "git clone failed — $url (ref: $ref)"
+        return 1
+    fi
+}
+
 download_pip_with_deps() {
     local dest_dir="$1"
     shift
@@ -281,14 +300,14 @@ dl_calibre_web() {
 
 dl_searxng() {
     echo "==> SearXNG (git: $SEARXNG_GIT_REF)"
-    download "https://github.com/searxng/searxng/archive/refs/heads/${SEARXNG_GIT_REF}.tar.gz" \
-        "$DEPS_DIR/searxng/searxng-src.tar.gz" || true
+    clone_repo "https://github.com/searxng/searxng.git" "$SEARXNG_GIT_REF" \
+        "$DEPS_DIR/searxng/searxng-src" || true
 }
 
 dl_paperless_ngx() {
     echo "==> Paperless-NGX $PAPERLESS_NGX_VERSION"
-    download "https://github.com/paperless-ngx/paperless-ngx/archive/refs/tags/v${PAPERLESS_NGX_VERSION}.tar.gz" \
-        "$DEPS_DIR/paperless-ngx/paperless-ngx-src.tar.gz" || true
+    clone_repo "https://github.com/paperless-ngx/paperless-ngx.git" "v${PAPERLESS_NGX_VERSION}" \
+        "$DEPS_DIR/paperless-ngx/paperless-ngx-src" || true
 }
 
 # ── Main ──────────────────────────────────────────────────────────
