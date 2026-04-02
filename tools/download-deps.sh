@@ -134,8 +134,16 @@ download_npm_package() {
     local dest_dir="$1" pkg="$2"
     mkdir -p "$dest_dir"
     echo "  [npm pack] $pkg"
-    if (cd "$dest_dir" && npm pack "$pkg" 2>/dev/null); then
-        ok "npm: $pkg"
+    local output
+    if output=$(cd "$dest_dir" && npm pack "$pkg" 2>&1) && [ -n "$output" ]; then
+        # npm pack prints the tarball filename on the last line
+        local tgz
+        tgz=$(echo "$output" | grep '\.tgz$' | tail -1)
+        if [ -n "$tgz" ] && [ -f "$dest_dir/$tgz" ]; then
+            ok "npm: $pkg → $tgz"
+        else
+            ok "npm: $pkg"
+        fi
     else
         fail "npm pack failed for: $pkg (install npm)"
     fi
