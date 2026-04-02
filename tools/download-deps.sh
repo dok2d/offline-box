@@ -32,7 +32,6 @@ NEXUS_VERSION=$(get_var "$REPO_ROOT/ansible/roles/services/nexus/defaults/main.y
 NEXTCLOUD_VERSION=$(get_var "$REPO_ROOT/ansible/roles/services/nextcloud/defaults/main.yml" "nextcloud_version")
 GITEA_VERSION=$(get_var "$REPO_ROOT/ansible/roles/services/gitea/defaults/main.yml" "gitea_version")
 VAULTWARDEN_VERSION=$(get_var "$REPO_ROOT/ansible/roles/services/vaultwarden/defaults/main.yml" "vaultwarden_version")
-VAULTWARDEN_WEB_VAULT_VERSION=$(get_var "$REPO_ROOT/ansible/roles/services/vaultwarden/defaults/main.yml" "vaultwarden_web_vault_version")
 SYNCTHING_VERSION=$(get_var "$REPO_ROOT/ansible/roles/services/syncthing/defaults/main.yml" "syncthing_version")
 OPENCLOUD_VERSION=$(get_var "$REPO_ROOT/ansible/roles/services/opencloud/defaults/main.yml" "opencloud_version")
 MATTERMOST_VERSION=$(get_var "$REPO_ROOT/ansible/roles/services/mattermost/defaults/main.yml" "mattermost_version")
@@ -58,6 +57,22 @@ download() {
     curl -fSL --retry 3 --retry-delay 5 -o "$dest" "$url"
 }
 
+save_image() {
+    local img="$1" dest="$2"
+    echo "  [pull+save] $img"
+    mkdir -p "$(dirname "$dest")"
+    if command -v skopeo >/dev/null 2>&1; then
+        skopeo copy "docker://$img" "docker-archive:$dest:$img"
+    elif command -v podman >/dev/null 2>&1; then
+        podman pull "$img" && podman save -o "$dest" "$img"
+    elif command -v docker >/dev/null 2>&1; then
+        docker pull "$img" && docker save -o "$dest" "$img"
+    else
+        echo "  [error] skopeo/podman/docker not found, cannot save $img"
+        return 1
+    fi
+}
+
 download_pip_with_deps() {
     local dest_dir="$1"
     shift
@@ -80,26 +95,15 @@ download_npm_package() {
 
 dl_images() {
     echo "==> Container base images"
-    local dest="$DEPS_DIR/images"
-    mkdir -p "$dest"
-
     for img in "docker.io/library/debian:13-slim" "docker.io/library/ubuntu:22.04"; do
         local fname
         fname=$(echo "$img" | sed 's|[/:]|_|g').tar
-        if [ -f "$dest/$fname" ]; then
+        local dest="$DEPS_DIR/images/$fname"
+        if [ -f "$dest" ]; then
             echo "  [skip] $fname already exists"
             continue
         fi
-        echo "  [pull+save] $img"
-        if command -v skopeo >/dev/null 2>&1; then
-            skopeo copy "docker://$img" "docker-archive:$dest/$fname:$img"
-        elif command -v podman >/dev/null 2>&1; then
-            podman pull "$img" && podman save -o "$dest/$fname" "$img"
-        elif command -v docker >/dev/null 2>&1; then
-            docker pull "$img" && docker save -o "$dest/$fname" "$img"
-        else
-            echo "  [warn] skopeo/podman/docker not found, cannot save $img"
-        fi
+        save_image "$img" "$dest"
     done
 }
 
@@ -147,8 +151,8 @@ dl_openstreetmap() {
 
 dl_nexus() {
     echo "==> Nexus $NEXUS_VERSION"
-    download "https://download.sonatype.com/nexus/3/nexus-${NEXUS_VERSION}-java17-unix.tar.gz" \
-        "$DEPS_DIR/nexus/nexus-${NEXUS_VERSION}-java17-unix.tar.gz"
+    download "https://download.sonatype.com/nexus/3/nexus-${NEXUS_VERSION}-unix.tar.gz" \
+        "$DEPS_DIR/nexus/nexus-${NEXUS_VERSION}-unix.tar.gz"
 }
 
 dl_nextcloud() {
@@ -159,16 +163,19 @@ dl_nextcloud() {
 
 dl_gitea() {
     echo "==> Gitea $GITEA_VERSION"
-    download "https://dl.gitea.com/gitea/${GITEA_VERSION%.*}/gitea-${GITEA_VERSION}-linux-${ARCH}" \
+    download "https://dl.gitea.com/gitea/${GITEA_VERSION}/gitea-${GITEA_VERSION}-linux-${ARCH}" \
         "$DEPS_DIR/gitea/gitea-${GITEA_VERSION}-linux-${ARCH}"
 }
 
 dl_vaultwarden() {
-    echo "==> Vaultwarden $VAULTWARDEN_VERSION (web-vault $VAULTWARDEN_WEB_VAULT_VERSION)"
-    download "https://github.com/dani-garcia/vaultwarden/releases/download/${VAULTWARDEN_VERSION}/vaultwarden-linux-x86_64" \
-        "$DEPS_DIR/vaultwarden/vaultwarden-linux-x86_64"
-    download "https://github.com/dani-garcia/bw_web_builds/releases/download/v${VAULTWARDEN_WEB_VAULT_VERSION}/bw_web_v${VAULTWARDEN_WEB_VAULT_VERSION}.tar.gz" \
-        "$DEPS_DIR/vaultwarden/bw_web_v${VAULTWARDEN_WEB_VAULT_VERSION}.tar.gz"
+    echo "==> Vaultwarden $VAULTWARDEN_VERSION (Docker image)"
+    local img="docker.io/vaultwarden/server:${VAULTWARDEN_VERSION}"
+    local dest="$DEPS_DIR/images/vaultwarden_server_${VAULTWARDEN_VERSION}.tar"
+    if [ -f "$dest" ]; then
+        echo "  [skip] $(basename "$dest") already exists"
+        return 0
+    fi
+    save_image "$img" "$dest"
 }
 
 dl_syncthing() {
@@ -190,9 +197,14 @@ dl_mattermost() {
 }
 
 dl_dendrite() {
-    echo "==> Dendrite $DENDRITE_VERSION"
-    download "https://github.com/matrix-org/dendrite/releases/download/v${DENDRITE_VERSION}/dendrite-${ARCH}.tar.gz" \
-        "$DEPS_DIR/dendrite/dendrite-${DENDRITE_VERSION}-${ARCH}.tar.gz"
+    echo "==> Dendrite $DENDRITE_VERSION (Docker image)"
+    local img="docker.io/matrixdotorg/dendrite-monolith:v${DENDRITE_VERSION}"
+    local dest="$DEPS_DIR/images/dendrite-monolith_v${DENDRITE_VERSION}.tar"
+    if [ -f "$dest" ]; then
+        echo "  [skip] $(basename "$dest") already exists"
+        return 0
+    fi
+    save_image "$img" "$dest"
 }
 
 dl_bigbluebutton() {

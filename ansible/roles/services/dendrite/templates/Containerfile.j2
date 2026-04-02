@@ -1,28 +1,12 @@
-FROM {{ container_base_image }} AS build
-{% if offline_mode | default(false) %}
-COPY dendrite-{{ dendrite_version }}-*.tar.gz /tmp/dendrite.tar.gz
-RUN tar -xzf /tmp/dendrite.tar.gz -C /usr/local/bin && \
-    chmod +x /usr/local/bin/dendrite /usr/local/bin/generate-keys /usr/local/bin/create-account && \
-    rm /tmp/dendrite.tar.gz
-{% else %}
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-    curl ca-certificates && \
-    rm -rf /var/lib/apt/lists/*
-RUN ARCH=$(dpkg --print-architecture) && \
-    curl -fsSL "https://github.com/matrix-org/dendrite/releases/download/v{{ dendrite_version }}/dendrite-${ARCH}.tar.gz" \
-    -o /tmp/dendrite.tar.gz && \
-    tar -xzf /tmp/dendrite.tar.gz -C /usr/local/bin && \
-    chmod +x /usr/local/bin/dendrite /usr/local/bin/generate-keys /usr/local/bin/create-account
-{% endif %}
+FROM docker.io/matrixdotorg/dendrite-monolith:v{{ dendrite_version }} AS source
 
 FROM {{ container_base_image }}
 RUN apt-get update && \
     apt-get install -y --no-install-recommends curl ca-certificates && \
     rm -rf /var/lib/apt/lists/*
-COPY --from=build /usr/local/bin/dendrite /usr/local/bin/dendrite
-COPY --from=build /usr/local/bin/generate-keys /usr/local/bin/generate-keys
-COPY --from=build /usr/local/bin/create-account /usr/local/bin/create-account
+COPY --from=source /usr/bin/dendrite /usr/local/bin/dendrite
+COPY --from=source /usr/bin/generate-keys /usr/local/bin/generate-keys
+COPY --from=source /usr/bin/create-account /usr/local/bin/create-account
 RUN useradd -r -u 10001 -m dendrite && \
     mkdir -p /data /etc/dendrite && \
     chown -R dendrite:dendrite /data /etc/dendrite

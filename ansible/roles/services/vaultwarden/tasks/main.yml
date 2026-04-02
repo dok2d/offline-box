@@ -43,15 +43,6 @@
   diff: true
   register: _containerfile
 
-- name: Copy offline deps for Vaultwarden
-  ansible.builtin.copy:
-    src: "{{ offline_deps_dir }}/vaultwarden/"
-    dest: "{{ vaultwarden_config_dir }}/"
-    owner: "{{ svc_user }}"
-    group: "{{ svc_user }}"
-    mode: "0644"
-  when: offline_mode | default(false)
-
 - name: Build Vaultwarden container image
   become: true
   become_user: "{{ svc_user }}"

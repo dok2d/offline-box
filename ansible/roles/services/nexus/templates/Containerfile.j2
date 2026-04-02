@@ -1,12 +1,12 @@
 FROM {{ container_base_image }} AS build
 {% if offline_mode | default(false) %}
-COPY nexus-{{ nexus_version }}-java17-unix.tar.gz /tmp/nexus.tar.gz
+COPY nexus-{{ nexus_version }}-unix.tar.gz /tmp/nexus.tar.gz
 RUN tar xz -C /opt -f /tmp/nexus.tar.gz && \
     mv /opt/nexus-{{ nexus_version }} /opt/nexus && \
     rm /tmp/nexus.tar.gz
 {% else %}
 RUN apt-get update && apt-get install -y --no-install-recommends curl tar && \
-    curl -fsSL https://download.sonatype.com/nexus/3/nexus-{{ nexus_version }}-java17-unix.tar.gz \
+    curl -fsSL https://download.sonatype.com/nexus/3/nexus-{{ nexus_version }}-unix.tar.gz \
       | tar xz -C /opt && \
     mv /opt/nexus-{{ nexus_version }} /opt/nexus && \
     rm -rf /var/lib/apt/lists/*

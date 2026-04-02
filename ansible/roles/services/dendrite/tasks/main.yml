@@ -47,15 +47,6 @@
       -private-key /etc/dendrite/matrix_key.pem
     creates: "{{ dendrite_config_dir }}/matrix_key.pem"
 
-- name: Copy offline deps for Dendrite
-  ansible.builtin.copy:
-    src: "{{ offline_deps_dir }}/dendrite/"
-    dest: "{{ dendrite_config_dir }}/"
-    owner: "{{ svc_user }}"
-    group: "{{ svc_user }}"
-    mode: "0644"
-  when: offline_mode | default(false)
-
 - name: Build Dendrite container image
   become: true
   become_user: "{{ svc_user }}"
