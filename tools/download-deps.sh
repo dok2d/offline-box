@@ -151,8 +151,8 @@ dl_openstreetmap() {
 
 dl_nexus() {
     echo "==> Nexus $NEXUS_VERSION"
-    download "https://download.sonatype.com/nexus/3/nexus-${NEXUS_VERSION}-unix.tar.gz" \
-        "$DEPS_DIR/nexus/nexus-${NEXUS_VERSION}-unix.tar.gz"
+    download "https://download.sonatype.com/nexus/3/nexus-${NEXUS_VERSION}-linux-x86_64.tar.gz" \
+        "$DEPS_DIR/nexus/nexus-${NEXUS_VERSION}-linux-x86_64.tar.gz"
 }
 
 dl_nextcloud() {

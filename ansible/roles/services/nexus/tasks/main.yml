@@ -27,8 +27,8 @@
 
 - name: Copy offline deps for Nexus
   ansible.builtin.copy:
-    src: "{{ offline_deps_dir }}/nexus/nexus-{{ nexus_version }}-unix.tar.gz"
-    dest: "{{ nexus_config_dir }}/nexus-{{ nexus_version }}-unix.tar.gz"
+    src: "{{ offline_deps_dir }}/nexus/nexus-{{ nexus_version }}-linux-x86_64.tar.gz"
+    dest: "{{ nexus_config_dir }}/nexus-{{ nexus_version }}-linux-x86_64.tar.gz"
     owner: "{{ svc_user }}"
     group: "{{ svc_user }}"
     mode: "0644"
