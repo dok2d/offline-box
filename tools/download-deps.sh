@@ -9,11 +9,33 @@
 # After downloading, set offline_mode: true in ansible/group_vars/all.yml
 # to build containers from local files instead of fetching from the internet.
 
-set -euo pipefail
+set -uo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 DEPS_DIR="$REPO_ROOT/deps"
+
+ERRORS=0
+WARNINGS=()
+
+RED='\033[0;31m'
+YELLOW='\033[1;33m'
+GREEN='\033[0;32m'
+NC='\033[0m' # No Color
+
+warn() {
+    WARNINGS+=("$1")
+    echo -e "  ${YELLOW}[WARN]${NC} $1"
+}
+
+fail() {
+    ERRORS=$((ERRORS + 1))
+    echo -e "  ${RED}[FAIL]${NC} $1"
+}
+
+ok() {
+    echo -e "  ${GREEN}[ok]${NC} $1"
+}
 
 # Source versions from ansible defaults (parse YAML simply)
 get_var() {
@@ -49,12 +71,21 @@ ARCH="${ARCH:-amd64}"
 download() {
     local url="$1" dest="$2"
     if [ -f "$dest" ]; then
-        echo "  [skip] $(basename "$dest") already exists"
+        ok "$(basename "$dest") already exists"
         return 0
     fi
     echo "  [download] $url"
     mkdir -p "$(dirname "$dest")"
-    curl -fSL --retry 3 --retry-delay 5 -o "$dest" "$url"
+    local http_code
+    http_code=$(curl -SL --retry 3 --retry-delay 5 -o "$dest" -w '%{http_code}' "$url" 2>/dev/null) || true
+    if [ -f "$dest" ] && [ -s "$dest" ] && [[ "$http_code" =~ ^2 ]]; then
+        ok "$(basename "$dest") (HTTP $http_code)"
+        return 0
+    else
+        rm -f "$dest"
+        fail "HTTP $http_code — $url"
+        return 1
+    fi
 }
 
 save_image() {
@@ -62,15 +93,27 @@ save_image() {
     echo "  [pull+save] $img"
     mkdir -p "$(dirname "$dest")"
     if command -v skopeo >/dev/null 2>&1; then
-        skopeo copy "docker://$img" "docker-archive:$dest:$img"
+        if skopeo copy "docker://$img" "docker-archive:$dest:$img" 2>/dev/null; then
+            ok "$img"
+            return 0
+        fi
     elif command -v podman >/dev/null 2>&1; then
-        podman pull "$img" && podman save -o "$dest" "$img"
+        if podman pull "$img" 2>/dev/null && podman save -o "$dest" "$img" 2>/dev/null; then
+            ok "$img"
+            return 0
+        fi
     elif command -v docker >/dev/null 2>&1; then
-        docker pull "$img" && docker save -o "$dest" "$img"
+        if docker pull "$img" 2>/dev/null && docker save -o "$dest" "$img" 2>/dev/null; then
+            ok "$img"
+            return 0
+        fi
     else
-        echo "  [error] skopeo/podman/docker not found, cannot save $img"
+        fail "skopeo/podman/docker not found, cannot save $img"
         return 1
     fi
+    rm -f "$dest"
+    fail "could not pull/save $img"
+    return 1
 }
 
 download_pip_with_deps() {
@@ -78,17 +121,24 @@ download_pip_with_deps() {
     shift
     mkdir -p "$dest_dir"
     echo "  [pip download] $* (with dependencies)"
-    pip download --dest "$dest_dir" "$@" 2>/dev/null || \
-    python3 -m pip download --dest "$dest_dir" "$@" 2>/dev/null || \
-    echo "  [warn] pip download failed for: $* (install python3-pip to download pip packages)"
+    if pip download --dest "$dest_dir" "$@" 2>/dev/null; then
+        ok "pip packages: $*"
+    elif python3 -m pip download --dest "$dest_dir" "$@" 2>/dev/null; then
+        ok "pip packages: $*"
+    else
+        fail "pip download failed for: $* (install python3-pip)"
+    fi
 }
 
 download_npm_package() {
     local dest_dir="$1" pkg="$2"
     mkdir -p "$dest_dir"
     echo "  [npm pack] $pkg"
-    (cd "$dest_dir" && npm pack "$pkg" 2>/dev/null) || \
-    echo "  [warn] npm pack failed for: $pkg (install npm to download npm packages)"
+    if (cd "$dest_dir" && npm pack "$pkg" 2>/dev/null); then
+        ok "npm: $pkg"
+    else
+        fail "npm pack failed for: $pkg (install npm)"
+    fi
 }
 
 # ── Container base images ─────────────────────────────────────────
@@ -100,10 +150,10 @@ dl_images() {
         fname=$(echo "$img" | sed 's|[/:]|_|g').tar
         local dest="$DEPS_DIR/images/$fname"
         if [ -f "$dest" ]; then
-            echo "  [skip] $fname already exists"
+            ok "$fname already exists"
             continue
         fi
-        save_image "$img" "$dest"
+        save_image "$img" "$dest" || true
     done
 }
 
@@ -114,11 +164,14 @@ dl_ansible() {
     local dest="$DEPS_DIR/ansible"
     mkdir -p "$dest"
     if ls "$dest"/containers-podman-*.tar.gz >/dev/null 2>&1; then
-        echo "  [skip] containers.podman already downloaded"
+        ok "containers.podman already downloaded"
     else
         echo "  [download] containers.podman collection"
-        ansible-galaxy collection download -r "$REPO_ROOT/ansible/requirements.yml" -p "$dest" 2>/dev/null || \
-        echo "  [warn] ansible-galaxy download failed (install ansible to download collections)"
+        if ansible-galaxy collection download -r "$REPO_ROOT/ansible/requirements.yml" -p "$dest" 2>/dev/null; then
+            ok "containers.podman"
+        else
+            fail "ansible-galaxy download failed (install ansible)"
+        fi
     fi
 }
 
@@ -130,20 +183,22 @@ dl_kiwix() {
     local urls
     urls=$(get_list_var "$REPO_ROOT/ansible/roles/services/kiwix/defaults/main.yml" "kiwix_zim_urls")
     if [ -z "$urls" ]; then
-        echo "  [skip] no ZIM URLs configured"
+        warn "no ZIM URLs configured"
         return 0
     fi
     while IFS= read -r url; do
         [ -z "$url" ] && continue
-        download "$url" "$dest/$(basename "$url")"
+        download "$url" "$dest/$(basename "$url")" || true
     done <<< "$urls"
 }
 
 dl_openstreetmap() {
     echo "==> OpenStreetMap (tileserver-gl-light $TILESERVER_VERSION + MBTiles)"
-    download_npm_package "$DEPS_DIR/openstreetmap" "tileserver-gl-light@${TILESERVER_VERSION}"
+    download_npm_package "$DEPS_DIR/openstreetmap" "tileserver-gl-light@${TILESERVER_VERSION}" || true
     if [ -n "${OSM_MBTILES_URL:-}" ]; then
-        download "$OSM_MBTILES_URL" "$DEPS_DIR/openstreetmap/$(basename "$OSM_MBTILES_URL")"
+        download "$OSM_MBTILES_URL" "$DEPS_DIR/openstreetmap/$(basename "$OSM_MBTILES_URL")" || true
+    else
+        warn "openstreetmap_mbtiles_url is empty — set it in defaults or place .mbtiles manually"
     fi
 }
 
@@ -152,19 +207,19 @@ dl_openstreetmap() {
 dl_nexus() {
     echo "==> Nexus $NEXUS_VERSION"
     download "https://download.sonatype.com/nexus/3/nexus-${NEXUS_VERSION}-linux-x86_64.tar.gz" \
-        "$DEPS_DIR/nexus/nexus-${NEXUS_VERSION}-linux-x86_64.tar.gz"
+        "$DEPS_DIR/nexus/nexus-${NEXUS_VERSION}-linux-x86_64.tar.gz" || true
 }
 
 dl_nextcloud() {
     echo "==> Nextcloud $NEXTCLOUD_VERSION"
     download "https://download.nextcloud.com/server/releases/nextcloud-${NEXTCLOUD_VERSION}.tar.bz2" \
-        "$DEPS_DIR/nextcloud/nextcloud-${NEXTCLOUD_VERSION}.tar.bz2"
+        "$DEPS_DIR/nextcloud/nextcloud-${NEXTCLOUD_VERSION}.tar.bz2" || true
 }
 
 dl_gitea() {
     echo "==> Gitea $GITEA_VERSION"
     download "https://dl.gitea.com/gitea/${GITEA_VERSION}/gitea-${GITEA_VERSION}-linux-${ARCH}" \
-        "$DEPS_DIR/gitea/gitea-${GITEA_VERSION}-linux-${ARCH}"
+        "$DEPS_DIR/gitea/gitea-${GITEA_VERSION}-linux-${ARCH}" || true
 }
 
 dl_vaultwarden() {
@@ -172,28 +227,28 @@ dl_vaultwarden() {
     local img="docker.io/vaultwarden/server:${VAULTWARDEN_VERSION}"
     local dest="$DEPS_DIR/images/vaultwarden_server_${VAULTWARDEN_VERSION}.tar"
     if [ -f "$dest" ]; then
-        echo "  [skip] $(basename "$dest") already exists"
+        ok "$(basename "$dest") already exists"
         return 0
     fi
-    save_image "$img" "$dest"
+    save_image "$img" "$dest" || true
 }
 
 dl_syncthing() {
     echo "==> Syncthing $SYNCTHING_VERSION"
     download "https://github.com/syncthing/syncthing/releases/download/v${SYNCTHING_VERSION}/syncthing-linux-${ARCH}-v${SYNCTHING_VERSION}.tar.gz" \
-        "$DEPS_DIR/syncthing/syncthing-linux-${ARCH}-v${SYNCTHING_VERSION}.tar.gz"
+        "$DEPS_DIR/syncthing/syncthing-linux-${ARCH}-v${SYNCTHING_VERSION}.tar.gz" || true
 }
 
 dl_opencloud() {
     echo "==> OpenCloud $OPENCLOUD_VERSION"
     download "https://github.com/opencloud-eu/opencloud/releases/download/v${OPENCLOUD_VERSION}/opencloud-${OPENCLOUD_VERSION}-linux-amd64" \
-        "$DEPS_DIR/opencloud/opencloud-${OPENCLOUD_VERSION}-linux-amd64"
+        "$DEPS_DIR/opencloud/opencloud-${OPENCLOUD_VERSION}-linux-amd64" || true
 }
 
 dl_mattermost() {
     echo "==> Mattermost $MATTERMOST_VERSION"
     download "https://releases.mattermost.com/${MATTERMOST_VERSION}/mattermost-${MATTERMOST_VERSION}-linux-${ARCH}.tar.gz" \
-        "$DEPS_DIR/mattermost/mattermost-${MATTERMOST_VERSION}-linux-${ARCH}.tar.gz"
+        "$DEPS_DIR/mattermost/mattermost-${MATTERMOST_VERSION}-linux-${ARCH}.tar.gz" || true
 }
 
 dl_dendrite() {
@@ -201,39 +256,38 @@ dl_dendrite() {
     local img="docker.io/matrixdotorg/dendrite-monolith:v${DENDRITE_VERSION}"
     local dest="$DEPS_DIR/images/dendrite-monolith_v${DENDRITE_VERSION}.tar"
     if [ -f "$dest" ]; then
-        echo "  [skip] $(basename "$dest") already exists"
+        ok "$(basename "$dest") already exists"
         return 0
     fi
-    save_image "$img" "$dest"
+    save_image "$img" "$dest" || true
 }
 
 dl_bigbluebutton() {
     echo "==> BigBlueButton $BBB_VERSION"
-    echo "  [warn] bbb-web.war must be built from source or extracted from .deb packages"
-    echo "         GitHub releases do not include binary assets. Skipping WAR download."
-    echo "  [npm pack] etherpad-lite"
-    download_npm_package "$DEPS_DIR/bigbluebutton" "etherpad-lite"
+    warn "bbb-web.war must be built from source or extracted from .deb packages"
+    echo "         GitHub releases do not include binary assets."
+    download_npm_package "$DEPS_DIR/bigbluebutton" "etherpad-lite" || true
 }
 
 dl_jellyfin() {
     echo "==> Jellyfin $JELLYFIN_VERSION (GPG key)"
     download "https://repo.jellyfin.org/jellyfin_team.gpg.key" \
-        "$DEPS_DIR/jellyfin/jellyfin_team.gpg.key"
+        "$DEPS_DIR/jellyfin/jellyfin_team.gpg.key" || true
 }
 
 dl_calibre_web() {
     echo "==> Calibre-web $CALIBRE_WEB_VERSION"
-    download_pip_with_deps "$DEPS_DIR/calibre-web" "calibreweb==${CALIBRE_WEB_VERSION}"
+    download_pip_with_deps "$DEPS_DIR/calibre-web" "calibreweb==${CALIBRE_WEB_VERSION}" || true
 }
 
 dl_searxng() {
     echo "==> SearXNG $SEARXNG_VERSION"
-    download_pip_with_deps "$DEPS_DIR/searxng" "searxng==${SEARXNG_VERSION}"
+    download_pip_with_deps "$DEPS_DIR/searxng" "searxng==${SEARXNG_VERSION}" || true
 }
 
 dl_paperless_ngx() {
     echo "==> Paperless-NGX $PAPERLESS_NGX_VERSION"
-    download_pip_with_deps "$DEPS_DIR/paperless-ngx" "paperless-ngx==${PAPERLESS_NGX_VERSION}" "gunicorn" "uvicorn"
+    download_pip_with_deps "$DEPS_DIR/paperless-ngx" "paperless-ngx==${PAPERLESS_NGX_VERSION}" "gunicorn" "uvicorn" || true
 }
 
 # ── Main ──────────────────────────────────────────────────────────
@@ -265,16 +319,37 @@ for svc in "${SERVICES[@]}"; do
         $func_name
         echo ""
     else
-        echo "[error] Unknown service: $svc"
-        echo "Available services: ${ALL_SERVICES[*]}"
-        exit 1
+        fail "Unknown service: $svc (available: ${ALL_SERVICES[*]})"
+        echo ""
     fi
 done
 
 echo "===================================="
-echo "To prepare for offline deployment:"
-echo "  1. Load base images:  podman load -i deps/images/docker.io_library_debian_13-slim.tar"
-echo "  2. Install collection: ansible-galaxy collection install deps/ansible/containers-podman-*.tar.gz"
-echo "  3. Set offline_mode: true in ansible/group_vars/all.yml"
-echo ""
-echo "Done!"
+
+if [ ${#WARNINGS[@]} -gt 0 ]; then
+    echo ""
+    echo -e "${YELLOW}Warnings (${#WARNINGS[@]}):${NC}"
+    for w in "${WARNINGS[@]}"; do
+        echo -e "  ${YELLOW}!${NC} $w"
+    done
+fi
+
+if [ "$ERRORS" -gt 0 ]; then
+    echo ""
+    echo -e "${RED}>>> $ERRORS download(s) FAILED. Review errors above. <<<${NC}"
+    echo ""
+    echo "To prepare for offline deployment:"
+    echo "  1. Fix failed downloads and re-run the script"
+    echo "  2. Load base images:   podman load -i deps/images/docker.io_library_debian_13-slim.tar"
+    echo "  3. Install collection: ansible-galaxy collection install deps/ansible/containers-podman-*.tar.gz"
+    echo "  4. Set offline_mode: true in ansible/group_vars/all.yml"
+    exit 1
+else
+    echo ""
+    echo -e "${GREEN}All downloads completed successfully.${NC}"
+    echo ""
+    echo "To prepare for offline deployment:"
+    echo "  1. Load base images:   podman load -i deps/images/docker.io_library_debian_13-slim.tar"
+    echo "  2. Install collection: ansible-galaxy collection install deps/ansible/containers-podman-*.tar.gz"
+    echo "  3. Set offline_mode: true in ansible/group_vars/all.yml"
+fi
