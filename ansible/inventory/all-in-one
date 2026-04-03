@@ -71,3 +71,6 @@ control
 
 [flib:children]
 control
+
+[kanban:children]
+control

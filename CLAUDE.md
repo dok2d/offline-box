@@ -276,14 +276,14 @@ WantedBy=default.target
 
 | MemoryMax | Сервисы |
 |-----------|---------|
-| 512M | kiwix, vaultwarden, calibre-web, flib, minidlna, searxng |
+| 512M | kiwix, vaultwarden, calibre-web, flib, minidlna, searxng, kanban |
 | 1G | nextcloud, gitea, dendrite, opencloud, openstreetmap, syncthing, transmission |
 | 2G | nexus, paperless-ngx |
 | 4G | jellyfin, bigbluebutton |
 
 | CPUQuota | Сервисы |
 |----------|---------|
-| 100% | kiwix, vaultwarden, calibre-web, flib, searxng |
+| 100% | kiwix, vaultwarden, calibre-web, flib, searxng, kanban |
 | 200% | nextcloud, gitea, dendrite, nexus, opencloud, openstreetmap, syncthing, transmission, minidlna |
 | 400% | jellyfin, paperless-ngx |
 | 800% | bigbluebutton |
@@ -382,6 +382,7 @@ RUN <download and install>
 | minidlna | `--network=host` вместо `-p` | SSDP/UPnP multicast discovery |
 | vaultwarden, dendrite | Multi-stage `FROM docker.io/...` | Бинарники копируются из upstream-образов |
 | flib | `sub_filter` в nginx | flib-py не поддерживает sub-path нативно |
+| kanban | `sub_filter` в nginx + multi-stage build (Go + assets) | Go SPA не поддерживает sub-path нативно |
 | syncthing | GUI не работает через sub-path | Архитектурное ограничение Syncthing |
 
 ### Порты (текущее распределение)
@@ -406,8 +407,9 @@ RUN <download and install>
 | 8016 | dendrite |
 | 8017 | minidlna |
 | 8018 | flib |
+| 8019 | kanban |
 
-Следующий свободный порт: **8019**
+Следующий свободный порт: **8020**
 
 ## Добавление нового сервиса — чеклист
 

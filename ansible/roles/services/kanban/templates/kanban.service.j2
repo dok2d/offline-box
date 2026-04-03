@@ -1,0 +1,28 @@
+[Unit]
+Description=Kanban task board (podman)
+After=default.target
+
+[Service]
+Environment="XDG_RUNTIME_DIR=/run/user/{{ svc_uid }}"
+ExecStartPre=-/usr/bin/podman rm -f kanban
+ExecStart=/usr/bin/podman run \
+  --name kanban \
+  --replace \
+  --rm \
+  --cap-drop=ALL \
+  --security-opt=no-new-privileges \
+  --read-only \
+  --tmpfs /tmp:rw,noexec,nosuid,size=64m \
+  -p {{ listen_addr }}:{{ kanban_port }}:{{ kanban_port }} \
+  --log-driver=k8s-file \
+  --log-opt=path={{ container_log_dir }}/kanban/kanban.log \
+  -v {{ kanban_data_dir }}:/data:rw \
+  {{ kanban_image_full }}
+ExecStop=/usr/bin/podman stop kanban
+MemoryMax=512M
+CPUQuota=100%
+Restart=on-failure
+RestartSec=10s
+
+[Install]
+WantedBy=default.target

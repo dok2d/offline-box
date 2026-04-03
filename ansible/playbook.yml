@@ -189,6 +189,14 @@
     - role: services/flib
       when: enable_flib | bool
 
+- name: Apply role kanban
+  hosts: kanban
+  become: true
+  gather_facts: false
+  roles:
+    - role: services/kanban
+      when: enable_kanban | bool
+
 ###############################################################################
 # Backup — runs on every host
 ###############################################################################

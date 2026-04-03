@@ -64,6 +64,9 @@ media
 [flib:children]
 media
 
+[kanban:children]
+infra
+
 [openstreetmap:children]
 media
 

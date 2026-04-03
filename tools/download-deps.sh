@@ -65,6 +65,7 @@ SEARXNG_GIT_REF=$(get_var "$REPO_ROOT/ansible/roles/services/searxng/defaults/ma
 PAPERLESS_NGX_VERSION=$(get_var "$REPO_ROOT/ansible/roles/services/paperless-ngx/defaults/main.yml" "paperless_ngx_version")
 JELLYFIN_VERSION=$(get_var "$REPO_ROOT/ansible/roles/services/jellyfin/defaults/main.yml" "jellyfin_version")
 FLIB_GIT_REF=$(get_var "$REPO_ROOT/ansible/roles/services/flib/defaults/main.yml" "flib_git_ref")
+KANBAN_GIT_REF=$(get_var "$REPO_ROOT/ansible/roles/services/kanban/defaults/main.yml" "kanban_git_ref")
 OSM_MBTILES_URL=$(get_var "$REPO_ROOT/ansible/roles/services/openstreetmap/defaults/main.yml" "openstreetmap_mbtiles_url")
 
 ARCH="${ARCH:-amd64}"
@@ -346,6 +347,18 @@ dl_paperless_ngx() {
         "$DEPS_DIR/paperless-ngx/paperless-ngx-src" || true
 }
 
+dl_kanban() {
+    echo "==> Kanban (git: $KANBAN_GIT_REF)"
+    clone_repo "https://github.com/dok2d/kanban.git" "$KANBAN_GIT_REF" \
+        "$DEPS_DIR/kanban/kanban-src" || true
+    # Download static assets (JS libs, CSS, fonts) for offline build
+    local assets="$DEPS_DIR/kanban/offline-assets"
+    mkdir -p "$assets/js" "$assets/css" "$assets/fonts"
+    download "https://cdn.jsdelivr.net/npm/marked/marked.min.js" "$assets/js/marked.min.js" || true
+    download "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" "$assets/js/highlight.min.js" || true
+    download "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css" "$assets/css/atom-one-dark.min.css" || true
+}
+
 dl_flib() {
     echo "==> Flib (git: $FLIB_GIT_REF)"
     clone_repo "https://github.com/dok2d/flib-py.git" "$FLIB_GIT_REF" \
@@ -359,7 +372,7 @@ ALL_SERVICES=(
     images ansible
     nexus nextcloud gitea vaultwarden syncthing opencloud
     mattermost dendrite bigbluebutton jellyfin openstreetmap
-    kiwix calibre_web searxng paperless_ngx flib
+    kiwix calibre_web searxng paperless_ngx flib kanban
 )
 
 # Determine which services to download

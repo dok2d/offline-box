@@ -277,3 +277,15 @@ offlinebox_services:
       desc: "Book library search"
       icon: "\U0001F4DA"
       url: /flib/
+  kanban:
+    container_name: kanban
+    enabled: "{{ enable_kanban }}"
+    image: "{{ kanban_image_full }}"
+    port: "{{ kanban_port }}"
+    data_dir: "{{ kanban_data_dir }}"
+    config_dir: "{{ kanban_config_dir }}"
+    dashboard:
+      name: Kanban
+      desc: "Task board"
+      icon: "\U0001F4CB"
+      url: /kanban/

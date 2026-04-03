@@ -1,0 +1,101 @@
+---
+- name: Create Kanban data directory
+  ansible.builtin.file:
+    path: "{{ kanban_data_dir }}"
+    state: directory
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0755"
+
+- name: Create Kanban config directory
+  ansible.builtin.file:
+    path: "{{ kanban_config_dir }}"
+    state: directory
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0755"
+
+- name: Deploy Kanban Containerfile
+  ansible.builtin.template:
+    src: Containerfile.j2
+    dest: "{{ kanban_config_dir }}/Containerfile"
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0644"
+  diff: true
+  register: _containerfile
+
+- name: Clone kanban source
+  ansible.builtin.git:
+    repo: "{{ kanban_git_url }}"
+    dest: "{{ kanban_config_dir }}/kanban-src"
+    version: "{{ kanban_git_ref }}"
+    depth: 1
+    force: true
+  become: true
+  become_user: "{{ svc_user }}"
+  when: not (offline_mode | default(false))
+  register: _kanban_source
+
+- name: Copy offline kanban source
+  ansible.builtin.copy:
+    src: "{{ offline_deps_dir }}/kanban/kanban-src/"
+    dest: "{{ kanban_config_dir }}/kanban-src/"
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+  when: offline_mode | default(false)
+
+- name: Copy offline static assets for Kanban
+  ansible.builtin.copy:
+    src: "{{ offline_deps_dir }}/kanban/offline-assets/"
+    dest: "{{ kanban_config_dir }}/offline-assets/"
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0644"
+  when: offline_mode | default(false)
+
+- name: Build Kanban container image
+  become: true
+  become_user: "{{ svc_user }}"
+  containers.podman.podman_image:
+    name: "{{ kanban_image }}"
+    tag: "{{ kanban_tag }}"
+    path: "{{ kanban_config_dir }}"
+    force: "{{ _containerfile.changed or (_kanban_source.changed | default(false)) }}"
+  notify: Restart kanban
+
+- name: Deploy Kanban systemd user unit
+  ansible.builtin.template:
+    src: kanban.service.j2
+    dest: "{{ svc_home }}/.config/systemd/user/kanban.service"
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0644"
+  diff: true
+
+- name: Enable and start Kanban service
+  become: true
+  become_user: "{{ svc_user }}"
+  ansible.builtin.systemd:
+    name: kanban
+    scope: user
+    enabled: true
+    state: started
+    daemon_reload: true
+
+- name: Wait for Kanban to become available
+  ansible.builtin.uri:
+    url: "http://{{ listen_addr }}:{{ kanban_port }}/"
+    status_code: [200, 302]
+  register: kanban_health
+  retries: 30
+  delay: 5
+  until: kanban_health is not failed
+
+- name: Deploy nginx config for Kanban
+  ansible.builtin.template:
+    src: nginx-kanban.conf.j2
+    dest: /etc/nginx/sites-enabled/kanban.conf
+    mode: "0644"
+  diff: true
+  notify: Reload nginx
