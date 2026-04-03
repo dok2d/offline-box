@@ -1,0 +1,12 @@
+---
+enable_flib: true
+
+flib_port: 8018
+flib_data_dir: "{{ opt_base }}/flib/data"
+flib_config_dir: "{{ opt_base }}/flib/config"
+# Git source for flib-py (web-select.py Flask application)
+flib_git_url: "https://github.com/dok2d/flib-py.git"
+flib_git_ref: "main"
+flib_tag: "latest"
+flib_image: "{{ (container_registry ~ '/' if container_registry else '') }}{{ (container_namespace ~ '/' if container_namespace else '') }}flib"
+flib_image_full: "{{ flib_image }}:{{ flib_tag }}"

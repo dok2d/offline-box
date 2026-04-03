@@ -64,6 +64,7 @@ CALIBRE_WEB_VERSION=$(get_var "$REPO_ROOT/ansible/roles/services/calibre-web/def
 SEARXNG_GIT_REF=$(get_var "$REPO_ROOT/ansible/roles/services/searxng/defaults/main.yml" "searxng_git_ref")
 PAPERLESS_NGX_VERSION=$(get_var "$REPO_ROOT/ansible/roles/services/paperless-ngx/defaults/main.yml" "paperless_ngx_version")
 JELLYFIN_VERSION=$(get_var "$REPO_ROOT/ansible/roles/services/jellyfin/defaults/main.yml" "jellyfin_version")
+FLIB_GIT_REF=$(get_var "$REPO_ROOT/ansible/roles/services/flib/defaults/main.yml" "flib_git_ref")
 OSM_MBTILES_URL=$(get_var "$REPO_ROOT/ansible/roles/services/openstreetmap/defaults/main.yml" "openstreetmap_mbtiles_url")
 
 ARCH="${ARCH:-amd64}"
@@ -345,13 +346,20 @@ dl_paperless_ngx() {
         "$DEPS_DIR/paperless-ngx/paperless-ngx-src" || true
 }
 
+dl_flib() {
+    echo "==> Flib (git: $FLIB_GIT_REF)"
+    clone_repo "https://github.com/dok2d/flib-py.git" "$FLIB_GIT_REF" \
+        "$DEPS_DIR/flib/flib-src" || true
+    download_pip_with_deps "$DEPS_DIR/flib/pip-packages" "flask" "weasyprint" || true
+}
+
 # ── Main ──────────────────────────────────────────────────────────
 
 ALL_SERVICES=(
     images ansible
     nexus nextcloud gitea vaultwarden syncthing opencloud
     mattermost dendrite bigbluebutton jellyfin openstreetmap
-    kiwix calibre_web searxng paperless_ngx
+    kiwix calibre_web searxng paperless_ngx flib
 )
 
 # Determine which services to download

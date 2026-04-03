@@ -1,0 +1,109 @@
+---
+- name: Create Flib data directory
+  ansible.builtin.file:
+    path: "{{ flib_data_dir }}"
+    state: directory
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0755"
+
+- name: Create Flib archives directory
+  ansible.builtin.file:
+    path: "{{ flib_data_dir }}/archives"
+    state: directory
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0755"
+
+- name: Create Flib config directory
+  ansible.builtin.file:
+    path: "{{ flib_config_dir }}"
+    state: directory
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0755"
+
+- name: Deploy Flib Containerfile
+  ansible.builtin.template:
+    src: Containerfile.j2
+    dest: "{{ flib_config_dir }}/Containerfile"
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0644"
+  diff: true
+  register: _containerfile
+
+- name: Clone flib-py source
+  ansible.builtin.git:
+    repo: "{{ flib_git_url }}"
+    dest: "{{ flib_config_dir }}/flib-src"
+    version: "{{ flib_git_ref }}"
+    depth: 1
+    force: true
+  become: true
+  become_user: "{{ svc_user }}"
+  when: not (offline_mode | default(false))
+  register: _flib_source
+
+- name: Copy offline flib-py source
+  ansible.builtin.copy:
+    src: "{{ offline_deps_dir }}/flib/flib-src/"
+    dest: "{{ flib_config_dir }}/flib-src/"
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+  when: offline_mode | default(false)
+
+- name: Copy offline pip packages for Flib
+  ansible.builtin.copy:
+    src: "{{ offline_deps_dir }}/flib/pip-packages/"
+    dest: "{{ flib_config_dir }}/pip-packages/"
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0644"
+  when: offline_mode | default(false)
+
+- name: Build Flib container image
+  become: true
+  become_user: "{{ svc_user }}"
+  containers.podman.podman_image:
+    name: "{{ flib_image }}"
+    tag: "{{ flib_tag }}"
+    path: "{{ flib_config_dir }}"
+    force: "{{ _containerfile.changed or (_flib_source.changed | default(false)) }}"
+  notify: Restart flib
+
+- name: Deploy Flib systemd user unit
+  ansible.builtin.template:
+    src: flib.service.j2
+    dest: "{{ svc_home }}/.config/systemd/user/flib.service"
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0644"
+  diff: true
+
+- name: Enable and start Flib service
+  become: true
+  become_user: "{{ svc_user }}"
+  ansible.builtin.systemd:
+    name: flib
+    scope: user
+    enabled: true
+    state: started
+    daemon_reload: true
+
+- name: Wait for Flib to become available
+  ansible.builtin.uri:
+    url: "http://{{ listen_addr }}:{{ flib_port }}/"
+    status_code: [200]
+  register: flib_health
+  retries: 30
+  delay: 5
+  until: flib_health is not failed
+
+- name: Deploy nginx config for Flib
+  ansible.builtin.template:
+    src: nginx-flib.conf.j2
+    dest: /etc/nginx/sites-enabled/flib.conf
+    mode: "0644"
+  diff: true
+  notify: Reload nginx

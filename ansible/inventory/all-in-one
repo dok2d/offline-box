@@ -68,3 +68,6 @@ control
 
 [minidlna:children]
 control
+
+[flib:children]
+control

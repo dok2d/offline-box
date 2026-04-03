@@ -181,6 +181,14 @@
     - role: services/minidlna
       when: enable_minidlna | bool
 
+- name: Apply role flib
+  hosts: flib
+  become: true
+  gather_facts: false
+  roles:
+    - role: services/flib
+      when: enable_flib | bool
+
 ###############################################################################
 # Backup — runs on every host
 ###############################################################################
