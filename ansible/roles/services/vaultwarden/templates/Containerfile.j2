@@ -10,5 +10,5 @@ RUN useradd -r -u 10001 -m vaultwarden && \
     mkdir -p /data && chown -R vaultwarden:vaultwarden /data
 USER vaultwarden
 EXPOSE {{ vaultwarden_port }}
-HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD curl -fs http://localhost:8010/vaultwarden/alive || exit 1
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD curl -fs http://localhost:{{ vaultwarden_port }}/alive || exit 1
 ENTRYPOINT ["/usr/local/bin/vaultwarden"]

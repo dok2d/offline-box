@@ -33,4 +33,5 @@ ENTRYPOINT ["/usr/bin/jellyfin", "--service", \
     "--datadir", "/config", \
     "--cachedir", "/cache", \
     "--webdir", "/usr/share/jellyfin/web", \
+    "--http-port", "{{ jellyfin_port }}", \
     "--baseurl", "/jellyfin"]

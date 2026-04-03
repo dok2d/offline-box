@@ -20,5 +20,5 @@ RUN python3 -m venv /app/venv && \
 {% endif %}
 EXPOSE {{ searxng_port }}
 ENV SEARXNG_SETTINGS_PATH=/config/settings.yml
-HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD curl -fs http://localhost:8009/searxng/ || exit 1
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD curl -fs http://localhost:{{ searxng_port }}/searxng/ || exit 1
 ENTRYPOINT ["/app/venv/bin/python", "-m", "searx.webapp"]

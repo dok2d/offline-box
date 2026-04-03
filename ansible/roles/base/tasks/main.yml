@@ -100,10 +100,10 @@
 - name: Allow Transmission peer port
   community.general.ufw:
     rule: allow
-    port: "{{ transmission_peer_port | string }}"
+    port: "{{ transmission_peer_port | default(51413) | string }}"
     proto: tcp
   when:
-    - enable_transmission | bool
+    - enable_transmission | default(false) | bool
     - inventory_hostname in groups.get('transmission', [])
 
 - name: Allow Syncthing ports
@@ -112,28 +112,28 @@
     port: "{{ item.port }}"
     proto: "{{ item.proto }}"
   loop:
-    - { port: "{{ syncthing_sync_port | string }}", proto: tcp }
-    - { port: "{{ syncthing_discovery_port | string }}", proto: udp }
+    - { port: "{{ syncthing_sync_port | default(22000) | string }}", proto: tcp }
+    - { port: "{{ syncthing_discovery_port | default(21027) | string }}", proto: udp }
   when:
-    - enable_syncthing | bool
+    - enable_syncthing | default(false) | bool
     - inventory_hostname in groups.get('syncthing', [])
 
 - name: Allow Gitea SSH port
   community.general.ufw:
     rule: allow
-    port: "{{ gitea_ssh_port | string }}"
+    port: "{{ gitea_ssh_port | default(2222) | string }}"
     proto: tcp
   when:
-    - enable_gitea | bool
+    - enable_gitea | default(false) | bool
     - inventory_hostname in groups.get('gitea', [])
 
 - name: Allow BigBlueButton FreeSWITCH media ports
   community.general.ufw:
     rule: allow
-    port: "{{ bigbluebutton_freeswitch_port_start | string }}:{{ bigbluebutton_freeswitch_port_end | string }}"
+    port: "{{ bigbluebutton_freeswitch_port_start | default(16384) | string }}:{{ bigbluebutton_freeswitch_port_end | default(32768) | string }}"
     proto: udp
   when:
-    - enable_bigbluebutton | bool
+    - enable_bigbluebutton | default(false) | bool
     - inventory_hostname in groups.get('bigbluebutton', [])
 
 - name: Enable UFW

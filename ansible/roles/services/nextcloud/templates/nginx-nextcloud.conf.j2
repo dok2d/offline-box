@@ -9,6 +9,11 @@ location /nextcloud/ {
     limit_req zone=general burst=20 nodelay;
     client_max_body_size {{ nextcloud_upload_max_size }};
 
+    # WebSocket for Notify Push
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "upgrade";
+
     # Reverse proxy awareness
     proxy_set_header X-Forwarded-Host $host;
     proxy_set_header X-Forwarded-Prefix /nextcloud;

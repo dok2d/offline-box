@@ -33,6 +33,7 @@
     group: "{{ svc_user }}"
     mode: "0644"
   diff: true
+  notify: Restart nextcloud
 
 - name: Copy offline deps for Nextcloud
   ansible.builtin.copy:

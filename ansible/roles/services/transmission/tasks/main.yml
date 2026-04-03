@@ -39,6 +39,7 @@
     group: "{{ svc_user }}"
     mode: "0644"
   diff: true
+  notify: Restart transmission
 
 - name: Deploy Transmission Containerfile
   ansible.builtin.template:
