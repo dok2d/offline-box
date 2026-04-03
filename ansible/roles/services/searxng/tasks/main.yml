@@ -1,12 +1,4 @@
 ---
-- name: Create SearXNG data directory
-  ansible.builtin.file:
-    path: "{{ searxng_data_dir }}"
-    state: directory
-    owner: "{{ svc_user }}"
-    group: "{{ svc_user }}"
-    mode: "0755"
-
 - name: Create SearXNG config directory
   ansible.builtin.file:
     path: "{{ searxng_config_dir }}"
