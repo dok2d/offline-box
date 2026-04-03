@@ -42,10 +42,9 @@ RUN useradd -r -u 10001 -m bigbluebutton && \
     chown -R postgres:postgres /run/postgresql
 
 # Install bbb-web (Grails application)
-# NOTE: bbb-web.war must be provided manually — build from source or extract
-# from official BBB .deb packages. GitHub releases have no binary assets.
+# Downloaded from ubuntu.bigbluebutton.org/focal-270 apt repo (bbb-web .deb)
 RUN mkdir -p /app/bbb-web
-COPY bbb-web.war /app/bbb-web/bbb-web.war
+COPY bbb-web* /app/bbb-web/
 
 # Install Etherpad-lite for shared notes
 {% if offline_mode | default(false) %}

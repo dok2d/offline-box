@@ -280,8 +280,43 @@ dl_dendrite() {
 
 dl_bigbluebutton() {
     echo "==> BigBlueButton $BBB_VERSION"
-    warn "bbb-web.war must be built from source or extracted from .deb packages"
-    echo "         GitHub releases do not include binary assets."
+    local deb_url="https://ubuntu.bigbluebutton.org/focal-270/pool/main/b/bbb-web/bbb-web_${BBB_VERSION}-65_amd64.deb"
+    local deb_dest="$DEPS_DIR/bigbluebutton/bbb-web.deb"
+    local war_dest="$DEPS_DIR/bigbluebutton/bbb-web.war"
+
+    if [ -f "$war_dest" ]; then
+        ok "bbb-web.war already exists"
+    else
+        download "$deb_url" "$deb_dest" || true
+        if [ -f "$deb_dest" ]; then
+            echo "  [extract] bbb-web.war from .deb"
+            local tmpdir
+            tmpdir=$(mktemp -d)
+            dpkg-deb -x "$deb_dest" "$tmpdir" 2>/dev/null
+            local war
+            war=$(find "$tmpdir" -name "bigbluebutton.war" -o -name "bbb-web.war" 2>/dev/null | head -1)
+            if [ -z "$war" ]; then
+                # bbb-web extracts to a directory, not a single WAR
+                war=$(find "$tmpdir" -path "*/bbb-web/WEB-INF" -printf "%h\n" 2>/dev/null | head -1)
+            fi
+            if [ -n "$war" ] && [ -e "$war" ]; then
+                cp -a "$war" "$war_dest"
+                ok "bbb-web.war extracted"
+            else
+                # Copy whole bbb-web directory as fallback
+                local webdir
+                webdir=$(find "$tmpdir" -type d -name "bbb-web" | head -1)
+                if [ -n "$webdir" ]; then
+                    cp -a "$webdir" "$DEPS_DIR/bigbluebutton/bbb-web"
+                    ok "bbb-web directory extracted from .deb"
+                else
+                    fail "could not find bbb-web.war in .deb"
+                fi
+            fi
+            rm -rf "$tmpdir" "$deb_dest"
+        fi
+    fi
+
     # etherpad-lite is published as ep_etherpad-lite on npm
     download_npm_tarball "ep_etherpad-lite" "1.8.14" \
         "$DEPS_DIR/bigbluebutton/ep_etherpad-lite-1.8.14.tgz" || true
