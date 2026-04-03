@@ -20,25 +20,25 @@
 
 ## Список сервисов
 
-| Сервис | Описание | Порт | URL |
-|--------|----------|------|-----|
-| Kiwix | Офлайн-библиотека Wikipedia и других ресурсов | 8001 | `/kiwix/` |
-| OpenStreetMap | Офлайн-карты и навигация | 8002 | `/osm/` |
-| Transmission | Торрент-клиент | 8003 | `/transmission/` |
-| Nexus | Репозиторий пакетов и артефактов (APT, PyPI, Docker) | 8004 | `/nexus/` |
-| Nextcloud | Облачное хранилище и совместная работа | 8005 | `/nextcloud/` |
-| Gitea | Git-репозитории и хостинг кода | 8006 | `/gitea/` |
-| Jellyfin | Медиасервер для стриминга видео и аудио | 8007 | `/jellyfin/` |
-| Calibre-web | Электронная библиотека (e-book) | 8008 | `/calibre/` |
-| SearXNG | Мета-поисковая система | 8009 | `/searxng/` |
-| Vaultwarden | Менеджер паролей (совместимый с Bitwarden) | 8010 | `/vaultwarden/` |
-| Syncthing | Синхронизация файлов между устройствами | 8011 | `/syncthing/` |
-| Paperless-ngx | Управление документами с OCR | 8012 | `/paperless/` |
-| BigBlueButton | Веб-конференции и онлайн-классы | 8013 | `/bbb/` |
-| OpenCloud | Синхронизация и обмен файлами | 8014 | `/opencloud/` |
-| Mattermost | Командный мессенджер | 8015 | `/mattermost/` |
-| Dendrite | Matrix-сервер для децентрализованного общения | 8016 | `/dendrite/` |
-| MiniDLNA | DLNA/UPnP медиасервер для устройств в локальной сети | 8017 | `/minidlna/` |
+| Сервис | Описание | Порт | Версия |
+|--------|----------|------|--------|
+| Kiwix | Офлайн-библиотека Wikipedia и других ресурсов | 8001 | apt |
+| OpenStreetMap | Офлайн-карты (tileserver-gl-light) | 8002 | 5.5.0 |
+| Transmission | Торрент-клиент | 8003 | apt |
+| Nexus | Репозиторий пакетов (APT, PyPI, Docker) | 8004 | 3.90.2-06 |
+| Nextcloud | Облачное хранилище и совместная работа | 8005 | 33.0.1 |
+| Gitea | Git-репозитории и хостинг кода | 8006 | 1.25.5 |
+| Jellyfin | Медиасервер для стриминга видео и аудио | 8007 | 10.11.6 |
+| Calibre-web | Электронная библиотека (e-book) | 8008 | 0.6.26 |
+| SearXNG | Мета-поисковая система | 8009 | 2026.3.29 |
+| Vaultwarden | Менеджер паролей (Bitwarden-совместимый) | 8010 | 1.35.4 |
+| Syncthing | Синхронизация файлов между устройствами | 8011 | 2.0.15 |
+| Paperless-ngx | Управление документами с OCR | 8012 | 2.20.13 |
+| BigBlueButton | Веб-конференции и онлайн-классы | 8013 | 2.7 |
+| OpenCloud | Синхронизация и обмен файлами | 8014 | 6.0.0 |
+| Mattermost | Командный мессенджер | 8015 | 11.4.3 |
+| Dendrite | Matrix-сервер для децентрализованного общения | 8016 | 0.13.8 |
+| MiniDLNA | DLNA/UPnP медиасервер для устройств в LAN | 8017 | apt |
 
 ## Быстрый старт
 
@@ -47,26 +47,67 @@
 - Управляющая машина с Ansible 2.14+
 - Коллекция `containers.podman`:
   ```bash
-  ansible-galaxy collection install containers.podman
+  ansible-galaxy collection install -r ansible/requirements.yml
   ```
 - Целевой сервер с Debian 13 (Trixie) и SSH-доступом
 
-### Развёртывание
+### Развёртывание (онлайн)
 
-1. Отредактируйте инвентарь:
+1. Установите зависимости Ansible:
+   ```bash
+   ansible-galaxy collection install -r ansible/requirements.yml
+   ```
+
+2. Отредактируйте инвентарь:
    ```bash
    vim ansible/inventory/hosts.yml
    ```
 
-2. При необходимости измените переменные:
+3. При необходимости измените переменные:
    ```bash
    vim ansible/group_vars/all.yml
    ```
 
-3. Запустите плейбук:
+4. Сгенерируйте пароли:
+   ```bash
+   python3 tools/generate-passwords.py --init
+   ```
+
+5. Запустите плейбук:
    ```bash
    ansible-playbook -i ansible/inventory/hosts.yml ansible/playbook.yml
    ```
+
+### Развёртывание (офлайн)
+
+Для полностью офлайн-развёртывания:
+
+1. **На машине с интернетом** скачайте все зависимости:
+   ```bash
+   ./tools/download-deps.sh
+   ```
+   Зависимости будут сохранены в каталог `deps/`.
+
+2. Скопируйте весь репозиторий (включая `deps/`) на целевой сервер.
+
+3. Установите Ansible-коллекцию из локального архива:
+   ```bash
+   ansible-galaxy collection install deps/ansible/containers-podman-*.tar.gz
+   ```
+
+4. Включите офлайн-режим в `ansible/group_vars/all.yml`:
+   ```yaml
+   offline_mode: true
+   ```
+
+5. Запустите плейбук:
+   ```bash
+   ansible-playbook -i ansible/inventory/hosts.yml ansible/playbook.yml
+   ```
+
+В офлайн-режиме Containerfile'ы используют предварительно скачанные бинарники и пакеты вместо загрузки из интернета. Для apt-пакетов используется Nexus в качестве кэширующего прокси.
+
+> **Примечание:** Для apt-пакетов, устанавливаемых внутри контейнеров, необходимо либо предварительно заполнить кэш Nexus при наличии интернета, либо настроить локальное зеркало apt. Скрипт `download-deps.sh` скачивает бинарные артефакты (Gitea, Vaultwarden, Syncthing и т.д.), pip/npm-пакеты, но не deb-пакеты из стандартных репозиториев.
 
 Для отключения отдельных сервисов задайте `enable_<сервис>: false` в `group_vars/all.yml` или в `host_vars`.
 
@@ -85,10 +126,9 @@
 | `listen_addr` | Адрес, на котором слушают сервисы | `127.0.0.1` |
 | `server_name` | Имя сервера для nginx и TLS-сертификата | автоопределение IP |
 | `use_ssl` | Включить HTTPS с self-signed сертификатом | `true` |
-| `ssl_cert_path` | Путь к TLS-сертификату | `/etc/nginx/ssl/box.crt` |
-| `ssl_key_path` | Путь к приватному ключу TLS | `/etc/nginx/ssl/box.key` |
-| `ssl_dhparam_path` | Путь к DH-параметрам | `/etc/nginx/ssl/dhparam.pem` |
 | `container_base_image` | Базовый образ контейнеров | `docker.io/library/debian:13-slim` |
+| `offline_mode` | Офлайн-сборка из локальных зависимостей | `false` |
+| `offline_deps_dir` | Каталог с предварительно скачанными зависимостями | `deps/` |
 
 ### Переменные сервисов
 
@@ -101,6 +141,35 @@
   ansible-playbook -i ansible/inventory/hosts.yml ansible/playbook.yml -e "enable_kiwix=false"
   ```
 
+## Офлайн-зависимости
+
+Скрипт `tools/download-deps.sh` скачивает следующие зависимости:
+
+| Компонент | Что скачивается |
+|-----------|----------------|
+| Base images | `debian:13-slim`, `ubuntu:22.04` (через podman/skopeo/docker) |
+| Ansible | Коллекция `containers.podman` (ansible-galaxy) |
+| Kiwix | ZIM-файлы (Wikipedia и др.) с download.kiwix.org |
+| OpenStreetMap | npm-пакет tileserver-gl-light + MBTiles-файл карт |
+| Nexus | `nexus-*-java17-unix.tar.gz` от Sonatype |
+| Nextcloud | `nextcloud-*.tar.bz2` с nextcloud.com |
+| Gitea | Бинарник с dl.gitea.com |
+| Vaultwarden | Бинарник + web-vault с GitHub |
+| Syncthing | Бинарник с GitHub |
+| OpenCloud | Бинарник с GitHub |
+| Mattermost | Архив с releases.mattermost.com |
+| Dendrite | Бинарник с GitHub |
+| BigBlueButton | `bbb-web.war` + etherpad-lite (npm) |
+| Jellyfin | GPG-ключ репозитория |
+| Calibre-web | pip-пакеты (calibreweb + зависимости) |
+| SearXNG | pip-пакеты (searxng + зависимости) |
+| Paperless-ngx | pip-пакеты (paperless-ngx, gunicorn, uvicorn + зависимости) |
+
+Можно скачать зависимости для отдельных сервисов:
+```bash
+./tools/download-deps.sh nexus gitea vaultwarden
+```
+
 ## Dashboard
 
 После развёртывания по адресу `https://<server_ip>/` доступна dashboard-страница со списком всех включённых сервисов и их статусами (healthcheck). Страница автоматически генерируется из реестра сервисов `offlinebox_services`.
@@ -112,30 +181,28 @@ offline-box/
   ansible/
     group_vars/
       all.yml                          # Глобальные переменные
+      passwords.example.yml            # Пример файла паролей
     inventory/
       hosts.yml                        # Инвентарь хостов
     playbook.yml                       # Основной плейбук
     roles/
-      base/
-        tasks/main.yml                 # Базовая настройка системы
-      podman/
-        tasks/main.yml                 # Установка Podman
-      nginx/
-        handlers/main.yml              # Хэндлеры nginx
-        tasks/main.yml                 # Установка и настройка nginx
-        templates/
-          dashboard.html.j2            # Шаблон dashboard-страницы
-          nginx.conf.j2                # Основной конфиг nginx
-          security-headers.conf.j2     # Заголовки безопасности
+      base/                            # Базовая настройка системы
+      podman/                          # Установка Podman
+      backup/                          # Настройка резервного копирования
+      nginx/                           # Nginx reverse proxy + dashboard
       services/
         <сервис>/
-          defaults/main.yml            # Переменные по умолчанию
-          files/Containerfile           # Containerfile для сборки образа
+          defaults/main.yml            # Переменные по умолчанию (версии)
           handlers/main.yml            # Хэндлеры сервиса
           tasks/main.yml               # Задачи развёртывания
           templates/
+            Containerfile.j2           # Шаблон Containerfile
             <сервис>.service.j2        # Systemd user unit
             nginx-<сервис>.conf.j2     # Конфиг nginx для сервиса
+  deps/                                # Офлайн-зависимости (gitignored)
+  tools/
+    generate-passwords.py              # Генерация паролей
+    download-deps.sh                   # Скачивание зависимостей для офлайна
 ```
 
 ## Лицензия

@@ -8,7 +8,7 @@ nextcloud_admin_user: admin
 nextcloud_db_type: sqlite
 nextcloud_upload_max_size: 10G
 nextcloud_php_memory_limit: 512M
-nextcloud_version: "30.0.6"
+nextcloud_version: "33.0.1"
 nextcloud_tag: "{{ nextcloud_version }}"
 nextcloud_image: "{{ (container_registry ~ '/' if container_registry else '') }}{{ (container_namespace ~ '/' if container_namespace else '') }}nextcloud"
 nextcloud_image_full: "{{ nextcloud_image }}:{{ nextcloud_tag }}"

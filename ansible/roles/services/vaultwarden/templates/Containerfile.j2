@@ -1,20 +1,11 @@
-FROM {{ container_base_image }} AS build
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends curl ca-certificates && \
-    rm -rf /var/lib/apt/lists/*
-RUN curl -fsSL -o /usr/local/bin/vaultwarden \
-    "https://github.com/dani-garcia/vaultwarden/releases/download/{{ vaultwarden_version }}/vaultwarden-linux-x86_64" && \
-    chmod +x /usr/local/bin/vaultwarden
-RUN mkdir -p /opt/web-vault && \
-    curl -fsSL -L "https://github.com/dani-garcia/bw_web_builds/releases/download/v{{ vaultwarden_web_vault_version }}/bw_web_v{{ vaultwarden_web_vault_version }}.tar.gz" | \
-    tar xz -C /opt
+FROM docker.io/vaultwarden/server:{{ vaultwarden_version }} AS source
 
 FROM {{ container_base_image }}
 RUN apt-get update && \
     apt-get install -y --no-install-recommends libssl3 ca-certificates curl && \
     rm -rf /var/lib/apt/lists/*
-COPY --from=build /usr/local/bin/vaultwarden /usr/local/bin/vaultwarden
-COPY --from=build /opt/web-vault /opt/web-vault
+COPY --from=source /vaultwarden /usr/local/bin/vaultwarden
+COPY --from=source /web-vault /opt/web-vault
 RUN useradd -r -u 10001 -m vaultwarden && \
     mkdir -p /data && chown -R vaultwarden:vaultwarden /data
 USER vaultwarden

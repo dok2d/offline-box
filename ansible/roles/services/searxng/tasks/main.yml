@@ -34,6 +34,14 @@
     mode: "0644"
   diff: true
 
+- name: Copy offline SearXNG source
+  ansible.builtin.copy:
+    src: "{{ offline_deps_dir }}/searxng/searxng-src/"
+    dest: "{{ searxng_config_dir }}/searxng-src/"
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+  when: offline_mode | default(false)
+
 - name: Build SearXNG container image
   become: true
   become_user: "{{ svc_user }}"

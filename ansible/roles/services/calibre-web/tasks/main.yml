@@ -87,6 +87,15 @@
   diff: true
   register: _containerfile
 
+- name: Copy offline pip packages for Calibre-web
+  ansible.builtin.copy:
+    src: "{{ offline_deps_dir }}/calibre-web/"
+    dest: "{{ calibre_web_config_dir }}/pip-packages/"
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0644"
+  when: offline_mode | default(false)
+
 - name: Build Calibre-web container image
   become: true
   become_user: "{{ svc_user }}"

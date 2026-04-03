@@ -2,14 +2,22 @@ FROM {{ container_base_image }}
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     python3 python3-pip python3-venv \
-    libxml2 libxslt1.1 libffi8 curl && \
+    libxml2 libxslt1.1 libffi8 curl git && \
     rm -rf /var/lib/apt/lists/*
 RUN useradd -r -u 10001 -m searxng && \
     mkdir -p /app /config && \
     chown -R searxng:searxng /app /config
 USER searxng
+{% if offline_mode | default(false) %}
+COPY searxng-src/ /tmp/searxng-src/
 RUN python3 -m venv /app/venv && \
-    /app/venv/bin/pip install --no-cache-dir searxng
+    /app/venv/bin/pip install --no-cache-dir /tmp/searxng-src && \
+    rm -rf /tmp/searxng-src
+{% else %}
+RUN python3 -m venv /app/venv && \
+    /app/venv/bin/pip install --no-cache-dir \
+    "git+https://github.com/searxng/searxng.git@{{ searxng_git_ref }}"
+{% endif %}
 EXPOSE {{ searxng_port }}
 ENV SEARXNG_SETTINGS_PATH=/config/settings.yml
 HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD curl -fs http://localhost:8009/searxng/ || exit 1

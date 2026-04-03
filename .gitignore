@@ -22,6 +22,9 @@ __pycache__/
 *.swo
 *~
 
+# Offline dependencies (downloaded by tools/download-deps.sh)
+deps/
+
 # OS
 .DS_Store
 Thumbs.db

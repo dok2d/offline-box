@@ -42,13 +42,17 @@ RUN useradd -r -u 10001 -m bigbluebutton && \
     chown -R postgres:postgres /run/postgresql
 
 # Install bbb-web (Grails application)
-RUN mkdir -p /app/bbb-web && \
-    cd /app/bbb-web && \
-    wget -q "https://github.com/bigbluebutton/bigbluebutton/releases/download/v${BBB_VERSION}.0/bbb-web.war" \
-      -O bbb-web.war
+# Downloaded from ubuntu.bigbluebutton.org/focal-270 apt repo (bbb-web .deb)
+RUN mkdir -p /app/bbb-web
+COPY bbb-web* /app/bbb-web/
 
 # Install Etherpad-lite for shared notes
-RUN npm install -g etherpad-lite
+{% if offline_mode | default(false) %}
+COPY ep_etherpad-lite-*.tgz /tmp/ep_etherpad-lite.tgz
+RUN npm install -g /tmp/ep_etherpad-lite.tgz && rm /tmp/ep_etherpad-lite.tgz
+{% else %}
+RUN npm install -g ep_etherpad-lite
+{% endif %}
 
 # Configure PostgreSQL for BBB
 USER postgres

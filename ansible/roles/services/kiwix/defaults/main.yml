@@ -7,7 +7,7 @@ kiwix_config_dir: "{{ opt_base }}/kiwix/config"
 # List of ZIM file URLs to download (browse https://download.kiwix.org/zim/)
 # Mirrors: https://ftp.fau.de/kiwix/zim/ , https://dumps.wikimedia.org/other/kiwix/zim/
 kiwix_zim_urls:
-  - "https://download.kiwix.org/zim/wikipedia/wikipedia_ru_all_maxi_2025-01.zim"
+  - "https://download.kiwix.org/zim/wikipedia/wikipedia_ru_all_maxi_2026-02.zim"
 kiwix_tag: "latest"
 kiwix_image: "{{ (container_registry ~ '/' if container_registry else '') }}{{ (container_namespace ~ '/' if container_namespace else '') }}kiwix"
 kiwix_image_full: "{{ kiwix_image }}:{{ kiwix_tag }}"

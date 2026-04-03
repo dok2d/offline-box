@@ -3,9 +3,14 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     curl ca-certificates && \
     rm -rf /var/lib/apt/lists/*
+{% if offline_mode | default(false) %}
+COPY opencloud-{{ opencloud_version }}-linux-amd64 /usr/local/bin/opencloud
+RUN chmod +x /usr/local/bin/opencloud
+{% else %}
 RUN curl -fsSL "https://github.com/opencloud-eu/opencloud/releases/download/v{{ opencloud_version }}/opencloud-{{ opencloud_version }}-linux-amd64" \
     -o /usr/local/bin/opencloud && \
     chmod +x /usr/local/bin/opencloud
+{% endif %}
 RUN useradd -r -u 10001 -m opencloud && \
     mkdir -p /data /etc/opencloud && \
     chown -R opencloud:opencloud /data /etc/opencloud

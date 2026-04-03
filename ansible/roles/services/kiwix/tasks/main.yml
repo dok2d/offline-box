@@ -15,6 +15,18 @@
     group: "{{ svc_user }}"
     mode: "0755"
 
+- name: Copy offline ZIM files
+  ansible.builtin.copy:
+    src: "{{ offline_deps_dir }}/kiwix/{{ item | basename }}"
+    dest: "{{ kiwix_data_dir }}/{{ item | basename }}"
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0644"
+  loop: "{{ kiwix_zim_urls }}"
+  when:
+    - offline_mode | default(false)
+    - kiwix_zim_urls | length > 0
+
 - name: Download ZIM files
   ansible.builtin.get_url:
     url: "{{ item }}"
@@ -24,7 +36,9 @@
     mode: "0644"
     timeout: 3600
   loop: "{{ kiwix_zim_urls }}"
-  when: kiwix_zim_urls | length > 0
+  when:
+    - not (offline_mode | default(false))
+    - kiwix_zim_urls | length > 0
 
 - name: Deploy Kiwix Containerfile
   ansible.builtin.template:

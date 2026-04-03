@@ -10,7 +10,7 @@
 | `kiwix_port` | Порт, на котором слушает сервис | `8001` |
 | `kiwix_data_dir` | Каталог для хранения ZIM-файлов и library.xml | `/opt/kiwix/data` |
 | `kiwix_config_dir` | Каталог конфигурации и Containerfile | `/opt/kiwix/config` |
-| `kiwix_zim_urls` | Список URL-адресов ZIM-файлов для скачивания | `["https://download.kiwix.org/zim/wikipedia/wikipedia_ru_all_maxi_2025-01.zim"]` |
+| `kiwix_zim_urls` | Список URL-адресов ZIM-файлов для скачивания | `["https://download.kiwix.org/zim/wikipedia/wikipedia_ru_all_maxi_2026-02.zim"]` |
 
 ## Порт
 

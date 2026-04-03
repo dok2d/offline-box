@@ -10,7 +10,7 @@
 | `openstreetmap_port` | Порт, на котором слушает сервис | `8002` |
 | `openstreetmap_data_dir` | Каталог для хранения MBTiles-файлов | `/opt/openstreetmap/data` |
 | `openstreetmap_config_dir` | Каталог конфигурации и Containerfile | `/opt/openstreetmap/config` |
-| `openstreetmap_mbtiles_url` | URL для скачивания MBTiles-файла | `https://archive.org/download/osm_europe_z11-z14_2019.mbtiles/osm_europe_z11-z14_2019.mbtiles` |
+| `openstreetmap_mbtiles_url` | URL для скачивания MBTiles-файла (или пустая строка) | `""` |
 
 ## Порт
 
@@ -31,9 +31,9 @@
 4. Создание и запуск systemd user unit
 5. Настройка nginx reverse proxy
 
-Альтернативные источники MBTiles-файлов:
-- https://data.maptiler.com/downloads/ (требуется регистрация, свежие данные)
-- https://archive.org/download/osm-vector-mbtiles/2020-10-planet-14.mbtiles (планета, 83 ГБ)
+Источники MBTiles-файлов:
+- https://data.maptiler.com/downloads/ (требуется бесплатная регистрация, свежие данные)
+- https://openfreemap.org/ (planet ~94 ГБ, monaco ~500 КБ, без регистрации)
 
 ## Зависимости
 

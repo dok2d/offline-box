@@ -1,14 +1,28 @@
 FROM {{ container_base_image }}
+{% if offline_mode | default(false) %}
+COPY jellyfin_team.gpg.key /tmp/jellyfin_team.gpg.key
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends curl gnupg ca-certificates && \
+    mkdir -p /etc/apt/keyrings && \
+    cat /tmp/jellyfin_team.gpg.key | gpg --dearmor -o /etc/apt/keyrings/jellyfin.gpg && \
+    rm /tmp/jellyfin_team.gpg.key && \
+    echo "deb [signed-by=/etc/apt/keyrings/jellyfin.gpg] https://repo.jellyfin.org/debian trixie main" \
+      > /etc/apt/sources.list.d/jellyfin.list && \
+    apt-get update && \
+    apt-get install -y --no-install-recommends jellyfin-server jellyfin-web jellyfin-ffmpeg7 && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+{% else %}
 RUN apt-get update && \
     apt-get install -y --no-install-recommends curl gnupg ca-certificates && \
     mkdir -p /etc/apt/keyrings && \
     curl -fsSL https://repo.jellyfin.org/jellyfin_team.gpg.key | \
       gpg --dearmor -o /etc/apt/keyrings/jellyfin.gpg && \
-    echo "deb [signed-by=/etc/apt/keyrings/jellyfin.gpg] https://repo.jellyfin.org/deb bookworm main" \
+    echo "deb [signed-by=/etc/apt/keyrings/jellyfin.gpg] https://repo.jellyfin.org/debian trixie main" \
       > /etc/apt/sources.list.d/jellyfin.list && \
     apt-get update && \
-    apt-get install -y --no-install-recommends jellyfin-server jellyfin-web jellyfin-ffmpeg6 && \
+    apt-get install -y --no-install-recommends jellyfin-server jellyfin-web jellyfin-ffmpeg7 && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
+{% endif %}
 RUN useradd -r -u 10001 -m jellyfin && \
     mkdir -p /config /cache /media && \
     chown -R jellyfin:jellyfin /config /cache /media

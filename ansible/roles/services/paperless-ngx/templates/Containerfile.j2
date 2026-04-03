@@ -6,15 +6,24 @@ RUN apt-get update && \
     libpq-dev libmagic1 libzbar0 \
     tesseract-ocr {% for lang in paperless_ngx_ocr_language.split('+') %}tesseract-ocr-{{ lang }} {% endfor %}\
     unpaper ghostscript icc-profiles-free \
-    poppler-utils gnupg curl \
+    poppler-utils gnupg curl git \
     redis-server && \
     rm -rf /var/lib/apt/lists/*
 RUN useradd -r -u 10001 -m paperless && \
     mkdir -p /app /data/consume /data/media /data/data /config /run/redis && \
     chown -R paperless:paperless /app /data /config /run/redis
 USER paperless
+{% if offline_mode | default(false) %}
+COPY paperless-ngx-src/ /tmp/paperless-ngx-src/
 RUN python3 -m venv /app/venv && \
-    /app/venv/bin/pip install --no-cache-dir paperless-ngx gunicorn uvicorn
+    /app/venv/bin/pip install --no-cache-dir /tmp/paperless-ngx-src gunicorn uvicorn && \
+    rm -rf /tmp/paperless-ngx-src
+{% else %}
+RUN python3 -m venv /app/venv && \
+    /app/venv/bin/pip install --no-cache-dir \
+    "git+https://github.com/paperless-ngx/paperless-ngx.git@v{{ paperless_ngx_version }}" \
+    gunicorn uvicorn
+{% endif %}
 EXPOSE {{ paperless_ngx_port }}
 COPY entrypoint.sh /app/entrypoint.sh
 HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD curl -fs http://localhost:8012/ || exit 1

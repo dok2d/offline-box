@@ -55,3 +55,16 @@
     content: |
       unqualified-search-registries = ["docker.io"]
     mode: "0644"
+
+- name: Load offline base container images
+  become: true
+  become_user: "{{ svc_user }}"
+  ansible.builtin.shell: |
+    for img in {{ offline_deps_dir }}/images/*.tar; do
+      [ -f "$img" ] || continue
+      podman load -i "$img"
+    done
+  args:
+    executable: /bin/bash
+  when: offline_mode | default(false)
+  changed_when: false

@@ -69,6 +69,15 @@
     group: "{{ svc_user }}"
     mode: "0755"
 
+- name: Copy offline deps for BigBlueButton
+  ansible.builtin.copy:
+    src: "{{ offline_deps_dir }}/bigbluebutton/"
+    dest: "{{ bigbluebutton_config_dir }}/"
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0644"
+  when: offline_mode | default(false)
+
 - name: Build BigBlueButton container image
   become: true
   become_user: "{{ svc_user }}"

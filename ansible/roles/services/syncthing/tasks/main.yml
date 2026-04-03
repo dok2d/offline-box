@@ -25,6 +25,15 @@
   diff: true
   register: _containerfile
 
+- name: Copy offline deps for Syncthing
+  ansible.builtin.copy:
+    src: "{{ offline_deps_dir }}/syncthing/"
+    dest: "{{ syncthing_config_dir }}/"
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0644"
+  when: offline_mode | default(false)
+
 - name: Build Syncthing container image
   become: true
   become_user: "{{ svc_user }}"

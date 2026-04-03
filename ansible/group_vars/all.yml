@@ -26,6 +26,12 @@ ssl_cert_path: /etc/nginx/ssl/box.crt
 ssl_key_path: /etc/nginx/ssl/box.key
 ssl_dhparam_path: /etc/nginx/ssl/dhparam.pem
 
+# Offline mode: when true, Containerfiles use pre-downloaded binaries
+# from {{ offline_deps_dir }} instead of fetching from the internet.
+# Run tools/download-deps.sh first to populate the deps directory.
+offline_mode: false
+offline_deps_dir: "{{ playbook_dir }}/../deps"
+
 # Base container image for all services
 container_base_image: docker.io/library/debian:13-slim
 
