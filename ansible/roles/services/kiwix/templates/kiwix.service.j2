@@ -11,7 +11,7 @@ ExecStart=/usr/bin/podman run \
   --rm \
   --cap-drop=ALL \
   --security-opt=no-new-privileges \
-  -p {{ listen_addr }}:{{ kiwix_port }}:8001 \
+  -p {{ listen_addr }}:{{ kiwix_port }}:{{ kiwix_port }} \
   --log-driver=k8s-file \
   --log-opt=path={{ container_log_dir }}/kiwix/kiwix.log \
   -v {{ kiwix_data_dir }}:/data:ro \

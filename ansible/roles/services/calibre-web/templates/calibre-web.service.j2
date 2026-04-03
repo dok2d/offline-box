@@ -11,7 +11,7 @@ ExecStart=/usr/bin/podman run \
   --rm \
   --cap-drop=ALL \
   --security-opt=no-new-privileges \
-  -p {{ listen_addr }}:{{ calibre_web_port }}:8008 \
+  -p {{ listen_addr }}:{{ calibre_web_port }}:{{ calibre_web_port }} \
   --log-driver=k8s-file \
   --log-opt=path={{ container_log_dir }}/calibre-web/calibre-web.log \
   -v {{ calibre_web_config_dir }}:/config:rw \

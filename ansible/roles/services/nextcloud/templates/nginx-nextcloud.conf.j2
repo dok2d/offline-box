@@ -6,12 +6,16 @@ location /nextcloud/ {
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
     proxy_set_header X-Forwarded-Proto $scheme;
     include /etc/nginx/snippets/security-headers.conf;
-    limit_req zone=upload burst=10 nodelay;
+    limit_req zone=general burst=20 nodelay;
     client_max_body_size {{ nextcloud_upload_max_size }};
 
-    # WebDAV
+    # Reverse proxy awareness
     proxy_set_header X-Forwarded-Host $host;
     proxy_set_header X-Forwarded-Prefix /nextcloud;
+
+    # Disable buffering for large uploads and WebDAV
+    proxy_request_buffering off;
+    proxy_buffering off;
 
     # Timeouts for large uploads
     proxy_read_timeout 3600;

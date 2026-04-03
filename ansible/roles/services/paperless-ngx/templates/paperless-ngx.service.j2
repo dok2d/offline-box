@@ -11,7 +11,7 @@ ExecStart=/usr/bin/podman run \
   --rm \
   --cap-drop=ALL \
   --security-opt=no-new-privileges \
-  -p {{ listen_addr }}:{{ paperless_ngx_port }}:8012 \
+  -p {{ listen_addr }}:{{ paperless_ngx_port }}:{{ paperless_ngx_port }} \
   --log-driver=k8s-file \
   --log-opt=path={{ container_log_dir }}/paperless-ngx/paperless-ngx.log \
   -v {{ paperless_ngx_data_dir }}:/data:rw \
