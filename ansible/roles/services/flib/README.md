@@ -31,9 +31,12 @@ Nginx использует `sub_filter` для перезаписи абсолю
 Данные необходимо подготовить **вручную** перед деплоем:
 
 1. Получить INPX-файл библиотеки и соответствующие ZIP-архивы с книгами
-2. Сконвертировать INPX в SQLite:
+2. Сконвертировать INPX в SQLite (утилита `inpx2sql.py` включена в образ):
    ```bash
+   # На хосте (если есть Python 3):
    python3 inpx2sql.py -i mylib_fb2.inpx -o books.db
+   # Или через контейнер:
+   podman exec flib /app/venv/bin/python3 /app/inpx2sql.py -i /app/data/mylib.inpx -o /app/data/books.db
    ```
 3. Разместить файлы:
    ```

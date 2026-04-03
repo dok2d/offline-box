@@ -162,7 +162,7 @@ download_npm_tarball() {
 
 dl_images() {
     echo "==> Container base images"
-    for img in "docker.io/library/debian:13-slim" "docker.io/library/ubuntu:22.04"; do
+    for img in "docker.io/library/debian:13-slim" "docker.io/library/ubuntu:22.04" "docker.io/library/golang:1.22-bookworm"; do
         local fname
         fname=$(echo "$img" | sed 's|[/:]|_|g').tar
         local dest="$DEPS_DIR/images/$fname"
@@ -351,19 +351,51 @@ dl_kanban() {
     echo "==> Kanban (git: $KANBAN_GIT_REF)"
     clone_repo "https://github.com/dok2d/kanban.git" "$KANBAN_GIT_REF" \
         "$DEPS_DIR/kanban/kanban-src" || true
+
+    # Vendor Go modules for offline build
+    if [ -d "$DEPS_DIR/kanban/kanban-src" ] && command -v go >/dev/null 2>&1; then
+        echo "  [go mod vendor] vendoring Go dependencies"
+        (cd "$DEPS_DIR/kanban/kanban-src" && go mod vendor 2>/dev/null) \
+            && ok "Go modules vendored" \
+            || warn "go mod vendor failed (Go compiler may not be installed)"
+    fi
+
     # Download static assets (JS libs, CSS, fonts) for offline build
     local assets="$DEPS_DIR/kanban/offline-assets"
     mkdir -p "$assets/js" "$assets/css" "$assets/fonts"
     download "https://cdn.jsdelivr.net/npm/marked/marked.min.js" "$assets/js/marked.min.js" || true
     download "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" "$assets/js/highlight.min.js" || true
     download "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css" "$assets/css/atom-one-dark.min.css" || true
+
+    # Download Google Fonts for offline (JetBrains Mono + Source Sans 3)
+    local fonts_css
+    fonts_css=$(curl -sL "https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Source+Sans+3:wght@400;600;700&display=swap" \
+        -H "User-Agent: Mozilla/5.0" 2>/dev/null) || true
+    if [ -n "$fonts_css" ]; then
+        echo "$fonts_css" | grep -oP 'url\(\K[^)]+' | while read -r url; do
+            fname=$(echo "$url" | sed 's|.*/||')
+            download "$url" "$assets/fonts/$fname" || true
+        done
+        echo "$fonts_css" | sed -E 's|url\(https?://[^)]*/(.[^/)]+)\)|url(/static/fonts/\1)|g' \
+            > "$assets/css/fonts.css"
+        ok "Google Fonts downloaded"
+    else
+        warn "could not download Google Fonts CSS"
+    fi
 }
 
 dl_flib() {
     echo "==> Flib (git: $FLIB_GIT_REF)"
     clone_repo "https://github.com/dok2d/flib-py.git" "$FLIB_GIT_REF" \
         "$DEPS_DIR/flib/flib-src" || true
-    download_pip_with_deps "$DEPS_DIR/flib/pip-packages" "flask" "weasyprint" || true
+    # Download pip packages from requirements.txt (includes flask, weasyprint, telegram bot, pyyaml)
+    if [ -f "$DEPS_DIR/flib/flib-src/requirements.txt" ]; then
+        download_pip_with_deps "$DEPS_DIR/flib/pip-packages" \
+            -r "$DEPS_DIR/flib/flib-src/requirements.txt" || true
+    else
+        download_pip_with_deps "$DEPS_DIR/flib/pip-packages" \
+            "flask" "weasyprint" "python-telegram-bot>=20.0" "PyYAML>=6.0" || true
+    fi
 }
 
 # ── Main ──────────────────────────────────────────────────────────
