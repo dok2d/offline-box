@@ -4,7 +4,7 @@ enable_kanban: true
 kanban_port: 8019
 kanban_data_dir: "{{ opt_base }}/kanban/data"
 kanban_config_dir: "{{ opt_base }}/kanban/config"
-kanban_upload_max_size: 10m
+kanban_upload_max_size: 50m
 kanban_git_url: "https://github.com/dok2d/kanban.git"
 kanban_git_ref: "main"
 kanban_tag: "latest"
