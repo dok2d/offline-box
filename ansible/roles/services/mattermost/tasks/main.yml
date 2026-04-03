@@ -52,6 +52,7 @@
     tag: "{{ mattermost_tag }}"
     path: "{{ mattermost_config_dir }}"
     force: "{{ _containerfile.changed | default(true) }}"
+  notify: Restart mattermost
 
 - name: Deploy Mattermost systemd user unit
   ansible.builtin.template:

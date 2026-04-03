@@ -15,14 +15,6 @@
     group: "{{ svc_user }}"
     mode: "0755"
 
-- name: Create containers env directory
-  ansible.builtin.file:
-    path: "{{ svc_home }}/.config/containers"
-    state: directory
-    owner: "{{ svc_user }}"
-    group: "{{ svc_user }}"
-    mode: "0700"
-
 - name: Deploy Vaultwarden env file
   ansible.builtin.template:
     src: vaultwarden.env.j2
@@ -51,6 +43,7 @@
     tag: "{{ vaultwarden_tag }}"
     path: "{{ vaultwarden_config_dir }}"
     force: "{{ _containerfile.changed | default(true) }}"
+  notify: Restart vaultwarden
 
 - name: Deploy Vaultwarden systemd user unit
   ansible.builtin.template:

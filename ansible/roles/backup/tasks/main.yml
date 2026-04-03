@@ -7,14 +7,6 @@
     group: "{{ svc_user }}"
     mode: "0750"
 
-- name: Deploy backup script
-  ansible.builtin.template:
-    src: backup.sh.j2
-    dest: "{{ svc_home }}/bin/offlinebox-backup.sh"
-    owner: "{{ svc_user }}"
-    group: "{{ svc_user }}"
-    mode: "0750"
-
 - name: Create bin directory for svc user
   ansible.builtin.file:
     path: "{{ svc_home }}/bin"
@@ -22,6 +14,14 @@
     owner: "{{ svc_user }}"
     group: "{{ svc_user }}"
     mode: "0755"
+
+- name: Deploy backup script
+  ansible.builtin.template:
+    src: backup.sh.j2
+    dest: "{{ svc_home }}/bin/offlinebox-backup.sh"
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0750"
 
 - name: Deploy backup systemd service unit
   ansible.builtin.template:

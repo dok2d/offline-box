@@ -58,6 +58,7 @@
     tag: "{{ kiwix_tag }}"
     path: "{{ kiwix_config_dir }}"
     force: "{{ _containerfile.changed | default(true) }}"
+  notify: Restart kiwix
 
 - name: Generate Kiwix library.xml from ZIM files
   become: true
@@ -74,7 +75,7 @@
   args:
     executable: /bin/bash
   register: kiwix_library
-  changed_when: kiwix_library.rc == 0
+  changed_when: false
 
 - name: Deploy Kiwix systemd user unit
   ansible.builtin.template:

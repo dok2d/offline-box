@@ -50,6 +50,7 @@
     tag: "{{ searxng_tag }}"
     path: "{{ searxng_config_dir }}"
     force: "{{ _containerfile.changed | default(true) }}"
+  notify: Restart searxng
 
 - name: Deploy SearXNG systemd user unit
   ansible.builtin.template:

@@ -60,7 +60,10 @@
 
 2. Отредактируйте инвентарь:
    ```bash
-   vim ansible/inventory/hosts.yml
+   # Один хост (все сервисы на одной машине):
+   vim ansible/inventory/all-in-one
+   # Несколько хостов (распределение сервисов по машинам):
+   vim ansible/inventory/multinode
    ```
 
 3. При необходимости измените переменные:
@@ -75,7 +78,10 @@
 
 5. Запустите плейбук:
    ```bash
-   ansible-playbook -i ansible/inventory/hosts.yml ansible/playbook.yml
+   # Один хост:
+   ansible-playbook -i ansible/inventory/all-in-one ansible/playbook.yml
+   # Несколько хостов:
+   ansible-playbook -i ansible/inventory/multinode ansible/playbook.yml
    ```
 
 ### Развёртывание (офлайн)
@@ -102,7 +108,10 @@
 
 5. Запустите плейбук:
    ```bash
-   ansible-playbook -i ansible/inventory/hosts.yml ansible/playbook.yml
+   # Один хост:
+   ansible-playbook -i ansible/inventory/all-in-one ansible/playbook.yml
+   # Несколько хостов:
+   ansible-playbook -i ansible/inventory/multinode ansible/playbook.yml
    ```
 
 В офлайн-режиме Containerfile'ы используют предварительно скачанные бинарники и пакеты вместо загрузки из интернета. Для apt-пакетов используется Nexus в качестве кэширующего прокси.
@@ -110,6 +119,10 @@
 > **Примечание:** Для apt-пакетов, устанавливаемых внутри контейнеров, необходимо либо предварительно заполнить кэш Nexus при наличии интернета, либо настроить локальное зеркало apt. Скрипт `download-deps.sh` скачивает бинарные артефакты (Gitea, Vaultwarden, Syncthing и т.д.), pip/npm-пакеты, но не deb-пакеты из стандартных репозиториев.
 
 Для отключения отдельных сервисов задайте `enable_<сервис>: false` в `group_vars/all.yml` или в `host_vars`.
+
+## Многохостовое развёртывание
+
+Проект поддерживает развёртывание на нескольких хостах. В файле `inventory/multinode` хосты распределяются по группам (media, infra, comms и т.д.), а сервисы наследуют группы через `:children` (аналогично kolla-ansible). Для развёртывания на одном хосте достаточно использовать `inventory/all-in-one`, где все группы указывают на localhost.
 
 ## Конфигурация
 
@@ -138,7 +151,7 @@
 - в `ansible/host_vars/<хост>.yml` -- для конкретного хоста
 - через `-e` при запуске плейбука:
   ```bash
-  ansible-playbook -i ansible/inventory/hosts.yml ansible/playbook.yml -e "enable_kiwix=false"
+  ansible-playbook -i ansible/inventory/all-in-one ansible/playbook.yml -e "enable_kiwix=false"
   ```
 
 ## Офлайн-зависимости
@@ -183,7 +196,8 @@ offline-box/
       all.yml                          # Глобальные переменные
       passwords.example.yml            # Пример файла паролей
     inventory/
-      hosts.yml                        # Инвентарь хостов
+      all-in-one                       # Инвентарь: всё на одном хосте
+      multinode                        # Инвентарь: распределение по хостам
     playbook.yml                       # Основной плейбук
     roles/
       base/                            # Базовая настройка системы

@@ -54,13 +54,7 @@ RUN npm install -g /tmp/ep_etherpad-lite.tgz && rm /tmp/ep_etherpad-lite.tgz
 RUN npm install -g ep_etherpad-lite
 {% endif %}
 
-# Configure PostgreSQL for BBB
-USER postgres
-RUN /etc/init.d/postgresql start && \
-    psql --command "CREATE USER bigbluebutton WITH PASSWORD '{{ bigbluebutton_db_password }}';" && \
-    createdb -O bigbluebutton bigbluebutton && \
-    /etc/init.d/postgresql stop
-USER root
+# PostgreSQL database is initialized at first start via entrypoint.sh
 
 # Configure FreeSWITCH for BBB
 RUN mkdir -p /etc/freeswitch/dialplan /etc/freeswitch/sip_profiles && \

@@ -64,7 +64,9 @@
     group: "{{ svc_user }}"
     mode: "0755"
   loop: "{{ offlinebox_services | dict2items }}"
-  when: item.value.enabled | bool
+  when:
+    - item.value.enabled | bool
+    - inventory_hostname in groups.get(item.key, [])
 
 - name: Deploy container logrotate config
   ansible.builtin.template:
@@ -100,7 +102,9 @@
     rule: allow
     port: "{{ transmission_peer_port | string }}"
     proto: tcp
-  when: enable_transmission | bool
+  when:
+    - enable_transmission | bool
+    - inventory_hostname in groups.get('transmission', [])
 
 - name: Allow Syncthing ports
   community.general.ufw:
@@ -110,21 +114,27 @@
   loop:
     - { port: "{{ syncthing_sync_port | string }}", proto: tcp }
     - { port: "{{ syncthing_discovery_port | string }}", proto: udp }
-  when: enable_syncthing | bool
+  when:
+    - enable_syncthing | bool
+    - inventory_hostname in groups.get('syncthing', [])
 
 - name: Allow Gitea SSH port
   community.general.ufw:
     rule: allow
     port: "{{ gitea_ssh_port | string }}"
     proto: tcp
-  when: enable_gitea | bool
+  when:
+    - enable_gitea | bool
+    - inventory_hostname in groups.get('gitea', [])
 
 - name: Allow BigBlueButton FreeSWITCH media ports
   community.general.ufw:
     rule: allow
     port: "{{ bigbluebutton_freeswitch_port_start | string }}:{{ bigbluebutton_freeswitch_port_end | string }}"
     proto: udp
-  when: enable_bigbluebutton | bool
+  when:
+    - enable_bigbluebutton | bool
+    - inventory_hostname in groups.get('bigbluebutton', [])
 
 - name: Enable UFW
   community.general.ufw:

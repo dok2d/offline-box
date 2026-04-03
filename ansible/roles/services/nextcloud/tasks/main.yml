@@ -51,6 +51,7 @@
     tag: "{{ nextcloud_tag }}"
     path: "{{ nextcloud_config_dir }}"
     force: "{{ _containerfile.changed | default(true) }}"
+  notify: Restart nextcloud
 
 - name: Deploy Nextcloud systemd user unit
   ansible.builtin.template:

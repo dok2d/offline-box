@@ -26,5 +26,5 @@ USER nexus
 ENV NEXUS_CONTEXT=/nexus
 EXPOSE {{ nexus_port }}
 WORKDIR /opt/nexus
-HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD curl -fs http://localhost:8004/nexus/service/rest/v1/status || exit 1
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD curl -fs http://localhost:{{ nexus_port }}/nexus/service/rest/v1/status || exit 1
 ENTRYPOINT ["bin/nexus", "run"]

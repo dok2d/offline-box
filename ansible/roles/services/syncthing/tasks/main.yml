@@ -42,6 +42,7 @@
     tag: "{{ syncthing_tag }}"
     path: "{{ syncthing_config_dir }}"
     force: "{{ _containerfile.changed | default(true) }}"
+  notify: Restart syncthing
 
 - name: Deploy Syncthing systemd user unit
   ansible.builtin.template:

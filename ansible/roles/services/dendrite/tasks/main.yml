@@ -35,6 +35,16 @@
   diff: true
   notify: Restart dendrite
 
+- name: Build Dendrite container image
+  become: true
+  become_user: "{{ svc_user }}"
+  containers.podman.podman_image:
+    name: "{{ dendrite_image }}"
+    tag: "{{ dendrite_tag }}"
+    path: "{{ dendrite_config_dir }}"
+    force: "{{ _containerfile.changed | default(true) }}"
+  notify: Restart dendrite
+
 - name: Generate Dendrite signing key
   become: true
   become_user: "{{ svc_user }}"
@@ -46,15 +56,6 @@
       {{ dendrite_image_full }}
       -private-key /etc/dendrite/matrix_key.pem
     creates: "{{ dendrite_config_dir }}/matrix_key.pem"
-
-- name: Build Dendrite container image
-  become: true
-  become_user: "{{ svc_user }}"
-  containers.podman.podman_image:
-    name: "{{ dendrite_image }}"
-    tag: "{{ dendrite_tag }}"
-    path: "{{ dendrite_config_dir }}"
-    force: "{{ _containerfile.changed | default(true) }}"
 
 - name: Deploy Dendrite systemd user unit
   ansible.builtin.template:

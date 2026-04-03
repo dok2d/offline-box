@@ -23,14 +23,6 @@
     group: "{{ svc_user }}"
     mode: "0755"
 
-- name: Create containers env directory
-  ansible.builtin.file:
-    path: "{{ svc_home }}/.config/containers"
-    state: directory
-    owner: "{{ svc_user }}"
-    group: "{{ svc_user }}"
-    mode: "0700"
-
 - name: Deploy BigBlueButton env file
   ansible.builtin.template:
     src: bigbluebutton.env.j2
@@ -86,6 +78,7 @@
     tag: "{{ bigbluebutton_tag }}"
     path: "{{ bigbluebutton_config_dir }}"
     force: "{{ _containerfile.changed | default(true) }}"
+  notify: Restart bigbluebutton
 
 - name: Deploy BigBlueButton systemd user unit
   ansible.builtin.template:
