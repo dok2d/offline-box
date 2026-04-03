@@ -271,7 +271,22 @@ WantedBy=default.target
 - `--cap-drop=ALL` и `--security-opt=no-new-privileges` — ОБЯЗАТЕЛЬНО
 - Порт: `{{ listen_addr }}:{{ port }}:{{ port }}` — НЕ хардкодить внутренний порт
 - `--log-driver=k8s-file` с путём в `{{ container_log_dir }}`
-- `MemoryMax` и `CPUQuota` — ОБЯЗАТЕЛЬНО (разумные лимиты)
+- `MemoryMax` и `CPUQuota` — ОБЯЗАТЕЛЬНО, подбирать по нагрузке:
+
+| MemoryMax | Сервисы |
+|-----------|---------|
+| 512M | kiwix, vaultwarden, calibre-web, flib, minidlna, searxng |
+| 1G | nextcloud, gitea, dendrite, opencloud, openstreetmap, syncthing, transmission |
+| 2G | nexus, paperless-ngx |
+| 4G | jellyfin, bigbluebutton |
+
+| CPUQuota | Сервисы |
+|----------|---------|
+| 100% | kiwix, vaultwarden, calibre-web, flib, searxng |
+| 200% | nextcloud, gitea, dendrite, nexus, opencloud, openstreetmap, syncthing, transmission, minidlna |
+| 400% | jellyfin, paperless-ngx |
+| 800% | bigbluebutton |
+
 - `Restart=on-failure`, `RestartSec=10s`
 - Для env-файлов: `--env-file {{ svc_home }}/.config/containers/<service>.env`
 - Данные: обычно `:ro` если сервис не пишет, `:rw` если пишет
@@ -356,6 +371,42 @@ RUN <download and install>
 - `download_pip_with_deps` — для pip-пакетов
 - `download_npm_tarball` — для npm-пакетов
 - `save_image` — для Docker-образов (multi-stage builds)
+
+## Известные исключения из паттернов
+
+| Сервис | Исключение | Причина |
+|--------|-----------|---------|
+| bigbluebutton | `FROM ubuntu:22.04` вместо `container_base_image` | Ubuntu-специфичные пакеты (FreeSWITCH, PostgreSQL) |
+| bigbluebutton | `--cap-add=NET_RAW`, `--cap-add=SYS_NICE` | FreeSWITCH требует raw sockets |
+| minidlna | `--network=host` вместо `-p` | SSDP/UPnP multicast discovery |
+| vaultwarden, dendrite | Multi-stage `FROM docker.io/...` | Бинарники копируются из upstream-образов |
+| flib | `sub_filter` в nginx | flib-py не поддерживает sub-path нативно |
+| syncthing | GUI не работает через sub-path | Архитектурное ограничение Syncthing |
+
+### Порты (текущее распределение)
+
+| Порт | Сервис |
+|------|--------|
+| 8001 | kiwix |
+| 8002 | openstreetmap |
+| 8003 | transmission |
+| 8004 | nexus |
+| 8005 | nextcloud |
+| 8006 | gitea |
+| 8007 | jellyfin |
+| 8008 | calibre-web |
+| 8009 | searxng |
+| 8010 | vaultwarden |
+| 8011 | syncthing |
+| 8012 | paperless-ngx |
+| 8013 | bigbluebutton |
+| 8014 | opencloud |
+| 8015 | mattermost |
+| 8016 | dendrite |
+| 8017 | minidlna |
+| 8018 | flib |
+
+Следующий свободный порт: **8019**
 
 ## Добавление нового сервиса — чеклист
 
