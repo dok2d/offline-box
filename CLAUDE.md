@@ -117,6 +117,7 @@ control
 defaults/main.yml
 tasks/main.yml
 handlers/main.yml
+README.md
 templates/
   Containerfile.j2
   <service-name>.service.j2
@@ -413,16 +414,17 @@ RUN <download and install>
 1. [ ] Создать `ansible/roles/services/<name>/defaults/main.yml`
 2. [ ] Создать `ansible/roles/services/<name>/tasks/main.yml`
 3. [ ] Создать `ansible/roles/services/<name>/handlers/main.yml`
-4. [ ] Создать `ansible/roles/services/<name>/templates/Containerfile.j2`
-5. [ ] Создать `ansible/roles/services/<name>/templates/<name>.service.j2`
-6. [ ] Создать `ansible/roles/services/<name>/templates/nginx-<name>.conf.j2`
-7. [ ] Добавить запись в `offlinebox_services` (group_vars/all.yml)
-8. [ ] Добавить play в `playbook.yml` (перед секцией Backup)
-9. [ ] Добавить группу `[<name>:children]` в `inventory/all-in-one`
-10. [ ] Добавить группу `[<name>:children]` в `inventory/multinode`
-11. [ ] Добавить функцию `dl_<name>()` в `tools/download-deps.sh`
-12. [ ] Добавить пароли в `passwords.example.yml` (если нужны)
-13. [ ] Обновить README.md (таблица сервисов, счётчик)
+4. [ ] Создать `ansible/roles/services/<name>/README.md`
+5. [ ] Создать `ansible/roles/services/<name>/templates/Containerfile.j2`
+6. [ ] Создать `ansible/roles/services/<name>/templates/<name>.service.j2`
+7. [ ] Создать `ansible/roles/services/<name>/templates/nginx-<name>.conf.j2`
+8. [ ] Добавить запись в `offlinebox_services` (group_vars/all.yml)
+9. [ ] Добавить play в `playbook.yml` (перед секцией Backup)
+10. [ ] Добавить группу `[<name>:children]` в `inventory/all-in-one`
+11. [ ] Добавить группу `[<name>:children]` в `inventory/multinode`
+12. [ ] Добавить функцию `dl_<name>()` в `tools/download-deps.sh`
+13. [ ] Добавить пароли в `passwords.example.yml` (если нужны)
+14. [ ] Обновить README.md (таблица сервисов, счётчик)
 
 ## Валидация
 
