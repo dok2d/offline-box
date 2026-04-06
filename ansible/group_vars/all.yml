@@ -289,3 +289,15 @@ offlinebox_services:
       desc: "Task board"
       icon: "\U0001F4CB"
       url: /kanban/
+  zulip:
+    container_name: zulip
+    enabled: "{{ enable_zulip }}"
+    image: "{{ zulip_image_full }}"
+    port: "{{ zulip_port }}"
+    data_dir: "{{ zulip_data_dir }}"
+    config_dir: "{{ zulip_config_dir }}"
+    dashboard:
+      name: Zulip
+      desc: "Team chat with threading"
+      icon: "\U0001F4AC"
+      url: /zulip/

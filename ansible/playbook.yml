@@ -197,6 +197,14 @@
     - role: services/kanban
       when: enable_kanban | bool
 
+- name: Apply role zulip
+  hosts: zulip
+  become: true
+  gather_facts: false
+  roles:
+    - role: services/zulip
+      when: enable_zulip | bool
+
 ###############################################################################
 # Backup — runs on every host
 ###############################################################################

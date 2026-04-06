@@ -74,3 +74,6 @@ control
 
 [kanban:children]
 control
+
+[zulip:children]
+control

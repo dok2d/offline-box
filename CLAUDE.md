@@ -278,13 +278,13 @@ WantedBy=default.target
 |-----------|---------|
 | 512M | kiwix, vaultwarden, calibre-web, flib, minidlna, searxng, kanban |
 | 1G | nextcloud, gitea, dendrite, opencloud, openstreetmap, syncthing, transmission |
-| 2G | nexus, paperless-ngx |
+| 2G | nexus, paperless-ngx, zulip |
 | 4G | jellyfin, bigbluebutton |
 
 | CPUQuota | Сервисы |
 |----------|---------|
 | 100% | kiwix, vaultwarden, calibre-web, flib, searxng, kanban |
-| 200% | nextcloud, gitea, dendrite, nexus, opencloud, openstreetmap, syncthing, transmission, minidlna |
+| 200% | nextcloud, gitea, dendrite, nexus, opencloud, openstreetmap, syncthing, transmission, minidlna, zulip |
 | 400% | jellyfin, paperless-ngx |
 | 800% | bigbluebutton |
 
@@ -384,6 +384,7 @@ RUN <download and install>
 | flib | `sub_filter` в nginx | flib-py не поддерживает sub-path нативно |
 | kanban | `sub_filter` в nginx + multi-stage build (Go + assets) | Go SPA не поддерживает sub-path нативно |
 | syncthing | GUI не работает через sub-path | Архитектурное ограничение Syncthing |
+| zulip | `FROM docker.io/zulip/docker-zulip` вместо `container_base_image`; внутренний порт 80 (`-p port:80`); несколько nginx location-блоков вместо одного | All-in-one образ; Zulip не поддерживает sub-path нативно |
 
 ### Порты (текущее распределение)
 
@@ -408,8 +409,9 @@ RUN <download and install>
 | 8017 | minidlna |
 | 8018 | flib |
 | 8019 | kanban |
+| 8020 | zulip |
 
-Следующий свободный порт: **8020**
+Следующий свободный порт: **8021**
 
 ## Добавление нового сервиса — чеклист
 

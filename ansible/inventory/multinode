@@ -104,6 +104,9 @@ comms
 [bigbluebutton:children]
 comms
 
+[zulip:children]
+comms
+
 # --- Downloads ---
 
 [transmission:children]

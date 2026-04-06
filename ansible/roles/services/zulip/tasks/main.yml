@@ -1,0 +1,90 @@
+---
+- name: Create Zulip data directory
+  ansible.builtin.file:
+    path: "{{ zulip_data_dir }}"
+    state: directory
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0755"
+
+- name: Create Zulip config directory
+  ansible.builtin.file:
+    path: "{{ zulip_config_dir }}"
+    state: directory
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0755"
+
+- name: Deploy Zulip environment file
+  ansible.builtin.template:
+    src: zulip.env.j2
+    dest: "{{ zulip_config_dir }}/zulip.env"
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0640"
+  diff: false
+  notify: Restart zulip
+
+- name: Deploy Zulip Containerfile
+  ansible.builtin.template:
+    src: Containerfile.j2
+    dest: "{{ zulip_config_dir }}/Containerfile"
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0644"
+  diff: true
+  register: _containerfile
+
+- name: Load Zulip image from offline deps
+  become: true
+  become_user: "{{ svc_user }}"
+  ansible.builtin.command:
+    cmd: "podman load -i {{ offline_deps_dir }}/images/zulip-{{ zulip_version }}.tar"
+  when: offline_mode | default(false)
+  changed_when: true
+
+- name: Build Zulip container image
+  become: true
+  become_user: "{{ svc_user }}"
+  containers.podman.podman_image:
+    name: "{{ zulip_image }}"
+    tag: "{{ zulip_tag }}"
+    path: "{{ zulip_config_dir }}"
+    force: "{{ _containerfile.changed | default(true) }}"
+  notify: Restart zulip
+
+- name: Deploy Zulip systemd user unit
+  ansible.builtin.template:
+    src: zulip.service.j2
+    dest: "{{ svc_home }}/.config/systemd/user/zulip.service"
+    owner: "{{ svc_user }}"
+    group: "{{ svc_user }}"
+    mode: "0644"
+  diff: true
+
+- name: Enable and start Zulip service
+  become: true
+  become_user: "{{ svc_user }}"
+  ansible.builtin.systemd:
+    name: zulip
+    scope: user
+    enabled: true
+    state: started
+    daemon_reload: true
+
+- name: Wait for Zulip to become available
+  ansible.builtin.uri:
+    url: "http://{{ listen_addr }}:{{ zulip_port }}/api/v1/server_settings"
+    status_code: [200]
+  register: zulip_health
+  retries: 40
+  delay: 10
+  until: zulip_health is not failed
+
+- name: Deploy nginx config for Zulip
+  ansible.builtin.template:
+    src: nginx-zulip.conf.j2
+    dest: /etc/nginx/sites-enabled/zulip.conf
+    mode: "0644"
+  diff: true
+  notify: Reload nginx

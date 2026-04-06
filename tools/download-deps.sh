@@ -66,6 +66,7 @@ PAPERLESS_NGX_VERSION=$(get_var "$REPO_ROOT/ansible/roles/services/paperless-ngx
 JELLYFIN_VERSION=$(get_var "$REPO_ROOT/ansible/roles/services/jellyfin/defaults/main.yml" "jellyfin_version")
 FLIB_GIT_REF=$(get_var "$REPO_ROOT/ansible/roles/services/flib/defaults/main.yml" "flib_git_ref")
 KANBAN_GIT_REF=$(get_var "$REPO_ROOT/ansible/roles/services/kanban/defaults/main.yml" "kanban_git_ref")
+ZULIP_VERSION=$(get_var "$REPO_ROOT/ansible/roles/services/zulip/defaults/main.yml" "zulip_version")
 OSM_MBTILES_URL=$(get_var "$REPO_ROOT/ansible/roles/services/openstreetmap/defaults/main.yml" "openstreetmap_mbtiles_url")
 
 ARCH="${ARCH:-amd64}"
@@ -398,13 +399,21 @@ dl_flib() {
     fi
 }
 
+dl_zulip() {
+    echo "==> Zulip (version: $ZULIP_VERSION)"
+    # Zulip is distributed as an all-in-one Docker image (Django + PostgreSQL + RabbitMQ + Redis + Memcached)
+    local img="docker.io/zulip/docker-zulip:${ZULIP_VERSION}"
+    local dest="$DEPS_DIR/images/zulip-${ZULIP_VERSION}.tar"
+    save_image "$img" "$dest" || true
+}
+
 # ── Main ──────────────────────────────────────────────────────────
 
 ALL_SERVICES=(
     images ansible
     nexus nextcloud gitea vaultwarden syncthing opencloud
     mattermost dendrite bigbluebutton jellyfin openstreetmap
-    kiwix calibre_web searxng paperless_ngx flib kanban
+    kiwix calibre_web searxng paperless_ngx flib kanban zulip
 )
 
 # Determine which services to download
