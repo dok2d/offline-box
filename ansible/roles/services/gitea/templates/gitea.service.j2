@@ -11,7 +11,7 @@ ExecStart=/usr/bin/podman run \
   --rm \
   --cap-drop=ALL \
   --security-opt=no-new-privileges \
-  -p {{ listen_addr }}:{{ gitea_port }}:8006 \
+  -p {{ listen_addr }}:{{ gitea_port }}:{{ gitea_port }} \
   -p {{ gitea_ssh_port }}:2222 \
   --log-driver=k8s-file \
   --log-opt=path={{ container_log_dir }}/gitea/gitea.log \

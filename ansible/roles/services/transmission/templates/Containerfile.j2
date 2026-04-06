@@ -7,5 +7,5 @@ RUN useradd -r -u 10001 -m transmission && \
     chown -R transmission:transmission /config /downloads /watch
 USER transmission
 EXPOSE {{ transmission_port }} {{ transmission_peer_port }}
-HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD curl -fs http://localhost:8003/transmission/web/ || exit 1
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD curl -fs http://localhost:{{ transmission_port }}/transmission/web/ || exit 1
 ENTRYPOINT ["transmission-daemon", "--foreground", "--config-dir", "/config"]

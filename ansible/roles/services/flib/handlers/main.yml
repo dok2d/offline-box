@@ -1,0 +1,9 @@
+---
+- name: Restart flib
+  become: true
+  become_user: "{{ svc_user }}"
+  ansible.builtin.systemd:
+    name: flib
+    scope: user
+    state: restarted
+    daemon_reload: true

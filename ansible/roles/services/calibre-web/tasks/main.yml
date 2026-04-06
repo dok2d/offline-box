@@ -104,6 +104,7 @@
     tag: "{{ calibre_web_tag }}"
     path: "{{ calibre_web_config_dir }}"
     force: "{{ _containerfile.changed | default(true) }}"
+  notify: Restart calibre-web
 
 - name: Deploy Calibre-web systemd user unit
   ansible.builtin.template:

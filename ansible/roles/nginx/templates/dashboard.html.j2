@@ -161,7 +161,7 @@ body {
 <script>
 var services = [
 {% for svc_id, svc in offlinebox_services.items() %}
-{% if svc.enabled | bool %}
+{% if svc.enabled | bool and inventory_hostname in groups.get(svc_id, []) %}
   {id:{{ svc_id | to_json }}, name:{{ svc.dashboard.name | to_json }}, desc:{{ svc.dashboard.desc | to_json }}, url:{{ svc.dashboard.url | to_json }}, icon:{{ svc.dashboard.icon | to_json }}},
 {% endif %}
 {% endfor %}

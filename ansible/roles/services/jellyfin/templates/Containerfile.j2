@@ -28,9 +28,10 @@ RUN useradd -r -u 10001 -m jellyfin && \
     chown -R jellyfin:jellyfin /config /cache /media
 USER jellyfin
 EXPOSE {{ jellyfin_port }}
-HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD curl -fs http://localhost:8007/jellyfin/health || exit 1
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD curl -fs http://localhost:{{ jellyfin_port }}/jellyfin/health || exit 1
 ENTRYPOINT ["/usr/bin/jellyfin", "--service", \
     "--datadir", "/config", \
     "--cachedir", "/cache", \
     "--webdir", "/usr/share/jellyfin/web", \
+    "--http-port", "{{ jellyfin_port }}", \
     "--baseurl", "/jellyfin"]

@@ -42,6 +42,7 @@
     tag: "{{ nexus_tag }}"
     path: "{{ nexus_config_dir }}"
     force: "{{ _containerfile.changed | default(true) }}"
+  notify: Restart nexus
 
 - name: Deploy Nexus systemd user unit
   ansible.builtin.template:

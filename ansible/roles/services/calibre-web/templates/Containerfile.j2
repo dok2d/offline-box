@@ -18,5 +18,5 @@ RUN python3 -m venv /app/venv && \
     /app/venv/bin/pip install --no-cache-dir calibreweb=={{ calibre_web_version }}
 {% endif %}
 EXPOSE {{ calibre_web_port }}
-HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD curl -fs http://localhost:8008/ || exit 1
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD curl -fs http://localhost:{{ calibre_web_port }}/ || exit 1
 ENTRYPOINT ["/app/venv/bin/cps", "-p", "/config/app.db", "-g", "/config/gdrive.db"]

@@ -10,7 +10,9 @@ location /nexus/ {
 
     include /etc/nginx/snippets/security-headers.conf;
 
-    limit_req zone=upload burst=10 nodelay;
+    limit_req zone=general burst=10 nodelay;
+
+    proxy_read_timeout 600;
 }
 
 # Block dangerous admin scripting API

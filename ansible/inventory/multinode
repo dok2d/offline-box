@@ -1,0 +1,118 @@
+# Offline Box — Multinode inventory
+# Distribute services across multiple hosts (like kolla-ansible multinode).
+#
+# Usage:
+#   ansible-playbook -i inventory/multinode playbook.yml
+#
+# How it works
+# ────────────
+# 1. Define your physical hosts in the top-level groups below.
+#    These are the ONLY groups you need to edit for a basic setup.
+# 2. Each service group inherits from one or more top-level groups
+#    via :children — hosts automatically receive the right services.
+# 3. To move a service to a different set of hosts, change the
+#    :children mapping (e.g. point [jellyfin:children] at [media]).
+# 4. For fine-grained control, override any service group directly:
+#      [jellyfin]
+#      specific-host01
+# 5. Services can still be globally disabled via enable_<service>: false
+#    in group_vars/all.yml — the inventory group is a necessary but not
+#    sufficient condition for deployment (same model as kolla-ansible).
+
+# ══════════════════════════════════════════════════════════════
+#  Top-level groups — EDIT THESE
+# ══════════════════════════════════════════════════════════════
+
+# Infrastructure services: git, packages, cloud storage, passwords, docs
+[infra]
+# infra01 ansible_host=192.168.1.101 ansible_user=root
+
+# Media services: video, books, music, maps, offline content
+[media]
+# media01 ansible_host=192.168.1.102 ansible_user=root
+
+# Communication services: chat, conferencing, matrix
+[comms]
+# comms01 ansible_host=192.168.1.103 ansible_user=root
+
+# Download / transfer services
+[download]
+# dl01 ansible_host=192.168.1.104 ansible_user=root
+
+# Search services
+[search]
+# search01 ansible_host=192.168.1.105 ansible_user=root
+
+# ══════════════════════════════════════════════════════════════
+#  Service groups — change the :children mappings as needed
+# ══════════════════════════════════════════════════════════════
+
+# --- Media ---
+
+[kiwix:children]
+media
+
+[jellyfin:children]
+media
+
+[calibre-web:children]
+media
+
+[minidlna:children]
+media
+
+[flib:children]
+media
+
+[kanban:children]
+infra
+
+[openstreetmap:children]
+media
+
+# --- Infrastructure ---
+
+[gitea:children]
+infra
+
+[nexus:children]
+infra
+
+[nextcloud:children]
+infra
+
+[opencloud:children]
+infra
+
+[vaultwarden:children]
+infra
+
+[syncthing:children]
+infra
+
+[paperless-ngx:children]
+infra
+
+# --- Communications ---
+
+[mattermost:children]
+comms
+
+[dendrite:children]
+comms
+
+[bigbluebutton:children]
+comms
+
+[zulip:children]
+comms
+
+# --- Downloads ---
+
+[transmission:children]
+download
+
+# --- Search ---
+
+[searxng:children]
+search

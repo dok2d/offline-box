@@ -1,0 +1,12 @@
+---
+enable_zulip: false
+
+zulip_port: 8020
+zulip_data_dir: "{{ opt_base }}/zulip/data"
+zulip_config_dir: "{{ opt_base }}/zulip/config"
+zulip_admin_email: "admin@localhost"
+
+zulip_version: "9.3-0"
+zulip_tag: "{{ zulip_version }}"
+zulip_image: "{{ (container_registry ~ '/' if container_registry else '') }}{{ (container_namespace ~ '/' if container_namespace else '') }}zulip"
+zulip_image_full: "{{ zulip_image }}:{{ zulip_tag }}"

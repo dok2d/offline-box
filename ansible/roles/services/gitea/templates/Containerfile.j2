@@ -23,5 +23,5 @@ RUN useradd -r -u 10001 -m -s /bin/bash gitea && \
 USER gitea
 ENV GITEA_WORK_DIR=/data
 EXPOSE {{ gitea_port }} {{ gitea_ssh_port }}
-HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD curl -fs http://localhost:8006/gitea/ || exit 1
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD curl -fs http://localhost:{{ gitea_port }}/gitea/ || exit 1
 ENTRYPOINT ["gitea", "web", "--config", "/etc/gitea/app.ini"]

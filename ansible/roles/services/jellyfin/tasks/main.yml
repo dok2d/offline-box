@@ -58,6 +58,7 @@
     tag: "{{ jellyfin_tag }}"
     path: "{{ jellyfin_config_dir }}"
     force: "{{ _containerfile.changed | default(true) }}"
+  notify: Restart jellyfin
 
 - name: Deploy Jellyfin systemd user unit
   ansible.builtin.template:

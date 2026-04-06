@@ -20,5 +20,5 @@ RUN useradd -r -u 10001 -m syncthing && \
     chown -R syncthing:syncthing /config /data
 USER syncthing
 EXPOSE {{ syncthing_port }} {{ syncthing_sync_port }} {{ syncthing_discovery_port }}/udp
-HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD curl -fs http://localhost:8011/rest/noauth/health || exit 1
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD curl -fs http://localhost:{{ syncthing_port }}/rest/noauth/health || exit 1
 ENTRYPOINT ["syncthing", "--gui-address=0.0.0.0:{{ syncthing_port }}", "--home=/config", "--no-browser"]

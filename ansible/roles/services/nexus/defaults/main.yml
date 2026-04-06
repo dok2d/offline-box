@@ -1,5 +1,5 @@
 ---
-enable_nexus: true
+enable_nexus: false
 
 nexus_port: 8004
 nexus_data_dir: "{{ opt_base }}/nexus/data"

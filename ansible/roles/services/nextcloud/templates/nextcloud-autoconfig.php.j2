@@ -5,4 +5,16 @@ $AUTOCONFIG = array(
   'directory' => '/data',
   'adminlogin' => '{{ nextcloud_admin_user }}',
   'adminpass' => '{{ nextcloud_admin_password }}',
+  'trusted_domains' => array(
+    0 => 'localhost',
+    1 => '{{ server_name }}',
+  ),
+  'trusted_proxies' => array(
+    0 => '127.0.0.1',
+  ),
+  'overwritewebroot' => '/nextcloud',
+{% if use_ssl | bool %}
+  'overwriteprotocol' => 'https',
+{% endif %}
+  'overwrite.cli.url' => '{{ "https" if use_ssl | bool else "http" }}://{{ server_name }}/nextcloud',
 );

@@ -13,5 +13,5 @@ RUN useradd -r -u 10001 -m tileserver
 USER tileserver
 WORKDIR /data
 EXPOSE {{ openstreetmap_port }}
-HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD curl -fs http://localhost:8002/osm/ || exit 1
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD curl -fs http://localhost:{{ openstreetmap_port }}/osm/ || exit 1
 ENTRYPOINT ["tileserver-gl-light", "--port", "{{ openstreetmap_port }}", "--basePath", "/osm"]

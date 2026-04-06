@@ -11,7 +11,7 @@ ExecStart=/usr/bin/podman run \
   --rm \
   --cap-drop=ALL \
   --security-opt=no-new-privileges \
-  -p {{ listen_addr }}:{{ openstreetmap_port }}:8002 \
+  -p {{ listen_addr }}:{{ openstreetmap_port }}:{{ openstreetmap_port }} \
   --log-driver=k8s-file \
   --log-opt=path={{ container_log_dir }}/openstreetmap/openstreetmap.log \
   -v {{ openstreetmap_data_dir }}:/data:ro \

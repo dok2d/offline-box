@@ -59,6 +59,7 @@
     tag: "{{ minidlna_tag }}"
     path: "{{ minidlna_config_dir }}"
     force: "{{ _containerfile.changed | default(true) }}"
+  notify: Restart minidlna
 
 - name: Deploy MiniDLNA systemd user unit
   ansible.builtin.template:

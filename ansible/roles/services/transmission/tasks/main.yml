@@ -39,6 +39,7 @@
     group: "{{ svc_user }}"
     mode: "0644"
   diff: true
+  notify: Restart transmission
 
 - name: Deploy Transmission Containerfile
   ansible.builtin.template:
@@ -58,6 +59,7 @@
     tag: "{{ transmission_tag }}"
     path: "{{ transmission_config_dir }}"
     force: "{{ _containerfile.changed | default(true) }}"
+  notify: Restart transmission
 
 - name: Deploy Transmission systemd user unit
   ansible.builtin.template:

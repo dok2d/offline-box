@@ -51,6 +51,7 @@
     tag: "{{ opencloud_tag }}"
     path: "{{ opencloud_config_dir }}"
     force: "{{ _containerfile.changed | default(true) }}"
+  notify: Restart opencloud
 
 - name: Deploy OpenCloud systemd user unit
   ansible.builtin.template:

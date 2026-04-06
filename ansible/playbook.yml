@@ -1,7 +1,32 @@
 ---
-- name: Deploy offline home server
-  hosts: box
+# Offline Box — main playbook
+#
+# Architecture follows kolla-ansible conventions:
+#   - Each service is a separate play targeting its inventory group.
+#   - A host receives a service only if it belongs to the service's group
+#     AND the service is enabled (enable_<service>: true).
+#   - Facts are gathered once in the first play; subsequent plays skip it.
+#
+# Usage:
+#   ansible-playbook -i inventory/all-in-one playbook.yml   # single host
+#   ansible-playbook -i inventory/multinode  playbook.yml   # multi host
+
+###############################################################################
+# Gather facts (once for all hosts)
+###############################################################################
+- name: Gather facts for all hosts
+  hosts: all
   become: true
+  gather_facts: true
+  tasks: []
+
+###############################################################################
+# Common infrastructure — runs on every host in the inventory
+###############################################################################
+- name: Apply common infrastructure
+  hosts: all
+  become: true
+  gather_facts: false
 
   pre_tasks:
     - name: Validate required variables
@@ -11,70 +36,182 @@
           - server_name is defined
         fail_msg: "Required variables missing. Check group_vars/all.yml"
 
-    - name: Validate passwords.yml exists
-      ansible.builtin.assert:
-        that:
-          - transmission_rpc_password is defined
-          - transmission_rpc_password | length > 0
-        fail_msg: >
-          Credentials not configured.
-          Run: python3 tools/generate-passwords.py --init
-
   roles:
     - role: base
     - role: podman
     - role: nginx
 
+###############################################################################
+# Per-service plays
+###############################################################################
+
+- name: Apply role kiwix
+  hosts: kiwix
+  become: true
+  gather_facts: false
+  roles:
     - role: services/kiwix
-      when: offlinebox_services.kiwix.enabled | bool
+      when: enable_kiwix | bool
 
+- name: Apply role openstreetmap
+  hosts: openstreetmap
+  become: true
+  gather_facts: false
+  roles:
     - role: services/openstreetmap
-      when: offlinebox_services.openstreetmap.enabled | bool
+      when: enable_openstreetmap | bool
 
+- name: Apply role transmission
+  hosts: transmission
+  become: true
+  gather_facts: false
+  roles:
     - role: services/transmission
-      when: offlinebox_services.transmission.enabled | bool
+      when: enable_transmission | bool
 
+- name: Apply role nexus
+  hosts: nexus
+  become: true
+  gather_facts: false
+  roles:
     - role: services/nexus
-      when: offlinebox_services.nexus.enabled | bool
+      when: enable_nexus | bool
 
+- name: Apply role nextcloud
+  hosts: nextcloud
+  become: true
+  gather_facts: false
+  roles:
     - role: services/nextcloud
-      when: offlinebox_services.nextcloud.enabled | bool
+      when: enable_nextcloud | bool
 
+- name: Apply role gitea
+  hosts: gitea
+  become: true
+  gather_facts: false
+  roles:
     - role: services/gitea
-      when: offlinebox_services.gitea.enabled | bool
+      when: enable_gitea | bool
 
+- name: Apply role jellyfin
+  hosts: jellyfin
+  become: true
+  gather_facts: false
+  roles:
     - role: services/jellyfin
-      when: offlinebox_services.jellyfin.enabled | bool
+      when: enable_jellyfin | bool
 
+- name: Apply role calibre-web
+  hosts: calibre-web
+  become: true
+  gather_facts: false
+  roles:
     - role: services/calibre-web
-      when: offlinebox_services['calibre-web'].enabled | bool
+      when: enable_calibre_web | bool
 
+- name: Apply role searxng
+  hosts: searxng
+  become: true
+  gather_facts: false
+  roles:
     - role: services/searxng
-      when: offlinebox_services.searxng.enabled | bool
+      when: enable_searxng | bool
 
+- name: Apply role vaultwarden
+  hosts: vaultwarden
+  become: true
+  gather_facts: false
+  roles:
     - role: services/vaultwarden
-      when: offlinebox_services.vaultwarden.enabled | bool
+      when: enable_vaultwarden | bool
 
+- name: Apply role syncthing
+  hosts: syncthing
+  become: true
+  gather_facts: false
+  roles:
     - role: services/syncthing
-      when: offlinebox_services.syncthing.enabled | bool
+      when: enable_syncthing | bool
 
+- name: Apply role paperless-ngx
+  hosts: paperless-ngx
+  become: true
+  gather_facts: false
+  roles:
     - role: services/paperless-ngx
-      when: offlinebox_services['paperless-ngx'].enabled | bool
+      when: enable_paperless_ngx | bool
 
+- name: Apply role bigbluebutton
+  hosts: bigbluebutton
+  become: true
+  gather_facts: false
+  roles:
     - role: services/bigbluebutton
-      when: offlinebox_services.bigbluebutton.enabled | bool
+      when: enable_bigbluebutton | bool
 
+- name: Apply role opencloud
+  hosts: opencloud
+  become: true
+  gather_facts: false
+  roles:
     - role: services/opencloud
-      when: offlinebox_services.opencloud.enabled | bool
+      when: enable_opencloud | bool
 
+- name: Apply role mattermost
+  hosts: mattermost
+  become: true
+  gather_facts: false
+  roles:
     - role: services/mattermost
-      when: offlinebox_services.mattermost.enabled | bool
+      when: enable_mattermost | bool
 
+- name: Apply role dendrite
+  hosts: dendrite
+  become: true
+  gather_facts: false
+  roles:
     - role: services/dendrite
-      when: offlinebox_services.dendrite.enabled | bool
+      when: enable_dendrite | bool
 
+- name: Apply role minidlna
+  hosts: minidlna
+  become: true
+  gather_facts: false
+  roles:
     - role: services/minidlna
-      when: offlinebox_services.minidlna.enabled | bool
+      when: enable_minidlna | bool
 
+- name: Apply role flib
+  hosts: flib
+  become: true
+  gather_facts: false
+  roles:
+    - role: services/flib
+      when: enable_flib | bool
+
+- name: Apply role kanban
+  hosts: kanban
+  become: true
+  gather_facts: false
+  roles:
+    - role: services/kanban
+      when: enable_kanban | bool
+
+- name: Apply role zulip
+  hosts: zulip
+  become: true
+  gather_facts: false
+  roles:
+    - role: services/zulip
+      when: enable_zulip | bool
+
+###############################################################################
+# Backup — runs on every host
+###############################################################################
+- name: Apply role backup
+  hosts: all
+  become: true
+  gather_facts: false
+  roles:
     - role: backup
       when: enable_backup | default(true) | bool

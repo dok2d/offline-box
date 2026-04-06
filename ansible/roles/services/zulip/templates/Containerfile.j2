@@ -1,0 +1,9 @@
+# Zulip all-in-one: Django + PostgreSQL + RabbitMQ + Redis + Memcached via supervisord
+# Exception: FROM upstream image instead of container_base_image (Zulip-specific install)
+FROM docker.io/zulip/docker-zulip:{{ zulip_version }}
+
+# Internal port is 80 (HTTPS disabled via DISABLE_HTTPS=true env var)
+# Data persistence via /data volume mount
+EXPOSE 80
+HEALTHCHECK --interval=60s --timeout=10s --retries=5 \
+  CMD curl -fso /dev/null http://localhost/api/v1/server_settings || exit 1

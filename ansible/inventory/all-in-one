@@ -1,0 +1,79 @@
+# Offline Box — All-in-One inventory
+# Deploys every service on a single host (like kolla-ansible all-in-one).
+#
+# Usage:
+#   ansible-playbook -i inventory/all-in-one playbook.yml
+
+# ──────────────────────────────────────────────────────────────
+#  Top-level group — the ONLY section you normally edit.
+#  Put your single host here; all service groups inherit from it.
+# ──────────────────────────────────────────────────────────────
+
+[control]
+localhost ansible_connection=local
+
+# ──────────────────────────────────────────────────────────────
+#  Service groups — inherit from [control] via :children.
+#  Every service will be deployed on the hosts in [control].
+#  Usually you do NOT need to edit anything below.
+# ──────────────────────────────────────────────────────────────
+
+[kiwix:children]
+control
+
+[openstreetmap:children]
+control
+
+[transmission:children]
+control
+
+[nexus:children]
+control
+
+[nextcloud:children]
+control
+
+[gitea:children]
+control
+
+[jellyfin:children]
+control
+
+[calibre-web:children]
+control
+
+[searxng:children]
+control
+
+[vaultwarden:children]
+control
+
+[syncthing:children]
+control
+
+[paperless-ngx:children]
+control
+
+[bigbluebutton:children]
+control
+
+[opencloud:children]
+control
+
+[mattermost:children]
+control
+
+[dendrite:children]
+control
+
+[minidlna:children]
+control
+
+[flib:children]
+control
+
+[kanban:children]
+control
+
+[zulip:children]
+control

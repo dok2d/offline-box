@@ -65,6 +65,7 @@
     tag: "{{ openstreetmap_tag }}"
     path: "{{ openstreetmap_config_dir }}"
     force: "{{ _containerfile.changed | default(true) }}"
+  notify: Restart openstreetmap
 
 - name: Deploy OpenStreetMap systemd user unit
   ansible.builtin.template:

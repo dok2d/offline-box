@@ -15,6 +15,13 @@ echo "Redis started."
 su -c "/usr/lib/postgresql/*/bin/pg_ctl -D /var/lib/postgresql/*/main start -l /var/log/postgresql/startup.log -w" postgres
 echo "PostgreSQL started."
 
+# Initialize database on first run
+if ! su -c "psql -tAc \"SELECT 1 FROM pg_roles WHERE rolname='bigbluebutton'\"" postgres | grep -q 1; then
+  su -c "psql --command \"CREATE USER bigbluebutton WITH PASSWORD '${BBB_DB_PASSWORD:-changeme}';\"" postgres
+  su -c "createdb -O bigbluebutton bigbluebutton" postgres
+  echo "PostgreSQL database initialized."
+fi
+
 # Start FreeSWITCH
 freeswitch -nc -nonat -nf -nosql \
   -rp \

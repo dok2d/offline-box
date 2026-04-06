@@ -64,7 +64,9 @@
     group: "{{ svc_user }}"
     mode: "0755"
   loop: "{{ offlinebox_services | dict2items }}"
-  when: item.value.enabled | bool
+  when:
+    - item.value.enabled | bool
+    - inventory_hostname in groups.get(item.key, [])
 
 - name: Deploy container logrotate config
   ansible.builtin.template:
@@ -98,9 +100,11 @@
 - name: Allow Transmission peer port
   community.general.ufw:
     rule: allow
-    port: "{{ transmission_peer_port | string }}"
+    port: "{{ transmission_peer_port | default(51413) | string }}"
     proto: tcp
-  when: enable_transmission | bool
+  when:
+    - enable_transmission | default(false) | bool
+    - inventory_hostname in groups.get('transmission', [])
 
 - name: Allow Syncthing ports
   community.general.ufw:
@@ -108,23 +112,29 @@
     port: "{{ item.port }}"
     proto: "{{ item.proto }}"
   loop:
-    - { port: "{{ syncthing_sync_port | string }}", proto: tcp }
-    - { port: "{{ syncthing_discovery_port | string }}", proto: udp }
-  when: enable_syncthing | bool
+    - { port: "{{ syncthing_sync_port | default(22000) | string }}", proto: tcp }
+    - { port: "{{ syncthing_discovery_port | default(21027) | string }}", proto: udp }
+  when:
+    - enable_syncthing | default(false) | bool
+    - inventory_hostname in groups.get('syncthing', [])
 
 - name: Allow Gitea SSH port
   community.general.ufw:
     rule: allow
-    port: "{{ gitea_ssh_port | string }}"
+    port: "{{ gitea_ssh_port | default(2222) | string }}"
     proto: tcp
-  when: enable_gitea | bool
+  when:
+    - enable_gitea | default(false) | bool
+    - inventory_hostname in groups.get('gitea', [])
 
 - name: Allow BigBlueButton FreeSWITCH media ports
   community.general.ufw:
     rule: allow
-    port: "{{ bigbluebutton_freeswitch_port_start | string }}:{{ bigbluebutton_freeswitch_port_end | string }}"
+    port: "{{ bigbluebutton_freeswitch_port_start | default(16384) | string }}:{{ bigbluebutton_freeswitch_port_end | default(32768) | string }}"
     proto: udp
-  when: enable_bigbluebutton | bool
+  when:
+    - enable_bigbluebutton | default(false) | bool
+    - inventory_hostname in groups.get('bigbluebutton', [])
 
 - name: Enable UFW
   community.general.ufw:

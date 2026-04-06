@@ -1,5 +1,12 @@
 ---
 ####################
+# Connection defaults
+####################
+
+ansible_user: root
+ansible_python_interpreter: /usr/bin/python3
+
+####################
 # Global settings
 ####################
 
@@ -258,3 +265,39 @@ offlinebox_services:
       desc: "DLNA/UPnP media server"
       icon: "\U0001F4E1"
       url: /minidlna/
+  flib:
+    container_name: flib
+    enabled: "{{ enable_flib }}"
+    image: "{{ flib_image_full }}"
+    port: "{{ flib_port }}"
+    data_dir: "{{ flib_data_dir }}"
+    config_dir: "{{ flib_config_dir }}"
+    dashboard:
+      name: Flib
+      desc: "Book library search"
+      icon: "\U0001F4DA"
+      url: /flib/
+  kanban:
+    container_name: kanban
+    enabled: "{{ enable_kanban }}"
+    image: "{{ kanban_image_full }}"
+    port: "{{ kanban_port }}"
+    data_dir: "{{ kanban_data_dir }}"
+    config_dir: "{{ kanban_config_dir }}"
+    dashboard:
+      name: Kanban
+      desc: "Task board"
+      icon: "\U0001F4CB"
+      url: /kanban/
+  zulip:
+    container_name: zulip
+    enabled: "{{ enable_zulip }}"
+    image: "{{ zulip_image_full }}"
+    port: "{{ zulip_port }}"
+    data_dir: "{{ zulip_data_dir }}"
+    config_dir: "{{ zulip_config_dir }}"
+    dashboard:
+      name: Zulip
+      desc: "Team chat with threading"
+      icon: "\U0001F4AC"
+      url: /zulip/

@@ -10,7 +10,7 @@ RETENTION={{ backup_retention_days }}
 log() { echo "[$(date '+%F %T')] $*"; }
 
 {% for svc_id, svc in offlinebox_services.items() %}
-{% if svc.enabled | bool %}
+{% if svc.enabled | bool and inventory_hostname in groups.get(svc_id, []) %}
 # ── {{ svc.dashboard.name }} ──
 SVC_DIR="{{ svc.data_dir }}"
 DEST="${BACKUP_ROOT}/{{ svc_id }}"

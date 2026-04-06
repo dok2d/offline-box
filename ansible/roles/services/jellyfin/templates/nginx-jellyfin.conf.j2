@@ -15,4 +15,6 @@ location /jellyfin/ {
     # Disable buffering for media streaming
     proxy_buffering off;
     client_max_body_size 100m;
+
+    proxy_read_timeout 3600;
 }

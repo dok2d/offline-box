@@ -11,7 +11,7 @@ ExecStart=/usr/bin/podman run \
   --rm \
   --cap-drop=ALL \
   --security-opt=no-new-privileges \
-  -p {{ listen_addr }}:{{ transmission_port }}:8003 \
+  -p {{ listen_addr }}:{{ transmission_port }}:{{ transmission_port }} \
   -p {{ transmission_peer_port }}:51413 \
   --log-driver=k8s-file \
   --log-opt=path={{ container_log_dir }}/transmission/transmission.log \

@@ -1,5 +1,5 @@
 ---
-enable_opencloud: true
+enable_opencloud: false
 
 opencloud_port: 8014
 opencloud_data_dir: "{{ opt_base }}/opencloud/data"

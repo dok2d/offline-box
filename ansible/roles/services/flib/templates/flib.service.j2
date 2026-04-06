@@ -1,0 +1,27 @@
+[Unit]
+Description=Flib book library search (podman)
+After=default.target
+
+[Service]
+Environment="XDG_RUNTIME_DIR=/run/user/{{ svc_uid }}"
+ExecStartPre=-/usr/bin/podman rm -f flib
+ExecStart=/usr/bin/podman run \
+  --name flib \
+  --replace \
+  --rm \
+  --cap-drop=ALL \
+  --security-opt=no-new-privileges \
+  -p {{ listen_addr }}:{{ flib_port }}:{{ flib_port }} \
+  --log-driver=k8s-file \
+  --log-opt=path={{ container_log_dir }}/flib/flib.log \
+  --tmpfs /app/temp_extract:rw,noexec,nosuid,size=256m \
+  -v {{ flib_data_dir }}:/app/data:ro \
+  {{ flib_image_full }}
+ExecStop=/usr/bin/podman stop flib
+MemoryMax=512M
+CPUQuota=100%
+Restart=on-failure
+RestartSec=10s
+
+[Install]
+WantedBy=default.target

@@ -51,6 +51,7 @@
     tag: "{{ gitea_tag }}"
     path: "{{ gitea_config_dir }}"
     force: "{{ _containerfile.changed | default(true) }}"
+  notify: Restart gitea
 
 - name: Deploy Gitea systemd user unit
   ansible.builtin.template:

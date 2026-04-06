@@ -1,5 +1,5 @@
 ---
-enable_bigbluebutton: true
+enable_bigbluebutton: false
 
 bigbluebutton_port: 8013
 bigbluebutton_data_dir: "{{ opt_base }}/bigbluebutton/data"
@@ -12,8 +12,6 @@ bigbluebutton_freeswitch_port_end: 32768
 # The bbb-web.war must be built from source or extracted from .deb packages;
 # GitHub releases do not include binary assets.
 bigbluebutton_version: "2.7"
-
-bigbluebutton_db_password: ""
 
 bigbluebutton_tag: "{{ bigbluebutton_version }}"
 bigbluebutton_image: "{{ (container_registry ~ '/' if container_registry else '') }}{{ (container_namespace ~ '/' if container_namespace else '') }}bigbluebutton"

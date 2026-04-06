@@ -1,0 +1,27 @@
+[Unit]
+Description=Zulip team chat (podman)
+After=default.target
+
+[Service]
+Environment="XDG_RUNTIME_DIR=/run/user/{{ svc_uid }}"
+ExecStartPre=-/usr/bin/podman rm -f zulip
+ExecStart=/usr/bin/podman run \
+  --name zulip \
+  --replace \
+  --rm \
+  --cap-drop=ALL \
+  --security-opt=no-new-privileges \
+  -p {{ listen_addr }}:{{ zulip_port }}:80 \
+  --log-driver=k8s-file \
+  --log-opt=path={{ container_log_dir }}/zulip/zulip.log \
+  --env-file={{ zulip_config_dir }}/zulip.env \
+  -v {{ zulip_data_dir }}:/data:rw \
+  {{ zulip_image_full }}
+ExecStop=/usr/bin/podman stop zulip
+MemoryMax=2G
+CPUQuota=200%
+Restart=on-failure
+RestartSec=15s
+
+[Install]
+WantedBy=default.target

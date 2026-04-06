@@ -13,7 +13,7 @@ ExecStart=/usr/bin/podman run \
   --cap-add=NET_RAW \
   --cap-add=SYS_NICE \
   --security-opt=no-new-privileges \
-  -p {{ listen_addr }}:{{ bigbluebutton_port }}:8013 \
+  -p {{ listen_addr }}:{{ bigbluebutton_port }}:{{ bigbluebutton_port }} \
   -p {{ bigbluebutton_freeswitch_port_start }}-{{ bigbluebutton_freeswitch_port_end }}:{{ bigbluebutton_freeswitch_port_start }}-{{ bigbluebutton_freeswitch_port_end }}/udp \
   --log-driver=k8s-file \
   --log-opt=path={{ container_log_dir }}/bigbluebutton/bigbluebutton.log \

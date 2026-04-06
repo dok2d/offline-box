@@ -1,0 +1,35 @@
+FROM {{ container_base_image }}
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    python3 python3-pip python3-venv \
+    unzip curl \
+    libpango-1.0-0 libpangoft2-1.0-0 \
+    libharfbuzz0b fonts-dejavu-core && \
+    rm -rf /var/lib/apt/lists/*
+RUN useradd -r -u 10001 -m flib && \
+    mkdir -p /app /app/data /app/data/archives && \
+    chown -R flib:flib /app
+# Copy only application files (exclude .git, *.db, *.zip, temp/)
+COPY flib-src/web-select.py flib-src/inpx2sql.py flib-src/bot.py /app/
+COPY flib-src/templates/ /app/templates/
+COPY flib-src/requirements.txt /app/requirements.txt
+{% if offline_mode | default(false) %}
+COPY pip-packages/ /tmp/pip-packages/
+RUN python3 -m venv /app/venv && \
+    /app/venv/bin/pip install --no-cache-dir --no-index \
+      --find-links /tmp/pip-packages -r /app/requirements.txt && \
+    rm -rf /tmp/pip-packages
+{% else %}
+RUN python3 -m venv /app/venv && \
+    /app/venv/bin/pip install --no-cache-dir -r /app/requirements.txt
+{% endif %}
+USER flib
+WORKDIR /app
+EXPOSE {{ flib_port }}
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
+  CMD curl -fs http://localhost:{{ flib_port }}/ || exit 1
+ENTRYPOINT ["/app/venv/bin/python3", "web-select.py", \
+    "--host", "0.0.0.0", \
+    "--port", "{{ flib_port }}", \
+    "--database", "/app/data/books.db", \
+    "--archives-path", "/app/data/archives"]

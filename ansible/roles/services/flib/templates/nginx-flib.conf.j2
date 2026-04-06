@@ -1,0 +1,20 @@
+# Flib - book library search
+location /flib/ {
+    proxy_pass http://{{ listen_addr }}:{{ flib_port }}/;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    include /etc/nginx/snippets/security-headers.conf;
+    limit_req zone=general burst=20 nodelay;
+
+    # flib-py generates absolute paths; rewrite them for /flib/ sub-path
+    sub_filter_once off;
+    sub_filter_types text/html application/json;
+    sub_filter '"/download/' '"/flib/download/';
+    sub_filter '"/read/' '"/flib/read/';
+    sub_filter '"/convert/' '"/flib/convert/';
+    sub_filter 'href="/"' 'href="/flib/"';
+    sub_filter "fetch('/'," "fetch('/flib/',";
+    proxy_set_header Accept-Encoding "";
+}

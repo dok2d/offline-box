@@ -1,5 +1,5 @@
 ---
-enable_paperless_ngx: true
+enable_paperless_ngx: false
 
 paperless_ngx_port: 8012
 paperless_ngx_data_dir: "{{ opt_base }}/paperless-ngx/data"

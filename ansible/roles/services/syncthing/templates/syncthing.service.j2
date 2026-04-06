@@ -11,7 +11,7 @@ ExecStart=/usr/bin/podman run \
   --rm \
   --cap-drop=ALL \
   --security-opt=no-new-privileges \
-  -p {{ listen_addr }}:{{ syncthing_port }}:8011 \
+  -p {{ listen_addr }}:{{ syncthing_port }}:{{ syncthing_port }} \
   -p {{ syncthing_sync_port }}:22000 \
   -p {{ syncthing_discovery_port }}:21027/udp \
   --log-driver=k8s-file \

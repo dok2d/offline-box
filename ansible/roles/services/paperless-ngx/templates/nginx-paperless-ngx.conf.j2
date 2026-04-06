@@ -8,4 +8,11 @@ location /paperless/ {
     include /etc/nginx/snippets/security-headers.conf;
     limit_req zone=upload burst=10 nodelay;
     client_max_body_size 100m;
+
+    # WebSocket for live status
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "upgrade";
+
+    proxy_read_timeout 300;
 }
